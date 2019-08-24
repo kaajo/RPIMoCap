@@ -17,33 +17,12 @@
 
 #pragma once
 
-#include "mqttsettings.h"
+#include <eigen3/Eigen/Geometry>
 
-#include <QByteArray>
-#include <QObject>
-
-#include <mosquittopp.h>
-
-namespace RPIMoCap {
-
-class MQTTSubscriber : public QObject, protected mosqpp::mosquittopp
+struct CameraSettings
 {
-    Q_OBJECT
-public:
-    MQTTSubscriber(QString clientName, QString topic, MQTTSettings settings, QObject *parent = nullptr);
+    CameraSettings(int id, Eigen::Affine3f transform) : id(id), transform(transform) {}
 
-signals:
-    void messageReceived(const QByteArray &data);
-
-private:
-    void on_connect(int rc) override;
-    void on_message(const mosquitto_message *message) override;
-    void on_log(int log_level, const char *str) override;
-    void on_error() override;
-
-    QString m_clientName;
-    QString m_topic;
-    MQTTSettings m_settings;
+    int id = -1;
+    Eigen::Affine3f transform = Eigen::Affine3f(Eigen::Affine3f::Identity());
 };
-
-}

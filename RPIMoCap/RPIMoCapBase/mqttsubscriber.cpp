@@ -19,9 +19,9 @@
 
 #include <mosquitto.h>
 
-RPIMoCap::MQTTSubscriber::MQTTSubscriber(std::string clientName, std::string topic, MQTTSettings settings, QObject *parent)
+RPIMoCap::MQTTSubscriber::MQTTSubscriber(QString clientName, QString topic, MQTTSettings settings, QObject *parent)
     : QObject(parent)
-    , mosqpp::mosquittopp(clientName.c_str())
+    , mosqpp::mosquittopp(clientName.toStdString().c_str())
     , m_clientName(std::move(clientName))
     , m_topic(std::move(topic))
     , m_settings(std::move(settings))
@@ -29,20 +29,19 @@ RPIMoCap::MQTTSubscriber::MQTTSubscriber(std::string clientName, std::string top
     auto conRes = connect_async(m_settings.IPAddress.c_str(),m_settings.port);
     switch(conRes) {
     case MOSQ_ERR_INVAL:
-        qDebug() << QString("the input parameters were invalid");
-        return;
+        qCDebug(MQTT) << QString("the input parameters were invalid");
+        break;
     case MOSQ_ERR_SUCCESS:
         loop_start();
-        return;
-    default: {
-        QString errorMessage = mosquitto_strerror(conRes);
-        qDebug() << errorMessage;
-    }
+        break;
+    default:
+        qCCritical(MQTT) << mosquitto_strerror(conRes);
+        break;
     }
 }
 
 void RPIMoCap::MQTTSubscriber::on_connect(int rc) {
-    subscribe(nullptr,m_topic.c_str(),static_cast<std::underlying_type_t<MQTTQoS>>(m_settings.QoS));
+    subscribe(nullptr,m_topic.toStdString().c_str(),static_cast<std::underlying_type_t<MQTTQoS>>(m_settings.QoS));
 }
 
 void RPIMoCap::MQTTSubscriber::on_message(const mosquitto_message *message) {
@@ -50,10 +49,29 @@ void RPIMoCap::MQTTSubscriber::on_message(const mosquitto_message *message) {
     emit messageReceived(data);
 }
 
-void RPIMoCap::MQTTSubscriber::on_log(int, const char *str) {
-    qDebug() << str;
+void RPIMoCap::MQTTSubscriber::on_log(int log_level, const char *str) {
+    switch (log_level) {
+    case MOSQ_LOG_DEBUG:
+        qCDebug(MQTT) << str;
+        break;
+    case MOSQ_LOG_INFO:
+    case MOSQ_LOG_NOTICE:
+    case MOSQ_LOG_SUBSCRIBE:
+    case MOSQ_LOG_UNSUBSCRIBE:
+        qCInfo(MQTT) << str;
+        break;
+    case MOSQ_LOG_WARNING:
+        qCWarning(MQTT) << str;
+        break;
+    case MOSQ_LOG_ERR:
+        qCCritical(MQTT) << str;
+        break;
+    default:
+        qCDebug(MQTT) << str;
+        break;
+    }
 }
 
 void RPIMoCap::MQTTSubscriber::on_error() {
-    qDebug() << "error";
+    qCCritical(MQTT) << "error";
 }

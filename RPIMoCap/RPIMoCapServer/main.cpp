@@ -16,43 +16,36 @@
  */
 
 #include "mainwindow.h"
-#include "linesaggregator.h"
+#include "rpimocapserver.h"
 
-#include <mqttpublisher.h>
-#include <mqttsubscriber.h>
 #include <line3d.h>
 
 #include <QApplication>
 #include <QtWidgets/QApplication>
 #include <QDebug>
-
-#include <memory>
-
-#include <QDir>
+#include <QProcess>
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
     QApplication::setOrganizationName("Miroslav Krajicek");
-    QApplication::setApplicationVersion("1.0");
+    QApplication::setApplicationVersion("0.1");
     QApplication::setApplicationName("RPIMoCap");
 
-    qRegisterMetaType<QVector<RPIMoCap::Line3D>>("QVector<RPIMoCap::Line3D>");
+    qSetMessagePattern("%{type} %{if-category}%{category}: %{endif}%{message}");
+
+    qRegisterMetaType<std::vector<RPIMoCap::Line3D>>("std::vector<RPIMoCap::Line3D>");
     qRegisterMetaType<RPIMoCap::Line3D>("RPIMoCap::Line3D");
 
-    RPIMoCap::MQTTSettings settings;
-    settings.IPAddress = "127.0.0.1";
+    RPIMoCapServer server;
 
-    RPIMoCap::MQTTPublisher publisher("serverTriggerPub", "/trigger", settings);
-    RPIMoCap::MQTTSubscriber subscriber("serverLinesSub","/lines",settings);
+    MainWindow w;
 
-    LinesAggregator aggregator;
-    QObject::connect(&subscriber,&RPIMoCap::MQTTSubscriber::messageReceived,&aggregator,&LinesAggregator::onLinesReceived);
-    QObject::connect(&aggregator,&LinesAggregator::trigger,&publisher,&RPIMoCap::MQTTPublisher::publishData);
+    QObject::connect(&w,&MainWindow::startMoCap, &server, &RPIMoCapServer::onMoCapStart);
+    QObject::connect(&server, &RPIMoCapServer::linesReceived, &w, &MainWindow::onLinesReceived);
 
-
-    publisher.publishData({});
+    w.show();
 
     return a.exec();
 }

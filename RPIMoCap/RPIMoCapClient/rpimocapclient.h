@@ -24,14 +24,20 @@
 
 #include <QObject>
 #include <QByteArray>
+#include <QHostAddress>
+#include <QNetworkInterface>
+#include <QTcpSocket>
 
 #include <msgpack/pack.h>
+#include <mqttsubscriber.h>
+#include <mqttpublisher.h>
 
 class RPIMoCapClient : public QObject
 {
     Q_OBJECT
 public:
-    explicit RPIMoCapClient(QObject *parent = nullptr);
+    explicit RPIMoCapClient(cv::Size2f cameraFoVRad, QObject *parent = nullptr);
+    ~RPIMoCapClient();
 
 signals:
     void error(std::string error);
@@ -39,11 +45,20 @@ signals:
 
 public slots:
     void onLines(const std::vector<RPIMoCap::Line3D> &lines);
-
     void trigger();
+
+    void onTcpMessage();
 
 private:
     bool opened = false;
     GstCVCamera m_camera;
     MarkerDetector m_markerDetector;
+
+    QTcpSocket m_rpimocaptcp;
+
+    bool isMQTTInitialized();
+    void initMQTT(const int32_t cameraid);
+    RPIMoCap::MQTTSettings m_MQTTsettings;
+    std::shared_ptr<RPIMoCap::MQTTSubscriber> m_cameraTriggerSub;
+    std::shared_ptr<RPIMoCap::MQTTPublisher> m_linePub;
 };

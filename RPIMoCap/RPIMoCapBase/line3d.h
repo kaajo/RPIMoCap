@@ -93,11 +93,11 @@ struct convert<RPIMoCap::Line3D> {
         //origin
         o.via.array.ptr[0] >> t.origin().x();
         o.via.array.ptr[1] >> t.origin().y();
-        o.via.array.ptr[2] >> t.origin().y();
+        o.via.array.ptr[2] >> t.origin().z();
         //direction
         o.via.array.ptr[3] >> t.direction().x();
         o.via.array.ptr[4] >> t.direction().y();
-        o.via.array.ptr[5] >> t.direction().y();
+        o.via.array.ptr[5] >> t.direction().z();
         return o;
     }
 };

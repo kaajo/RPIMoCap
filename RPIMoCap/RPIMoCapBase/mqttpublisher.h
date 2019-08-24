@@ -21,7 +21,6 @@
 
 #include <QByteArray>
 #include <QObject>
-#include <QDebug>
 
 #include <mosquittopp.h>
 
@@ -31,7 +30,7 @@ class MQTTPublisher : public QObject, protected mosqpp::mosquittopp
 {
     Q_OBJECT
 public:
-    MQTTPublisher(std::string clientName, std::string topic, MQTTSettings settings, QObject *parent = nullptr);
+    MQTTPublisher(QString clientName, QString topic, MQTTSettings settings, QObject *parent = nullptr);
 
 public slots:
     void publishData(const QByteArray &data);
@@ -39,11 +38,11 @@ public slots:
 private:
     void on_connect(int rc) override;
     void on_disconnect(int rc) override;
-    void on_log(int, const char *str) override;
+    void on_log(int log_level, const char *str) override;
     void on_error() override;
 
-    std::string m_clientName;
-    std::string m_topic;
+    QString m_clientName;
+    QString m_topic;
     MQTTSettings m_settings;
 };
 

@@ -19,9 +19,9 @@
 
 #include <mosquitto.h>
 
-RPIMoCap::MQTTPublisher::MQTTPublisher(std::string clientName, std::string topic, MQTTSettings settings, QObject *parent)
+RPIMoCap::MQTTPublisher::MQTTPublisher(QString clientName, QString topic, MQTTSettings settings, QObject *parent)
     : QObject(parent)
-    , mosqpp::mosquittopp(clientName.c_str())
+    , mosqpp::mosquittopp(clientName.toStdString().c_str())
     , m_clientName(std::move(clientName))
     , m_topic(std::move(topic))
     , m_settings(std::move(settings))
@@ -29,48 +29,64 @@ RPIMoCap::MQTTPublisher::MQTTPublisher(std::string clientName, std::string topic
     auto conRes = connect_async(m_settings.IPAddress.c_str(),m_settings.port);
     switch(conRes) {
     case MOSQ_ERR_INVAL:
-        qDebug() << QString("the input parameters were invalid");
-        return;
+        qCDebug(MQTT) << QString("the input parameters were invalid");
+        break;
     case MOSQ_ERR_SUCCESS:
         loop_start();
-        return;
-    default: {
-        QString errorMessage = mosquitto_strerror(conRes);
-        qDebug() << errorMessage;
-    }
+        break;
+    default:
+        qCCritical(MQTT) << mosquitto_strerror(conRes);
+        break;
     }
 }
 
 void RPIMoCap::MQTTPublisher::publishData(const QByteArray &data)
 {
-    mosqpp::mosquittopp::publish(nullptr, m_topic.c_str(), data.size(), data.data(),
+    mosqpp::mosquittopp::publish(nullptr, m_topic.toStdString().c_str(), data.size(), data.data(),
                                  static_cast<std::underlying_type_t<MQTTQoS>>(m_settings.QoS), false);
 }
 
 void RPIMoCap::MQTTPublisher::on_connect(int rc) {
     switch(rc) {
     case MOSQ_ERR_INVAL:
-        qDebug() << QString("the input parameters were invalid");
-        return;
+        qCDebug(MQTT) << QString("the input parameters were invalid");
+        break;
     case MOSQ_ERR_SUCCESS:
         loop_start();
-        return;
-    default: {
-        QString errorMessage = mosquitto_strerror(rc);
-        qDebug() << errorMessage;
-    }
+        break;
+    default:
+        qCCritical(MQTT) << mosquitto_strerror(rc);
+        break;
     }
 }
 
 void RPIMoCap::MQTTPublisher::on_disconnect(int rc) {
-    QString errorMessage = mosquitto_strerror(rc);
-    qDebug() << errorMessage;
+    qCCritical(MQTT) << mosquitto_strerror(rc);
 }
 
-void RPIMoCap::MQTTPublisher::on_log(int, const char *str) {
-    qDebug() << str;
+void RPIMoCap::MQTTPublisher::on_log(int log_level, const char *str) {
+    switch (log_level) {
+    case MOSQ_LOG_DEBUG:
+        qCDebug(MQTT) << str;
+        break;
+    case MOSQ_LOG_INFO:
+    case MOSQ_LOG_NOTICE:
+    case MOSQ_LOG_SUBSCRIBE:
+    case MOSQ_LOG_UNSUBSCRIBE:
+        qCInfo(MQTT) << str;
+        break;
+    case MOSQ_LOG_WARNING:
+        qCWarning(MQTT) << str;
+        break;
+    case MOSQ_LOG_ERR:
+        qCCritical(MQTT) << str;
+        break;
+    default:
+        qCDebug(MQTT) << str;
+        break;
+    }
 }
 
 void RPIMoCap::MQTTPublisher::on_error() {
-    qDebug() << "error";
+    qCCritical(MQTT) << "error";
 }

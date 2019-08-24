@@ -17,8 +17,6 @@
 
 #include "linesaggregator.h"
 
-#include <line3d.h>
-
 #include <QtDebug>
 #include <QThread>
 
@@ -29,19 +27,31 @@ LinesAggregator::LinesAggregator(QObject *parent) : QObject(parent)
 
 }
 
+void LinesAggregator::onMoCapStart(bool start)
+{
+    running = start;
+    if (start)
+    {
+        emit trigger({});
+    }
+}
+
 void LinesAggregator::onLinesReceived(const QByteArray &linesData)
 {
-    //this->thread()->msleep(500);
-
     msgpack::object_handle result;
     msgpack::unpack(result, linesData.data(), linesData.length());
 
     std::vector<RPIMoCap::Line3D> lines(result.get().as<std::vector<RPIMoCap::Line3D>>());
+
+    emit linesReceived(lines);
 
     auto curTime = QTime::currentTime();
 
     qDebug() << "ms elapsed: " << lastTime.msecsTo(curTime) << " lines received: " << lines.size();
     lastTime = curTime;
 
-    emit trigger({});
+    if (running)
+    {
+        emit trigger({});
+    }
 }

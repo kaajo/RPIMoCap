@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <line3d.h>
+
 #include <QMainWindow>
 
 namespace Ui {
@@ -31,7 +33,15 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+signals:
+    void startMoCap(bool start);
+
+public slots:
+    void onLinesReceived(const std::vector<RPIMoCap::Line3D> &lines);
+
+private slots:
+    void on_MoCapButton_clicked(bool checked);
+
 private:
     Ui::MainWindow *ui;
 };
-

@@ -15,35 +15,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include "frame.h"
 
-#include "mqttsettings.h"
-
-#include <QByteArray>
-#include <QObject>
-
-#include <mosquittopp.h>
-
-namespace RPIMoCap {
-
-class MQTTSubscriber : public QObject, protected mosqpp::mosquittopp
+std::vector<RPIMoCap::Line3D> RPIMoCap::Frame::lines() const
 {
-    Q_OBJECT
-public:
-    MQTTSubscriber(QString clientName, QString topic, MQTTSettings settings, QObject *parent = nullptr);
-
-signals:
-    void messageReceived(const QByteArray &data);
-
-private:
-    void on_connect(int rc) override;
-    void on_message(const mosquitto_message *message) override;
-    void on_log(int log_level, const char *str) override;
-    void on_error() override;
-
-    QString m_clientName;
-    QString m_topic;
-    MQTTSettings m_settings;
-};
-
+    return m_lines;
 }

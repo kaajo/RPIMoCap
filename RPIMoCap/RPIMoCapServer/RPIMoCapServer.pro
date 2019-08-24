@@ -4,9 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT += core gui widgets 3dcore 3drender 3dinput 3dlogic 3dextras
 
 TARGET = RPIMoCapServer
 TEMPLATE = app
@@ -22,26 +20,39 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-CONFIG += c++11
+CONFIG += c++17
+CONFIG += link_pkgconfig
 
 SOURCES += \
         linesaggregator.cpp \
         main.cpp \
-        mainwindow.cpp
+        mainwindow.cpp \
+        mocapscene3d.cpp \
+        munkres.cpp \
+        pointchecker.cpp \
+        rpimocapserver.cpp
 
 HEADERS += \
+        camerasettings.h \
         linesaggregator.h \
-        mainwindow.h
+        mainwindow.h \
+        matrix.h \
+        matrix.tpp \
+        mocapscene3d.h \
+        munkres.h \
+        pointchecker.h \
+        rpimocapserver.h
 
 FORMS += \
-        mainwindow.ui
+        mainwindow.ui \
+        mocapscene3d.ui
 
+PKGCONFIG += msgpack opencv
 LIBS += -lmosquitto -lmosquittopp
 
 LIBS += -L$$OUT_PWD/../RPIMoCapBase/ -lRPIMoCapBase
 INCLUDEPATH += $$PWD/../RPIMoCapBase
 DEPENDPATH += $$PWD/../RPIMoCapBase
-
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

@@ -6,8 +6,6 @@
 
 CONFIG += c++14
 
-QT += widgets
-
 TARGET = RPIMoCapBase
 TEMPLATE = lib
 
@@ -19,16 +17,20 @@ DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs depr
 QMAKE_CXXFLAGS += -march=native -mtune=native -O3
 
 SOURCES += \
+        frame.cpp \
         line3d.cpp \
         mqttpublisher.cpp \
+        mqttsettings.cpp \
         mqttsubscriber.cpp
 
 HEADERS += \
+        frame.h \
         line3d.h \
         mqttpublisher.h \
         mqttsettings.h \
         mqttsubscriber.h \
-        rpimocapbase_global.h 
+        rpimocapbase_global.h  \
+        vector3f.h
 
 LIBS += -lmosquitto -lmosquittopp
 

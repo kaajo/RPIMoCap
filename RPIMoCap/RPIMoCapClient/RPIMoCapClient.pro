@@ -11,6 +11,7 @@ DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs depr
 QMAKE_CXXFLAGS += -march=native -mtune=native -O3
 
 SOURCES += \
+        avahibrowser.cpp \
         main.cpp \
         markerdetector.cpp \
         rpicamera.cpp \
@@ -28,6 +29,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 HEADERS += \
+    avahibrowser.h \
     markerdetector.h \
     rpicamera.h \
     rpimocapclient.h

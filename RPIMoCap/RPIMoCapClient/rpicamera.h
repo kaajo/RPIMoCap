@@ -20,7 +20,7 @@
 #include <QObject>
 #include <QDebug>
 
-#include <opencv2/core/mat.hpp>
+#include <opencv2/core/core.hpp>
 #include <gst/gstelement.h>
 #include <gst/app/app.h>
 

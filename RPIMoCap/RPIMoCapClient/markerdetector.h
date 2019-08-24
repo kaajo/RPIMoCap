@@ -26,21 +26,17 @@
 class MarkerDetector
 {
 public:
-    explicit MarkerDetector();
+    explicit MarkerDetector(cv::Size2f cameraFoVRad);
 
-    static cv::Mat computePixelLines(const cv::Size2i &resolution, const float horizontalFov);
-    static cv::Vec3f computePixelLine(const cv::Size2i &resolution, const float degreesPerPixel, const int row, const int col);
+    static cv::Mat computePixelDirs(const cv::Size2i &resolution, cv::Size2f cameraFoVRad);
+    static Eigen::Vector3f computePixelDir(const cv::Size2i &resolution, cv::Size2f cameraFoVRad, cv::Point2i pixel);
 
     std::vector<RPIMoCap::Line3D> onImage(const cv::Mat &image);
 
 private:
-    RPIMoCap::Line3D qtConcurrentpickLine(const std::vector<cv::Point> &contour);
+    RPIMoCap::Line3D qtConcurrentpickLine(const std::vector<cv::Point2i> &contour);
 
-    inline Eigen::Vector3f pixelLineDirectionVector(const int x,const int y)
-    {
-        auto vec = m_pixelLines.at<cv::Vec3d>(cv::Point2d(x,y));
-        return Eigen::Vector3f(vec[0],vec[1],vec[2]);
-    }
+    cv::Size2f m_cameraFoVRad;
     cv::Mat m_pixelLines;
-    cv::Mat dilateKernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3));
+    //cv::Mat dilateKernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3));
 };

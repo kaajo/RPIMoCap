@@ -17,7 +17,11 @@
 
 #pragma once
 
+#include <QLoggingCategory>
+
 #include <string>
+
+Q_DECLARE_LOGGING_CATEGORY(MQTT)
 
 namespace RPIMoCap {
 

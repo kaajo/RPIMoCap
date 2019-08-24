@@ -23,9 +23,26 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    //RPIMoCap::Frame frame(0,{},{});
+
+    //ui->widget->drawFrame(frame);
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::onLinesReceived(const std::vector<RPIMoCap::Line3D> &lines)
+{
+    RPIMoCap::Frame frame(0,{},lines);;
+
+    ui->widget->drawFrame(frame);
+}
+
+void MainWindow::on_MoCapButton_clicked(bool checked)
+{
+    ui->MoCapButton->setText(checked ? "STOP" : "START");
+    emit startMoCap(checked);
 }
