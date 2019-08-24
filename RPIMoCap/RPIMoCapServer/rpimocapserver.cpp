@@ -20,6 +20,8 @@
 RPIMoCapServer::RPIMoCapServer(QObject *parent)
     : QObject(parent)
 {
+    m_avahiPublish.start("avahi-publish-service", {"RPIMoCap Server", "_rpimocap._tcp", QString::number(5000), "RPIMoCap service"});
+
     connect(&m_aggregator, &LinesAggregator::linesReceived, this, &RPIMoCapServer::linesReceived);
 
     m_tcpServer.listen(QHostAddress::Any,5000);
@@ -29,6 +31,11 @@ RPIMoCapServer::RPIMoCapServer(QObject *parent)
     settings.IPAddress = "127.0.0.1";
     m_triggerPub = std::make_shared<RPIMoCap::MQTTPublisher>("serverTriggerPub", "/trigger", settings);
     connect(&m_aggregator,&LinesAggregator::trigger,m_triggerPub.get(),&RPIMoCap::MQTTPublisher::publishData);
+}
+
+RPIMoCapServer::~RPIMoCapServer()
+{
+    m_avahiPublish.kill();
 }
 
 void RPIMoCapServer::onMoCapStart(bool start)

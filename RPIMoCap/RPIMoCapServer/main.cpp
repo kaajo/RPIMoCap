@@ -23,7 +23,6 @@
 #include <QApplication>
 #include <QtWidgets/QApplication>
 #include <QDebug>
-#include <QProcess>
 
 int main(int argc, char *argv[])
 {

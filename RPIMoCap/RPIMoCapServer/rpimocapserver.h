@@ -26,6 +26,7 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QHash>
+#include <QProcess>
 
 #include <memory>
 
@@ -47,6 +48,7 @@ class RPIMoCapServer : public QObject
     Q_OBJECT
 public:
     explicit RPIMoCapServer(QObject *parent = nullptr);
+    virtual ~RPIMoCapServer();
 
 signals:
     void linesReceived(const std::vector<RPIMoCap::Line3D> &lines);
@@ -67,4 +69,6 @@ private:
 
     LinesAggregator m_aggregator;
     std::shared_ptr<RPIMoCap::MQTTPublisher> m_triggerPub;
+
+    QProcess m_avahiPublish;
 };

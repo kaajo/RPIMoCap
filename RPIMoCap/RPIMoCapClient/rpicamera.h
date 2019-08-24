@@ -33,6 +33,7 @@ public:
     GstCVCamera(const GstCVCamera&) = delete;
     void operator=(const GstCVCamera&) = delete;
 
+    bool getOpened() const {return m_opened;}
     bool open();
 
     void close();

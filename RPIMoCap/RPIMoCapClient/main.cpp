@@ -49,6 +49,8 @@ int main(int argc, char *argv[])
 
     QCoreApplication a(argc, argv);
 
+    qSetMessagePattern("%{type} %{if-category}%{category}: %{endif}%{message}");
+
     RPIMoCapClient client(cameraV2Fov);
     return a.exec();
 }

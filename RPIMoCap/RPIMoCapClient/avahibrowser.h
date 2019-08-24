@@ -39,27 +39,6 @@ public:
         QString description;
     };
 
-    static QHash<QString, ServiceInfo> browseServices(const IPVersion &ipv) {
-        QProcess avahiBrowser;
-        avahiBrowser.start("avahi-browse", QStringList() << ("-atpr"));
-        avahiBrowser.waitForFinished();
-
-        const QStringList lines = QString(avahiBrowser.readAll()).split("\n",QString::SplitBehavior::SkipEmptyParts);
-
-        QHash<QString, ServiceInfo> services;
-        for (const QString &line : lines)
-        {
-            const QStringList d = line.split(";");
-            if (d.first() == "=")
-            {
-                const IPVersion ipver = d[2] == "IPv4" ? IPVersion::IPv4 : IPVersion::IPv6;
-                if (ipver == ipv)
-                {
-                    services[d[4]] = ServiceInfo(ServiceInfo{d[1],ipver, d[4], d[5], QHostAddress(d[7]), d[8].toShort(), d[9]});
-                }
-            }
-        }
-        return services;
-    }
+    static QHash<QString, ServiceInfo> browseServices(const IPVersion &ipv);
 };
 

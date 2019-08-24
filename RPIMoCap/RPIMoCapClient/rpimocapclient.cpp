@@ -18,6 +18,8 @@
 #include "rpimocapclient.h"
 #include "avahibrowser.h"
 
+#include <QTimerEvent>
+
 #include <chrono>
 
 RPIMoCapClient::RPIMoCapClient(cv::Size2f cameraFoVRad, QObject *parent)
@@ -28,30 +30,10 @@ RPIMoCapClient::RPIMoCapClient(cv::Size2f cameraFoVRad, QObject *parent)
     qDebug() << "starting RPIMoCapClient, camera FoV" << cameraFoVRad.width * 180.0f/M_PI
              << "x" << cameraFoVRad.height * 180.0f/M_PI;
 
-    const auto services = AvahiBrowser::browseServices(AvahiBrowser::IPVersion::IPv4);
-    const auto rpimocapService = services.find("_rpimocap._tcp");
+    connect(&m_rpimocaptcp, &QTcpSocket::readyRead,this,&RPIMoCapClient::onTcpMessage);
+    connect(&m_rpimocaptcp, &QTcpSocket::disconnected, this, &RPIMoCapClient::onTcpDisconnected);
 
-    if (rpimocapService == services.end())
-    {
-        qDebug() << "no RPIMoCap service available on local network";
-    }
-    else
-    {
-        m_rpimocaptcp.connectToHost(rpimocapService.value().ipAddress,rpimocapService.value().port);
-        connect(&m_rpimocaptcp,&QTcpSocket::readyRead,this,&RPIMoCapClient::onTcpMessage);
-    }
-
-    const auto mqttService = services.find("_mqtt._tcp");
-
-    if (mqttService == services.end())
-    {
-        qDebug() << "no MQTT service available on local network";
-    }
-    else
-    {
-        m_MQTTsettings.IPAddress = mqttService.value().ipAddress.toString().toStdString();
-        m_MQTTsettings.port = mqttService.value().port;
-    }
+    m_avahiCheckTimerID = QObject::startTimer(5000);
 }
 
 RPIMoCapClient::~RPIMoCapClient()
@@ -68,9 +50,11 @@ void RPIMoCapClient::onLines(const std::vector<RPIMoCap::Line3D> &lines)
 
 void RPIMoCapClient::trigger()
 {
-    if (!opened) {
-        m_camera.open();
-        opened = true;
+    if (!m_camera.getOpened()) {
+        if (!m_camera.open()) {
+            qCritical() << "cannot open camera";
+            return;
+        }
     }
 
     auto start = std::chrono::high_resolution_clock::now();
@@ -95,6 +79,68 @@ void RPIMoCapClient::onTcpMessage()
     const QByteArray id = m_rpimocaptcp.readAll();
     qDebug() << "ID assigned:" << QString(id);
     initMQTT(QString(id).toInt());
+}
+
+void RPIMoCapClient::onTcpDisconnected()
+{
+    m_cameraTriggerSub.reset();
+    m_linePub.reset();
+
+    m_avahiCheckTimerID = QObject::startTimer(5000);
+
+    qDebug() << "TCP disconnect";
+}
+
+void RPIMoCapClient::timerEvent(QTimerEvent *event)
+{
+    if (event->timerId() != m_avahiCheckTimerID)
+    {
+        return;
+    }
+
+    checkAvahiServices();
+}
+
+void RPIMoCapClient::checkAvahiServices()
+{
+    const auto services = AvahiBrowser::browseServices(AvahiBrowser::IPVersion::IPv4);
+    const auto rpimocapService = services.find("_rpimocap._tcp");
+
+    if (m_rpimocaptcp.state() != QAbstractSocket::ConnectedState)
+    {
+        if (rpimocapService == services.end())
+        {
+            qDebug() << "no RPIMoCap service available on local network";
+            return;
+        }
+        else
+        {
+            m_rpimocaptcp.connectToHost(rpimocapService.value().ipAddress,rpimocapService.value().port);
+            qDebug() << "trying to connect to TCP";
+        }
+    }
+
+    if (!isMQTTInitialized())
+    {
+        const auto mqttService = services.find("_mqtt._tcp");
+
+        if (mqttService == services.end())
+        {
+            qDebug() << "no MQTT service available on local network";
+            return;
+        }
+        else
+        {
+            m_MQTTsettings.IPAddress = mqttService.value().ipAddress.toString().toStdString();
+            m_MQTTsettings.port = mqttService.value().port;
+        }
+    }
+
+    if (m_rpimocaptcp.state() == QAbstractSocket::ConnectedState && isMQTTInitialized())
+    {
+        QObject::killTimer(m_avahiCheckTimerID);
+        m_avahiCheckTimerID = -1;
+    }
 }
 
 bool RPIMoCapClient::isMQTTInitialized()

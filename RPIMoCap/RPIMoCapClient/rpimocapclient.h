@@ -48,13 +48,17 @@ public slots:
     void trigger();
 
     void onTcpMessage();
+    void onTcpDisconnected();
+
+    virtual void timerEvent(QTimerEvent *event) override;
 
 private:
-    bool opened = false;
     GstCVCamera m_camera;
     MarkerDetector m_markerDetector;
 
+    int m_avahiCheckTimerID = -1;
     QTcpSocket m_rpimocaptcp;
+    void checkAvahiServices();
 
     bool isMQTTInitialized();
     void initMQTT(const int32_t cameraid);
