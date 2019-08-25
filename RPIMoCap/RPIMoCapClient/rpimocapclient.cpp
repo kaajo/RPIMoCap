@@ -155,8 +155,8 @@ void RPIMoCapClient::initMQTT( const int32_t cameraid)
         return;
     }
 
-    m_cameraTriggerSub = std::make_shared<RPIMoCap::MQTTSubscriber>("camera1trigger", "/trigger", m_MQTTsettings);
-    m_linePub = std::make_shared<RPIMoCap::MQTTPublisher>("camera1linesPub","/client" + QString::number(cameraid) + "/lines",m_MQTTsettings);
+    m_cameraTriggerSub = std::make_shared<RPIMoCap::MQTTSubscriber>("triggersub" + QString::number(cameraid), "/trigger", m_MQTTsettings);
+    m_linePub = std::make_shared<RPIMoCap::MQTTPublisher>("linespub" + QString::number(cameraid),"/client" + QString::number(cameraid) + "/lines",m_MQTTsettings);
 
     connect(m_cameraTriggerSub.get(), &RPIMoCap::MQTTSubscriber::messageReceived,this, &RPIMoCapClient::trigger);
     connect(this, &RPIMoCapClient::linesSerialized, m_linePub.get(), &RPIMoCap::MQTTPublisher::publishData);
