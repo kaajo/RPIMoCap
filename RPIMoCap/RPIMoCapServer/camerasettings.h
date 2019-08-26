@@ -17,12 +17,74 @@
 
 #pragma once
 
+#include <mqttsubscriber.h>
+#include <line3d.h>
+
+#include <QObject>
+
 #include <eigen3/Eigen/Geometry>
+#include <msgpack.hpp>
 
-struct CameraSettings
+#include <memory>
+#include <mutex>
+
+struct CameraSettings : QObject
 {
-    CameraSettings(int id, Eigen::Affine3f transform) : id(id), transform(transform) {}
+    Q_OBJECT
+public:
+    CameraSettings(int id, const RPIMoCap::MQTTSettings &settings, Eigen::Affine3f transform = Eigen::Affine3f::Identity())
+        : m_id(id)
+        , m_lineSub("serverLinesSub" + QString::number(id),"/client" + QString::number(id) + "/lines",settings)
+        , m_transform(transform)
+    {
+        connect(&m_lineSub,&RPIMoCap::MQTTSubscriber::messageReceived, this, &CameraSettings::onLinesDataReceived);
+    }
 
-    int id = -1;
-    Eigen::Affine3f transform = Eigen::Affine3f(Eigen::Affine3f::Identity());
+    virtual ~CameraSettings() {}
+
+    int id() const {return m_id;}
+
+    Eigen::Affine3f transform() const
+    {
+        std::unique_lock lock(m_transformMutex);
+        return m_transform;
+    }
+
+    void setTransform(const Eigen::Affine3f &newTransform)
+    {
+        {
+            std::unique_lock lock(m_transformMutex);
+            m_transform = newTransform;
+        }
+        emit changed();
+    }
+
+signals:
+    void linesReceived(int cameraID, std::vector<RPIMoCap::Line3D> lines);
+    void changed();
+
+private slots:
+    void onLinesDataReceived(const QByteArray &data)
+    {
+        msgpack::object_handle result;
+        msgpack::unpack(result, data.data(), data.length());
+
+        std::vector<RPIMoCap::Line3D> lines(result.get().as<std::vector<RPIMoCap::Line3D>>());
+
+        for (auto &line : lines)
+        {
+            Eigen::Vector3f newDir = transform().rotation() * line.direction();
+            Eigen::Vector3f newOrigin = transform() * line.origin();
+            line = RPIMoCap::Line3D(newOrigin, newDir);
+        }
+
+        emit linesReceived(m_id, lines);
+    }
+
+private:
+    mutable std::mutex m_transformMutex;
+
+    int m_id = -1;
+    RPIMoCap::MQTTSubscriber m_lineSub;
+    Eigen::Affine3f m_transform;
 };

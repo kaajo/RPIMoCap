@@ -18,6 +18,7 @@
 #pragma once
 
 #include "linesaggregator.h"
+#include "camerasettings.h"
 
 #include <mqttpublisher.h>
 #include <mqttsubscriber.h>
@@ -30,19 +31,6 @@
 
 #include <memory>
 
-struct ClientData
-{
-    ClientData(const int id, const RPIMoCap::MQTTSettings &settings)
-        : id(id)
-        , lineSub(new RPIMoCap::MQTTSubscriber("serverLinesSub","/client" + QString::number(id) + "/lines",settings))
-    {
-
-    }
-
-    int id = -1;
-    std::shared_ptr<RPIMoCap::MQTTSubscriber> lineSub;
-};
-
 class RPIMoCapServer : public QObject
 {
     Q_OBJECT
@@ -52,6 +40,9 @@ public:
 
 signals:
     void linesReceived(const std::vector<RPIMoCap::Line3D> &lines);
+
+    void cameraAdded(const std::shared_ptr<CameraSettings> &settings);
+    void cameraRemoved(int id);
 
 public slots:
     void onMoCapStart(bool start);
@@ -63,7 +54,7 @@ private slots:
 private:
     int nextId = 1;
     QTcpServer m_tcpServer;
-    QHash<QTcpSocket*,ClientData> m_currentClients;
+    QHash<QTcpSocket*, std::shared_ptr<CameraSettings>> m_currentClients;
 
     void addClient(QTcpSocket *conn, const int id);
 

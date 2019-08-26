@@ -24,6 +24,7 @@ CONFIG += c++17
 CONFIG += link_pkgconfig
 
 SOURCES += \
+        camerasettingswidget.cpp \
         linesaggregator.cpp \
         main.cpp \
         mainwindow.cpp \
@@ -34,6 +35,7 @@ SOURCES += \
 
 HEADERS += \
         camerasettings.h \
+        camerasettingswidget.h \
         linesaggregator.h \
         mainwindow.h \
         matrix.h \
@@ -44,6 +46,7 @@ HEADERS += \
         rpimocapserver.h
 
 FORMS += \
+        camerasettingswidget.ui \
         mainwindow.ui \
         mocapscene3d.ui
 

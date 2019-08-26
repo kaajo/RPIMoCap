@@ -59,7 +59,13 @@ void RPIMoCapServer::onNewConnection()
 void RPIMoCapServer::onLostConnection()
 {
     QTcpSocket *socket = qobject_cast<QTcpSocket*>(sender());
-    m_currentClients.remove(socket);
+    const auto it = m_currentClients.find(socket);
+
+    if (it != m_currentClients.end())
+    {
+        emit cameraRemoved(it.value()->id());
+        m_currentClients.erase(it);
+    }
 }
 
 void RPIMoCapServer::addClient(QTcpSocket *conn, const int id)
@@ -67,8 +73,11 @@ void RPIMoCapServer::addClient(QTcpSocket *conn, const int id)
     RPIMoCap::MQTTSettings settings;
     settings.IPAddress = "127.0.0.1";
 
-    ClientData clientData(id,settings);
-    m_currentClients.insert(conn,clientData);
-    connect(clientData.lineSub.get(),&RPIMoCap::MQTTSubscriber::messageReceived,&m_aggregator,&LinesAggregator::onLinesReceived);
+    auto camera = std::make_shared<CameraSettings>(id, settings);
+    m_currentClients.insert(conn,camera);
+
+    connect(camera.get(),&CameraSettings::linesReceived, &m_aggregator, &LinesAggregator::onLinesReceived);
+
+    emit cameraAdded(camera);
 }
 

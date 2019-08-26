@@ -38,13 +38,13 @@ int main(int argc, char *argv[])
     qRegisterMetaType<RPIMoCap::Line3D>("RPIMoCap::Line3D");
 
     RPIMoCapServer server;
-
     MainWindow w;
 
     QObject::connect(&w,&MainWindow::startMoCap, &server, &RPIMoCapServer::onMoCapStart);
     QObject::connect(&server, &RPIMoCapServer::linesReceived, &w, &MainWindow::onLinesReceived);
+    QObject::connect(&server, &RPIMoCapServer::cameraAdded, &w, &MainWindow::addCamera);
+    QObject::connect(&server, &RPIMoCapServer::cameraRemoved, &w, &MainWindow::removeCamera);
 
     w.show();
-
     return a.exec();
 }

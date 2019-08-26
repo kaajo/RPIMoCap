@@ -42,7 +42,7 @@ MocapScene3D::MocapScene3D(QWidget *parent) :
 
     Qt3DRender::QCamera *cameraEntity = view->camera();
     cameraEntity->lens()->setPerspectiveProjection(45.0f, 16.0f/9.0f, 0.1f, 1000.0f);
-    cameraEntity->setPosition(QVector3D(100, 45, 100));
+    cameraEntity->setPosition(QVector3D(100, 0, 100));
     cameraEntity->setUpVector(QVector3D(0, 1, 0));
     cameraEntity->setViewCenter(QVector3D(0, 0, 0));
 
@@ -70,9 +70,10 @@ MocapScene3D::~MocapScene3D()
     delete ui;
 }
 
-void MocapScene3D::addCamera(const CameraSettings &camera)
+void MocapScene3D::addCamera(const std::shared_ptr<CameraSettings> &camera)
 {
-    m_currentCameras[camera.id] = std::make_shared<Camera>(camera.transform, m_rootEntity);
+    m_currentCameras[camera->id()] = {camera,std::make_shared<Camera>(camera->transform(), m_rootEntity)};
+    connect(camera.get(), &CameraSettings::changed, this, &MocapScene3D::updateCameras);
 }
 
 void MocapScene3D::removeCamera(const int id)
@@ -94,4 +95,12 @@ void MocapScene3D::drawFrame(const RPIMoCap::Frame &frame)
     }
 
     update(); //TODO needed?
+}
+
+void MocapScene3D::updateCameras()
+{
+    for (auto &cam : m_currentCameras)
+    {
+        cam.second->setTransform(cam.first->transform());
+    }
 }

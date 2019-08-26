@@ -38,28 +38,20 @@ public:
     explicit MocapScene3D(QWidget *parent = nullptr);
     ~MocapScene3D();
 
-    void addCamera(const CameraSettings &camera);
+    void addCamera(const std::shared_ptr<CameraSettings> &camera);
     void removeCamera(const int id);
 
     void drawFrame(const RPIMoCap::Frame &frame);
+
+private slots:
+    void updateCameras();
 
 private:
     class Camera
     {
     public:
         Camera(Eigen::Affine3f transform,Qt3DCore::QEntity *rootEntity) {
-            Eigen::Affine3f coneTransform = Eigen::Affine3f(Eigen::Affine3f::Identity());
-            coneTransform.rotate(Eigen::AngleAxisf(0.5*M_PI, Eigen::Vector3f::UnitY()));
-            coneTransform.rotate(Eigen::AngleAxisf(0.5*M_PI, Eigen::Vector3f::UnitX()));
-            coneTransform.rotate(Eigen::AngleAxisf(0.25*M_PI, Eigen::Vector3f::UnitY()));
-            transform = transform * coneTransform;
-
-            cameraTransform->setTranslation({transform.translation().x(),
-                                             transform.translation().y(),
-                                             transform.translation().z()});
-
-            const Eigen::Quaternionf rot(transform.rotation());
-            cameraTransform->setRotation(QQuaternion(QVector4D(rot.x(),rot.y(),rot.z(),rot.w())));
+            setTransform(transform);
 
             cameraMesh->setRings(4);
             cameraMesh->setSlices(4);
@@ -80,6 +72,22 @@ private:
         ~Camera()
         {
             entity->deleteLater();
+        }
+
+        void setTransform(Eigen::Affine3f transform)
+        {
+            Eigen::Affine3f coneTransform = Eigen::Affine3f(Eigen::Affine3f::Identity());
+            coneTransform.rotate(Eigen::AngleAxisf(0.5*M_PI, Eigen::Vector3f::UnitY()));
+            coneTransform.rotate(Eigen::AngleAxisf(0.5*M_PI, Eigen::Vector3f::UnitX()));
+            coneTransform.rotate(Eigen::AngleAxisf(0.25*M_PI, Eigen::Vector3f::UnitY()));
+            transform = transform * coneTransform;
+
+            cameraTransform->setTranslation({transform.translation().x(),
+                                             transform.translation().y(),
+                                             transform.translation().z()});
+
+            const Eigen::Quaternionf rot(transform.rotation());
+            cameraTransform->setRotation(QQuaternion(QVector4D(rot.x(),rot.y(),rot.z(),rot.w())));
         }
 
         Qt3DCore::QEntity *entity = new Qt3DCore::QEntity();
@@ -197,5 +205,5 @@ private:
     std::vector<Marker> m_currentMarkers;
     std::vector<Line*> m_allLines;
 
-    QHash<int,std::shared_ptr<Camera>> m_currentCameras;
+    QHash<int,std::pair<std::shared_ptr<CameraSettings>,std::shared_ptr<Camera>>> m_currentCameras;
 };

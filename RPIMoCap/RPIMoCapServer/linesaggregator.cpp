@@ -36,18 +36,13 @@ void LinesAggregator::onMoCapStart(bool start)
     }
 }
 
-void LinesAggregator::onLinesReceived(const QByteArray &linesData)
+void LinesAggregator::onLinesReceived(const int clientId, const std::vector<RPIMoCap::Line3D> &lines)
 {
-    msgpack::object_handle result;
-    msgpack::unpack(result, linesData.data(), linesData.length());
-
-    std::vector<RPIMoCap::Line3D> lines(result.get().as<std::vector<RPIMoCap::Line3D>>());
-
     emit linesReceived(lines);
 
     auto curTime = QTime::currentTime();
 
-    qDebug() << "ms elapsed: " << lastTime.msecsTo(curTime) << " lines received: " << lines.size();
+    qDebug() << "ms elapsed: " << lastTime.msecsTo(curTime) << " lines received: " << lines.size() << "from client: " << clientId;
     lastTime = curTime;
 
     if (running)

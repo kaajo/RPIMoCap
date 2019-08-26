@@ -24,9 +24,9 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    //RPIMoCap::Frame frame(0,{},{});
-
-    //ui->widget->drawFrame(frame);
+    ui->scrollAreaWidgetContents->setLayout(new QVBoxLayout);
+    ui->scrollAreaWidgetContents->layout()->setSpacing(0);
+    ui->scrollAreaWidgetContents->layout()->setMargin(0);
 }
 
 MainWindow::~MainWindow()
@@ -37,8 +37,25 @@ MainWindow::~MainWindow()
 void MainWindow::onLinesReceived(const std::vector<RPIMoCap::Line3D> &lines)
 {
     RPIMoCap::Frame frame(0,{},lines);;
-
     ui->widget->drawFrame(frame);
+}
+
+void MainWindow::addCamera(const std::shared_ptr<CameraSettings> &camera)
+{
+    ui->widget->addCamera(camera);
+
+    auto widget = new CameraSettingsWidget(camera);
+    m_cameraWidgets[camera->id()] = widget;
+    ui->scrollAreaWidgetContents->layout()->addWidget(widget);
+}
+
+void MainWindow::removeCamera(const int id)
+{
+    ui->widget->removeCamera(id);
+
+    ui->scrollAreaWidgetContents->layout()->removeWidget(m_cameraWidgets[id]);
+    m_cameraWidgets[id]->deleteLater();
+    m_cameraWidgets.remove(id);
 }
 
 void MainWindow::on_MoCapButton_clicked(bool checked)

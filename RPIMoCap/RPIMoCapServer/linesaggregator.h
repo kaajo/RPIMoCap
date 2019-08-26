@@ -34,7 +34,7 @@ signals:
 
 public slots:
     void onMoCapStart(bool start);
-    void onLinesReceived(const QByteArray &linesData);
+    void onLinesReceived(const int clientId, const std::vector<RPIMoCap::Line3D> &lines);
 
 private:
     QTime lastTime = QTime::currentTime();
