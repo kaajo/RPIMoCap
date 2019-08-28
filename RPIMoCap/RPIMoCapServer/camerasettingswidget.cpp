@@ -19,7 +19,7 @@ CameraSettingsWidget::~CameraSettingsWidget()
 
 void CameraSettingsWidget::on_pushButton_clicked()
 {
-    auto t = m_camera->transform();
+    auto t = Eigen::Affine3f::Identity();
 
     {
         bool ok = false;
@@ -45,15 +45,43 @@ void CameraSettingsWidget::on_pushButton_clicked()
             t.translation().z() = newVal;
         }
     }
+
+    float rollRad = 0.0f;
     {
         bool ok = false;
         float newVal = ui->rotationXedit->text().toFloat(&ok);
         if (ok)
         {
-             t.rotation().eulerAngles(0,1,2);//TODO
+            rollRad = newVal * M_PI/180.0;
         }
     }
 
+    float pitchRad = 0.0f;
+    {
+        bool ok = false;
+        float newVal = ui->rotationYedit->text().toFloat(&ok);
+        if (ok)
+        {
+            pitchRad = newVal * M_PI/180.0;
+        }
+    }
+
+    float yawRad = 0.0f;
+    {
+        bool ok = false;
+        float newVal = ui->rotationZedit->text().toFloat(&ok);
+        if (ok)
+        {
+            yawRad = newVal * M_PI/180.0;
+        }
+    }
+
+    Eigen::Matrix3f rot;
+    rot = Eigen::AngleAxisf(yawRad, Eigen::Vector3f::UnitZ())
+        * Eigen::AngleAxisf(pitchRad, Eigen::Vector3f::UnitY())
+        * Eigen::AngleAxisf(rollRad, Eigen::Vector3f::UnitX());
+
+    t.rotate(rot);
 
     m_camera->setTransform(t);
 }

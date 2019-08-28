@@ -77,7 +77,6 @@ private:
         void setTransform(Eigen::Affine3f transform)
         {
             Eigen::Affine3f coneTransform = Eigen::Affine3f(Eigen::Affine3f::Identity());
-            coneTransform.rotate(Eigen::AngleAxisf(0.5*M_PI, Eigen::Vector3f::UnitY()));
             coneTransform.rotate(Eigen::AngleAxisf(0.5*M_PI, Eigen::Vector3f::UnitX()));
             coneTransform.rotate(Eigen::AngleAxisf(0.25*M_PI, Eigen::Vector3f::UnitY()));
             transform = transform * coneTransform;
