@@ -29,13 +29,13 @@ RPIMoCap::MQTTSubscriber::MQTTSubscriber(QString clientName, QString topic, MQTT
     auto conRes = connect_async(m_settings.IPAddress.c_str(),m_settings.port);
     switch(conRes) {
     case MOSQ_ERR_INVAL:
-        qCDebug(MQTT) << QString("the input parameters were invalid");
+        qCDebug(MQTT) << m_clientName << QString("the input parameters were invalid");
         break;
     case MOSQ_ERR_SUCCESS:
         loop_start();
         break;
     default:
-        qCCritical(MQTT) << mosquitto_strerror(conRes);
+        qCCritical(MQTT) << m_clientName << mosquitto_strerror(conRes);
         break;
     }
 }
@@ -52,26 +52,26 @@ void RPIMoCap::MQTTSubscriber::on_message(const mosquitto_message *message) {
 void RPIMoCap::MQTTSubscriber::on_log(int log_level, const char *str) {
     switch (log_level) {
     case MOSQ_LOG_DEBUG:
-        qCDebug(MQTT) << str;
+        qCDebug(MQTT) << m_clientName << str;
         break;
     case MOSQ_LOG_INFO:
     case MOSQ_LOG_NOTICE:
     case MOSQ_LOG_SUBSCRIBE:
     case MOSQ_LOG_UNSUBSCRIBE:
-        qCInfo(MQTT) << str;
+        qCInfo(MQTT) << m_clientName << str;
         break;
     case MOSQ_LOG_WARNING:
-        qCWarning(MQTT) << str;
+        qCWarning(MQTT) << m_clientName << str;
         break;
     case MOSQ_LOG_ERR:
-        qCCritical(MQTT) << str;
+        qCCritical(MQTT) << m_clientName << str;
         break;
     default:
-        qCDebug(MQTT) << str;
+        qCDebug(MQTT) << m_clientName << str;
         break;
     }
 }
 
 void RPIMoCap::MQTTSubscriber::on_error() {
-    qCCritical(MQTT) << "error";
+    qCCritical(MQTT) << m_clientName << "error";
 }

@@ -27,8 +27,30 @@ LinesAggregator::LinesAggregator(QObject *parent) : QObject(parent)
 
 }
 
+void LinesAggregator::addClientID(const int id)
+{
+    if (!m_clientIDs.contains(id))
+    {
+        m_clientIDs.push_back(id);
+    }
+}
+
+void LinesAggregator::removeClientID(const int id)
+{
+    if (m_clientIDs.contains(id))
+    {
+        m_clientIDs.removeOne(id);
+    }
+}
+
 void LinesAggregator::onMoCapStart(bool start)
 {
+    for (auto &received : m_currentlyReceived)
+    {
+        received = false;
+    }
+    m_currentlines.clear();
+
     running = start;
     if (start)
     {
@@ -38,15 +60,34 @@ void LinesAggregator::onMoCapStart(bool start)
 
 void LinesAggregator::onLinesReceived(const int clientId, const std::vector<RPIMoCap::Line3D> &lines)
 {
-    emit linesReceived(lines);
+    m_currentlines.append(QVector<RPIMoCap::Line3D>::fromStdVector(lines));
+    m_currentlyReceived[clientId] = true;
 
-    auto curTime = QTime::currentTime();
+    bool haveAll = true;
 
-    qDebug() << "ms elapsed: " << lastTime.msecsTo(curTime) << " lines received: " << lines.size() << "from client: " << clientId;
-    lastTime = curTime;
-
-    if (running)
+    for (auto &received : m_currentlyReceived)
     {
+        if (!received)
+        {
+            haveAll = false;
+        }
+    }
+
+
+    if (running && haveAll)
+    {
+        auto curTime = QTime::currentTime();
+
+        qDebug() << "ms elapsed: " << lastTime.msecsTo(curTime) << " lines received: " << lines.size() << "from client: " << clientId;
+        lastTime = curTime;
+
+        for (auto &received : m_currentlyReceived)
+        {
+            received = false;
+        }
+
         emit trigger({});
+        emit linesReceived(m_currentlines.toStdVector());
+        m_currentlines.clear();
     }
 }

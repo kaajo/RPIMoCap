@@ -21,12 +21,16 @@
 
 #include <QObject>
 #include <QTime>
+#include <QMap>
 
 class LinesAggregator : public QObject
 {
     Q_OBJECT
 public:
     explicit LinesAggregator(QObject *parent = nullptr);
+
+    void addClientID(const int id);
+    void removeClientID(const int id);
 
 signals:
     void trigger(const QByteArray &payload);
@@ -39,5 +43,10 @@ public slots:
 private:
     QTime lastTime = QTime::currentTime();
     bool running = false;
+
+    QVector<int> m_clientIDs;
+
+    QVector<RPIMoCap::Line3D> m_currentlines;
+    QMap<int,bool> m_currentlyReceived;
 };
 
