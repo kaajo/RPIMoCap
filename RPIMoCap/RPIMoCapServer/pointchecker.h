@@ -21,7 +21,7 @@
 
 #include <frame.h>
 #include <line3d.h>
-#include <vector3f.h>
+#include <msgpack_defs.h>
 
 #include "munkres.h"
 
@@ -65,18 +65,18 @@ public:
 
     QVector<RPIMoCap::Frame::Marker> getLastPoints() const {return lastPoints;}
 
-    QVector<RPIMoCap::Frame::Marker> solvePointIDs(QVector<RPIMoCap::Vector3D> points2);
+    QVector<RPIMoCap::Frame::Marker> solvePointIDs(QVector<Eigen::Vector3f> points2);
 private:
 
-    QVector<RPIMoCap::Frame::Marker> handleNo(QVector<RPIMoCap::Vector3D> &points);
-    QVector<RPIMoCap::Frame::Marker> handleNotEnough(QVector<RPIMoCap::Vector3D> &points);
-    QVector<RPIMoCap::Frame::Marker> handleGood(QVector<RPIMoCap::Vector3D> &points);
+    QVector<RPIMoCap::Frame::Marker> handleNo(QVector<Eigen::Vector3f> &points);
+    QVector<RPIMoCap::Frame::Marker> handleNotEnough(QVector<Eigen::Vector3f> &points);
+    QVector<RPIMoCap::Frame::Marker> handleGood(QVector<Eigen::Vector3f> &points);
 
-    std::vector<std::vector<double> > createDistanceMap(QVector<RPIMoCap::Frame::Marker> lastPoints, QVector<RPIMoCap::Vector3D> points);
+    std::vector<std::vector<double> > createDistanceMap(QVector<RPIMoCap::Frame::Marker> lastPoints, QVector<Eigen::Vector3f> points);
     void checkRemovedIndexes();
     size_t nextUniqueIndex(int size);
-    void addUncoveredPoints(QVector<RPIMoCap::Vector3D> points, std::vector<std::vector<double> > map, QVector<RPIMoCap::Frame::Marker> &pts);
-    QVector<RPIMoCap::Frame::Marker> addCoveredPoints(QVector<RPIMoCap::Vector3D> points, std::vector<std::vector<double> > map);
+    void addUncoveredPoints(QVector<Eigen::Vector3f> points, std::vector<std::vector<double> > map, QVector<RPIMoCap::Frame::Marker> &pts);
+    QVector<RPIMoCap::Frame::Marker> addCoveredPoints(QVector<Eigen::Vector3f> points, std::vector<std::vector<double> > map);
     void handleRemovedPoints(QVector<RPIMoCap::Frame::Marker> points);
 
     void my_solve(std::vector <std::vector <double> > &m)

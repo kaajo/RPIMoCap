@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "vector3f.h"
+#include "msgpack_defs.h"
 #include "line3d.h"
 
 #include <eigen3/Eigen/Geometry>
@@ -44,9 +44,8 @@ public:
         MSGPACK_DEFINE_MAP(id,position);
     };
 
-    Frame(const uint64_t time, const std::vector<Marker> &markers, const std::vector<Line3D> &lines)
+    Frame(const uint64_t time, const std::vector<Line3D> &lines)
         : m_time(time)
-        , m_markers(markers)
         , m_lines(lines)
     {
     }
@@ -75,6 +74,9 @@ public:
     */
 
     std::vector<Line3D> lines() const;
+
+    std::vector<Marker> markers() const;
+    void setMarkers(const std::vector<Marker> &markers);
 
 private:
     uint64_t m_time;

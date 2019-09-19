@@ -17,7 +17,10 @@
 
 #pragma once
 
+#include <camerasettings.h>
+
 #include <line3d.h>
+#include <frame.h>
 
 #include <QObject>
 #include <QTime>
@@ -29,11 +32,17 @@ class LinesAggregator : public QObject
 public:
     explicit LinesAggregator(QObject *parent = nullptr);
 
-    void addClientID(const int id);
-    void removeClientID(const int id);
+    void addCamera(const std::shared_ptr<CameraSettings> &camera);
+    void removeCamera(const int id);
 
 signals:
     void trigger(const QByteArray &payload);
+
+    /**
+     * @brief When lines are received from all cameras, new RPIMoCap::Frame with proper time and lines is emitted
+     * @param frame
+     */
+    void frameReady(const RPIMoCap::Frame &frame);
     void linesReceived(const std::vector<RPIMoCap::Line3D> &lines);
 
 public slots:
@@ -44,7 +53,7 @@ private:
     QTime lastTime = QTime::currentTime();
     bool running = false;
 
-    QVector<int> m_clientIDs;
+    QMap<int,std::shared_ptr<CameraSettings>> m_clients;
 
     QVector<RPIMoCap::Line3D> m_currentlines;
     QMap<int,bool> m_currentlyReceived;

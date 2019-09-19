@@ -21,3 +21,13 @@ std::vector<RPIMoCap::Line3D> RPIMoCap::Frame::lines() const
 {
     return m_lines;
 }
+
+std::vector<RPIMoCap::Frame::Marker>  RPIMoCap::Frame::markers() const
+{
+    return m_markers;
+}
+
+void  RPIMoCap::Frame::setMarkers(const std::vector<Marker> &markers)
+{
+    m_markers = markers;
+}

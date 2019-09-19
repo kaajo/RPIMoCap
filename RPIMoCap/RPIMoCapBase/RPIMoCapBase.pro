@@ -29,8 +29,8 @@ HEADERS += \
         mqttpublisher.h \
         mqttsettings.h \
         mqttsubscriber.h \
-        rpimocapbase_global.h  \
-        vector3f.h
+        msgpack_defs.h \
+        rpimocapbase_global.h
 
 LIBS += -lmosquitto -lmosquittopp
 

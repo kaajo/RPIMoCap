@@ -104,8 +104,11 @@ RoboTrain::Utilities::FrustumFactory::pixelLineFromDirection(int x, int y) const
 }
 */
 
-std::vector<RPIMoCap::Line3D> MarkerDetector::onImage(const cv::Mat &image)
+void MarkerDetector::onImage(const cv::Mat &image, std::vector<RPIMoCap::Line3D> &lines, std::vector<cv::Point2i> &points)
 {
+    lines.clear();
+    points.clear();
+
     if (m_pixelLines.empty()) {
         m_pixelLines = computePixelDirs(cv::Size2i(image.cols,image.rows) ,m_cameraFoVRad);
         qDebug() << "compute lines: " << image.cols << " " << image.rows;
@@ -132,10 +135,8 @@ std::vector<RPIMoCap::Line3D> MarkerDetector::onImage(const cv::Mat &image)
         return contArea < 500 && contArea > 5;
     });
 
-    const std::vector<RPIMoCap::Line3D> lines = QtConcurrent::blockingMapped<std::vector<RPIMoCap::Line3D>>(contours,
+    lines = QtConcurrent::blockingMapped<std::vector<RPIMoCap::Line3D>>(contours,
               std::bind(&MarkerDetector::qtConcurrentpickLine, this, std::placeholders::_1));
-
-    return lines;
 }
 
 RPIMoCap::Line3D MarkerDetector::qtConcurrentpickLine(const std::vector<cv::Point2i> &contour)

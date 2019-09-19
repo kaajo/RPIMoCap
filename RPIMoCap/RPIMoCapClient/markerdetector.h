@@ -18,6 +18,7 @@
 #pragma once
 
 #include <line3d.h>
+#include <msgpack_defs.h>
 
 #include <QObject>
 
@@ -31,7 +32,7 @@ public:
     static cv::Mat computePixelDirs(const cv::Size2i &resolution, cv::Size2f cameraFoVRad);
     static Eigen::Vector3f computePixelDir(const cv::Size2i &resolution, cv::Size2f cameraFoVRad, cv::Point2i pixel);
 
-    std::vector<RPIMoCap::Line3D> onImage(const cv::Mat &image);
+    void onImage(const cv::Mat &image, std::vector<RPIMoCap::Line3D> &lines, std::vector<cv::Point2i> &points);
 
 private:
     RPIMoCap::Line3D qtConcurrentpickLine(const std::vector<cv::Point2i> &contour);

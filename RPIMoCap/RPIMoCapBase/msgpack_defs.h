@@ -18,20 +18,17 @@
 #pragma once
 
 #include <eigen3/Eigen/Geometry>
+#include <opencv2/core/types.hpp>
 
 #include <msgpack.hpp>
-
-namespace RPIMoCap {
-using Vector3D = Eigen::Vector3f;
-}
 
 namespace msgpack {
 MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
 namespace adaptor {
 
 template <>
-struct convert<RPIMoCap::Vector3D> {
-    msgpack::object const& operator()(msgpack::object const &o, RPIMoCap::Vector3D &t) const {
+struct convert<Eigen::Vector3f> {
+    msgpack::object const& operator()(msgpack::object const &o, Eigen::Vector3f &t) const {
         if (o.type != msgpack::type::ARRAY) throw msgpack::type_error();
         if (o.via.array.size != 3) throw msgpack::type_error();
         o.via.array.ptr[0] >> t.x();
@@ -42,9 +39,9 @@ struct convert<RPIMoCap::Vector3D> {
 };
 
 template <>
-struct pack<RPIMoCap::Vector3D> {
+struct pack<Eigen::Vector3f> {
     template <typename Stream>
-    msgpack::packer<Stream>& operator()(msgpack::packer<Stream> &o, RPIMoCap::Vector3D const &t) const {
+    msgpack::packer<Stream>& operator()(msgpack::packer<Stream> &o, Eigen::Vector3f const &t) const {
         o.pack_array(3);
         o.pack(t.x());
         o.pack(t.y());
@@ -66,6 +63,28 @@ struct object_with_zone<my_class> {
     }
 };
 */
+
+template <>
+struct convert<cv::Point2i> {
+    msgpack::object const& operator()(msgpack::object const &o, cv::Point2i &t) const {
+        if (o.type != msgpack::type::ARRAY) throw msgpack::type_error();
+        if (o.via.array.size != 2) throw msgpack::type_error();
+        o.via.array.ptr[0] >> t.x;
+        o.via.array.ptr[1] >> t.y;
+        return o;
+    }
+};
+
+template <>
+struct pack<cv::Point2i> {
+    template <typename Stream>
+    msgpack::packer<Stream>& operator()(msgpack::packer<Stream> &o, cv::Point2i const &t) const {
+        o.pack_array(2);
+        o.pack(t.x);
+        o.pack(t.y);
+        return o;
+    }
+};
 
 } // namespace adaptor
 } // MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS)

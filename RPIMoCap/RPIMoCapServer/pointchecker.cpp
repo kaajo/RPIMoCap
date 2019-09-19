@@ -34,7 +34,7 @@ PointChecker::PointChecker()
 {
 }
 
-QVector<RPIMoCap::Frame::Marker> PointChecker::solvePointIDs(QVector<RPIMoCap::Vector3D> points)
+QVector<RPIMoCap::Frame::Marker> PointChecker::solvePointIDs(QVector<Eigen::Vector3f> points)
 {
     QVector<RPIMoCap::Frame::Marker> pts;
 
@@ -82,7 +82,7 @@ QVector<RPIMoCap::Frame::Marker> PointChecker::solvePointIDs(QVector<RPIMoCap::V
 
 }
 
-QVector<RPIMoCap::Frame::Marker> PointChecker::handleNo(QVector<RPIMoCap::Vector3D> &points)
+QVector<RPIMoCap::Frame::Marker> PointChecker::handleNo(QVector<Eigen::Vector3f> &points)
 {
     QVector<RPIMoCap::Frame::Marker> pts;
 
@@ -123,7 +123,7 @@ QVector<RPIMoCap::Frame::Marker> PointChecker::handleNo(QVector<RPIMoCap::Vector
     return pts;
 }
 
-QVector<RPIMoCap::Frame::Marker> PointChecker::handleNotEnough(QVector<RPIMoCap::Vector3D> &points)
+QVector<RPIMoCap::Frame::Marker> PointChecker::handleNotEnough(QVector<Eigen::Vector3f> &points)
 {
     QVector<RPIMoCap::Frame::Marker> pts;
 
@@ -169,7 +169,7 @@ QVector<RPIMoCap::Frame::Marker> PointChecker::handleNotEnough(QVector<RPIMoCap:
     return pts;
 }
 
-QVector<RPIMoCap::Frame::Marker> PointChecker::handleGood(QVector<RPIMoCap::Vector3D> &points)
+QVector<RPIMoCap::Frame::Marker> PointChecker::handleGood(QVector<Eigen::Vector3f> &points)
 {
     QVector<RPIMoCap::Frame::Marker> pts;
 
@@ -199,7 +199,7 @@ QVector<RPIMoCap::Frame::Marker> PointChecker::handleGood(QVector<RPIMoCap::Vect
             bool ok = false;
             for(int j = 0; j < pts.size(); j++)
             {
-                RPIMoCap::Vector3D pnt = pts[j].position;
+                Eigen::Vector3f pnt = pts[j].position;
 
                 if(points[i] == pnt)
                 {
@@ -218,7 +218,7 @@ QVector<RPIMoCap::Frame::Marker> PointChecker::handleGood(QVector<RPIMoCap::Vect
 }
 
 
-std::vector<std::vector<double> > PointChecker::createDistanceMap(QVector<RPIMoCap::Frame::Marker> lastPoints, QVector<RPIMoCap::Vector3D> points)
+std::vector<std::vector<double> > PointChecker::createDistanceMap(QVector<RPIMoCap::Frame::Marker> lastPoints, QVector<Eigen::Vector3f> points)
 {
     std::vector< std::vector<double>> matrix;
 
@@ -227,7 +227,7 @@ std::vector<std::vector<double> > PointChecker::createDistanceMap(QVector<RPIMoC
         std::vector<double> vec;
         for(int j = 0; j < points.size(); j++)
         {
-            RPIMoCap::Vector3D f = lastPoints[i].position;
+            Eigen::Vector3f f = lastPoints[i].position;
 
             vec.push_back((f - points[j]).norm());
         }
@@ -251,7 +251,7 @@ size_t PointChecker::nextUniqueIndex(int size)
     }
 }
 
-void PointChecker::addUncoveredPoints(QVector<RPIMoCap::Vector3D> points, std::vector<std::vector<double> > map, QVector<RPIMoCap::Frame::Marker> &pts)
+void PointChecker::addUncoveredPoints(QVector<Eigen::Vector3f> points, std::vector<std::vector<double> > map, QVector<RPIMoCap::Frame::Marker> &pts)
 {
     size_t rows = map.size();
 
@@ -280,7 +280,7 @@ void PointChecker::addUncoveredPoints(QVector<RPIMoCap::Vector3D> points, std::v
     }
 }
 
-QVector<RPIMoCap::Frame::Marker> PointChecker::addCoveredPoints(QVector<RPIMoCap::Vector3D> points, std::vector<std::vector<double> > map)
+QVector<RPIMoCap::Frame::Marker> PointChecker::addCoveredPoints(QVector<Eigen::Vector3f> points, std::vector<std::vector<double> > map)
 {
     QVector<RPIMoCap::Frame::Marker> pts;
 

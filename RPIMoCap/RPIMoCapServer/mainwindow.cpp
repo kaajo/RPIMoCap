@@ -36,7 +36,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::onLinesReceived(const std::vector<RPIMoCap::Line3D> &lines)
 {
-    RPIMoCap::Frame frame(0,{},lines);;
+    RPIMoCap::Frame frame(0,lines);;
     ui->widget->drawFrame(frame);
 }
 

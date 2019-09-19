@@ -22,7 +22,7 @@ RPIMoCapServer::RPIMoCapServer(QObject *parent)
 {
     m_avahiPublish.start("avahi-publish-service", {"RPIMoCap Server", "_rpimocap._tcp", QString::number(5000), "RPIMoCap service"});
 
-    connect(&m_aggregator, &LinesAggregator::linesReceived, this, &RPIMoCapServer::linesReceived);
+    connect(&m_aggregator, &LinesAggregator::linesReceived, this, &RPIMoCapServer::linesReceived); //TODO intersector, TODO tracker (pipeline)
 
     m_tcpServer.listen(QHostAddress::Any,5000);
     connect(&m_tcpServer,&QTcpServer::newConnection,this,&RPIMoCapServer::onNewConnection);

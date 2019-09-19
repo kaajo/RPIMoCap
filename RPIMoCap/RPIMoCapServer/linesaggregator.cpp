@@ -22,24 +22,28 @@
 
 #include <msgpack.hpp>
 
+#include <chrono>
+
 LinesAggregator::LinesAggregator(QObject *parent) : QObject(parent)
 {
 
 }
 
-void LinesAggregator::addClientID(const int id)
+void LinesAggregator::addCamera(const std::shared_ptr<CameraSettings> &camera)
 {
-    if (!m_clientIDs.contains(id))
+    if (!m_clients.contains(camera->id()))
     {
-        m_clientIDs.push_back(id);
+        m_clients.insert(camera->id(), camera);
+        m_currentlyReceived.insert(camera->id(), false);
     }
 }
 
-void LinesAggregator::removeClientID(const int id)
+void LinesAggregator::removeCamera(const int id)
 {
-    if (m_clientIDs.contains(id))
+    if (m_clients.contains(id))
     {
-        m_clientIDs.removeOne(id);
+        m_clients.remove(id);
+        m_currentlyReceived.remove(id);
     }
 }
 
@@ -73,7 +77,6 @@ void LinesAggregator::onLinesReceived(const int clientId, const std::vector<RPIM
         }
     }
 
-
     if (running && haveAll)
     {
         auto curTime = QTime::currentTime();
@@ -87,6 +90,11 @@ void LinesAggregator::onLinesReceived(const int clientId, const std::vector<RPIM
         }
 
         emit trigger({});
+
+        uint64_t currentTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+
+        RPIMoCap::Frame frame(currentTime, m_currentlines.toStdVector());
+        emit frameReady(frame);
         emit linesReceived(m_currentlines.toStdVector());
         m_currentlines.clear();
     }

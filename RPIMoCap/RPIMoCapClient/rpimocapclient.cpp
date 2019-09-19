@@ -48,6 +48,13 @@ void RPIMoCapClient::onLines(const std::vector<RPIMoCap::Line3D> &lines)
     emit linesSerialized(QByteArray::fromStdString(buf.str()));
 }
 
+void RPIMoCapClient::onPoints(const std::vector<cv::Point2i> &points)
+{
+    std::stringstream buf;
+    msgpack::pack(buf, points);
+    emit pointsSerialized(QByteArray::fromStdString(buf.str()));
+}
+
 void RPIMoCapClient::trigger()
 {
     if (!m_camera.getOpened()) {
@@ -67,7 +74,12 @@ void RPIMoCapClient::trigger()
         qDebug() << "empty image from gst";
     }
 
-    onLines(m_markerDetector.onImage(currentImage));
+    std::vector<RPIMoCap::Line3D> lines;
+    std::vector<cv::Point2i> points;
+    m_markerDetector.onImage(currentImage, lines, points);
+
+    onLines(lines);
+    onPoints(points);
 
     auto end = std::chrono::high_resolution_clock::now();
 
@@ -157,7 +169,9 @@ void RPIMoCapClient::initMQTT( const int32_t cameraid)
 
     m_cameraTriggerSub = std::make_shared<RPIMoCap::MQTTSubscriber>("triggersub" + QString::number(cameraid), "/trigger", m_MQTTsettings);
     m_linePub = std::make_shared<RPIMoCap::MQTTPublisher>("linespub" + QString::number(cameraid),"/client" + QString::number(cameraid) + "/lines",m_MQTTsettings);
+    m_pointPub = std::make_shared<RPIMoCap::MQTTPublisher>("pointspub" + QString::number(cameraid),"/client" + QString::number(cameraid) + "/points",m_MQTTsettings);
 
     connect(m_cameraTriggerSub.get(), &RPIMoCap::MQTTSubscriber::messageReceived,this, &RPIMoCapClient::trigger);
     connect(this, &RPIMoCapClient::linesSerialized, m_linePub.get(), &RPIMoCap::MQTTPublisher::publishData);
+    connect(this, &RPIMoCapClient::pointsSerialized, m_pointPub.get(), &RPIMoCap::MQTTPublisher::publishData);
 }

@@ -31,7 +31,8 @@ SOURCES += \
         mocapscene3d.cpp \
         munkres.cpp \
         pointchecker.cpp \
-        rpimocapserver.cpp
+        rpimocapserver.cpp \
+        wandcalibration.cpp
 
 HEADERS += \
         camerasettings.h \
@@ -43,7 +44,8 @@ HEADERS += \
         mocapscene3d.h \
         munkres.h \
         pointchecker.h \
-        rpimocapserver.h
+        rpimocapserver.h \
+        wandcalibration.h
 
 FORMS += \
         camerasettingswidget.ui \

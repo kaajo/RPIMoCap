@@ -21,6 +21,7 @@
 #include "markerdetector.h"
 
 #include <line3d.h>
+#include <msgpack_defs.h>
 
 #include <QObject>
 #include <QByteArray>
@@ -42,9 +43,11 @@ public:
 signals:
     void error(std::string error);
     void linesSerialized(const QByteArray &lines);
+    void pointsSerialized(const QByteArray &points);
 
 public slots:
     void onLines(const std::vector<RPIMoCap::Line3D> &lines);
+    void onPoints(const std::vector<cv::Point2i> &points);
     void trigger();
 
     void onTcpMessage();
@@ -65,4 +68,5 @@ private:
     RPIMoCap::MQTTSettings m_MQTTsettings;
     std::shared_ptr<RPIMoCap::MQTTSubscriber> m_cameraTriggerSub;
     std::shared_ptr<RPIMoCap::MQTTPublisher> m_linePub;
+    std::shared_ptr<RPIMoCap::MQTTPublisher> m_pointPub;
 };
