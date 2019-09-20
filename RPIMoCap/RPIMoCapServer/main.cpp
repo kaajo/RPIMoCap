@@ -18,8 +18,6 @@
 #include "mainwindow.h"
 #include "rpimocapserver.h"
 
-#include <line3d.h>
-
 #include <QApplication>
 #include <QtWidgets/QApplication>
 #include <QDebug>

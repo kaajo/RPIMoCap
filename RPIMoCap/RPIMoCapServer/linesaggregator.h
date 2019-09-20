@@ -19,8 +19,8 @@
 
 #include <camerasettings.h>
 
-#include <line3d.h>
-#include <frame.h>
+#include <RPIMoCapBase/line3d.h>
+#include <RPIMoCapBase/frame.h>
 
 #include <QObject>
 #include <QTime>

@@ -20,7 +20,7 @@
 #include "camerasettings.h"
 #include "camerasettingswidget.h"
 
-#include <line3d.h>
+#include <RPIMoCapBase/line3d.h>
 
 #include <QMainWindow>
 #include <QVector>

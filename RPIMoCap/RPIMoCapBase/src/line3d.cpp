@@ -15,7 +15,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "line3d.h"
+#include "RPIMoCapBase/line3d.h"
 
 bool RPIMoCap::closestPointsTwoLines(const RPIMoCap::Line3D &line1, const RPIMoCap::Line3D &line2, Eigen::Vector3f &closestPointLine1, Eigen::Vector3f &closestPointLine2)
 {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "msgpack_defs.h"
+#include <RPIMoCapBase/msgpack_defs.h>
 
 #include <QObject>
 

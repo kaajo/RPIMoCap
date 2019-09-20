@@ -19,9 +19,9 @@
 #define POINTCHECKER_H
 
 
-#include <frame.h>
-#include <line3d.h>
-#include <msgpack_defs.h>
+#include <RPIMoCapBase/frame.h>
+#include <RPIMoCapBase/line3d.h>
+#include <RPIMoCapBase/msgpack_defs.h>
 
 #include "munkres.h"
 

@@ -15,13 +15,19 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include "RPIMoCapBase/frame.h"
 
-#include <QtCore/qglobal.h>
+std::vector<RPIMoCap::Line3D> RPIMoCap::Frame::lines() const
+{
+    return m_lines;
+}
 
-#if defined(RPIMOCAPBASE_LIBRARY)
-#  define RPIMOCAPBASESHARED_EXPORT Q_DECL_EXPORT
-#else
-#  define RPIMOCAPBASESHARED_EXPORT Q_DECL_IMPORT
-#endif
+std::vector<RPIMoCap::Frame::Marker>  RPIMoCap::Frame::markers() const
+{
+    return m_markers;
+}
 
+void  RPIMoCap::Frame::setMarkers(const std::vector<Marker> &markers)
+{
+    m_markers = markers;
+}

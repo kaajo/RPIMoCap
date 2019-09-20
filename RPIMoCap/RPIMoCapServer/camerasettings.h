@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <mqttsubscriber.h>
-#include <line3d.h>
+#include <RPIMoCapBase/mqttsubscriber.h>
+#include <RPIMoCapBase/line3d.h>
 
 #include <QObject>
 

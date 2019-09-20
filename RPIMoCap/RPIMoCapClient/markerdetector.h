@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <line3d.h>
-#include <msgpack_defs.h>
+#include <RPIMoCapBase/line3d.h>
+#include <RPIMoCapBase/msgpack_defs.h>
 
 #include <QObject>
 

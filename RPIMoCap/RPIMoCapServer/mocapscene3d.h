@@ -18,7 +18,7 @@
 #pragma once
 
 #include <camerasettings.h>
-#include <frame.h>
+#include <RPIMoCapBase/frame.h>
 
 #include <QWidget>
 

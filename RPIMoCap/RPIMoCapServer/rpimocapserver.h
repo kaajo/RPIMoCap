@@ -20,8 +20,8 @@
 #include "linesaggregator.h"
 #include "camerasettings.h"
 
-#include <mqttpublisher.h>
-#include <mqttsubscriber.h>
+#include <RPIMoCapBase/mqttpublisher.h>
+#include <RPIMoCapBase/mqttsubscriber.h>
 
 #include <QObject>
 #include <QTcpServer>

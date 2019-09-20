@@ -15,11 +15,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mqttpublisher.h"
+#include "RPIMoCapBase/mqttsubscriber.h"
 
 #include <mosquitto.h>
 
-RPIMoCap::MQTTPublisher::MQTTPublisher(QString clientName, QString topic, MQTTSettings settings, QObject *parent)
+RPIMoCap::MQTTSubscriber::MQTTSubscriber(QString clientName, QString topic, MQTTSettings settings, QObject *parent)
     : QObject(parent)
     , mosqpp::mosquittopp(clientName.toStdString().c_str())
     , m_clientName(std::move(clientName))
@@ -40,31 +40,16 @@ RPIMoCap::MQTTPublisher::MQTTPublisher(QString clientName, QString topic, MQTTSe
     }
 }
 
-void RPIMoCap::MQTTPublisher::publishData(const QByteArray &data)
-{
-    mosqpp::mosquittopp::publish(nullptr, m_topic.toStdString().c_str(), data.size(), data.data(),
-                                 static_cast<std::underlying_type_t<MQTTQoS>>(m_settings.QoS), false);
+void RPIMoCap::MQTTSubscriber::on_connect(int rc) {
+    subscribe(nullptr,m_topic.toStdString().c_str(),static_cast<std::underlying_type_t<MQTTQoS>>(m_settings.QoS));
 }
 
-void RPIMoCap::MQTTPublisher::on_connect(int rc) {
-    switch(rc) {
-    case MOSQ_ERR_INVAL:
-        qCDebug(MQTT) << m_clientName << QString("the input parameters were invalid");
-        break;
-    case MOSQ_ERR_SUCCESS:
-        loop_start();
-        break;
-    default:
-        qCCritical(MQTT) << m_clientName << mosquitto_strerror(rc);
-        break;
-    }
+void RPIMoCap::MQTTSubscriber::on_message(const mosquitto_message *message) {
+    const QByteArray data(static_cast<const char*>(message->payload),static_cast<int>(message->payloadlen));
+    emit messageReceived(data);
 }
 
-void RPIMoCap::MQTTPublisher::on_disconnect(int rc) {
-    qCCritical(MQTT) << m_clientName << mosquitto_strerror(rc);
-}
-
-void RPIMoCap::MQTTPublisher::on_log(int log_level, const char *str) {
+void RPIMoCap::MQTTSubscriber::on_log(int log_level, const char *str) {
     switch (log_level) {
     case MOSQ_LOG_DEBUG:
         qCDebug(MQTT) << m_clientName << str;
@@ -87,6 +72,6 @@ void RPIMoCap::MQTTPublisher::on_log(int log_level, const char *str) {
     }
 }
 
-void RPIMoCap::MQTTPublisher::on_error() {
+void RPIMoCap::MQTTSubscriber::on_error() {
     qCCritical(MQTT) << m_clientName << "error";
 }
