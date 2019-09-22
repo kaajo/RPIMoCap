@@ -17,14 +17,12 @@
 
 #pragma once
 
-#include <QObject>
-#include <QDebug>
+#include <RPIMoCap/ClientLib/icamera.h>
 
-#include <opencv2/core/core.hpp>
 #include <gst/gstelement.h>
 #include <gst/app/app.h>
 
-class GstCVCamera {
+class GstCVCamera : public ICamera {
 public:
     GstCVCamera(std::string pipelineDescription);
 
@@ -33,15 +31,15 @@ public:
     GstCVCamera(const GstCVCamera&) = delete;
     void operator=(const GstCVCamera&) = delete;
 
-    bool getOpened() const {return m_opened;}
-    bool open();
+    bool getOpened() const override {return m_opened;}
+    bool open() override;
 
-    void close();
+    void close() override;
 
+    cv::Mat pullData() override;
+private:
     constexpr static const char* const appSinkName = "appsink";
 
-    cv::Mat pullData();
-private:
     bool init();
 
     static cv::Size2i getWidthHeightFromCaps(GstCaps* gstCaps);

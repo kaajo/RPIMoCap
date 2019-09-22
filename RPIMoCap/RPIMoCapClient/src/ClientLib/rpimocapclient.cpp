@@ -23,9 +23,10 @@
 
 #include <chrono>
 
-RPIMoCapClient::RPIMoCapClient(cv::Size2f cameraFoVRad, QObject *parent)
+RPIMoCapClient::RPIMoCapClient(std::shared_ptr<ICamera> camera,
+                               cv::Size2f cameraFoVRad, QObject *parent)
     : QObject(parent)
-    , m_camera("v4l2src device=/dev/video0 ! video/x-raw,width=640,height=480,framerate=90/1 ! videoconvert ! video/x-raw,format=GRAY8 ! appsink max-buffers=1 name=appsink")
+    , m_camera(camera)
     , m_markerDetector(cameraFoVRad)
 {
     qDebug() << "starting RPIMoCapClient, camera FoV" << cameraFoVRad.width * 180.0f/M_PI
@@ -58,8 +59,8 @@ void RPIMoCapClient::onPoints(const std::vector<cv::Point2i> &points)
 
 void RPIMoCapClient::trigger()
 {
-    if (!m_camera.getOpened()) {
-        if (!m_camera.open()) {
+    if (!m_camera->getOpened()) {
+        if (!m_camera->open()) {
             qCritical() << "cannot open camera";
             return;
         }
@@ -67,7 +68,7 @@ void RPIMoCapClient::trigger()
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    cv::Mat currentImage = m_camera.pullData();
+    cv::Mat currentImage = m_camera->pullData();
     //cv::imwrite("/tmp/image.jpg",currentImage);
 
     if (currentImage.empty())

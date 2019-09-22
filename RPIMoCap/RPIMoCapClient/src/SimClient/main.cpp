@@ -16,6 +16,7 @@
  */
 
 #include <RPIMoCap/ClientLib/rpimocapclient.h>
+#include <RPIMoCap/ClientLib/rpicamera.h>
 
 #include <QCoreApplication>
 
@@ -50,6 +51,10 @@ int main(int argc, char *argv[])
 
     qSetMessagePattern("%{type} %{if-category}%{category}: %{endif}%{message}");
 
-    RPIMoCapClient client(cameraV2Fov);
+    auto camera = std::make_shared<GstCVCamera>("v4l2src device=/dev/video0 ! "
+                                                "video/x-raw,width=640,height=480,framerate=90/1 ! "
+                                                "videoconvert ! video/x-raw,format=GRAY8 ! appsink max-buffers=1 name=appsink");
+
+    RPIMoCapClient client(camera, cameraV2Fov);
     return a.exec();
 }

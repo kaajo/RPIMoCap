@@ -17,6 +17,8 @@
 
 #include "RPIMoCap/ClientLib/rpicamera.h"
 
+#include <QDebug>
+
 #include <chrono>
 
 GstCVCamera::GstCVCamera(std::__cxx11::string pipelineDescription)
@@ -56,7 +58,7 @@ void GstCVCamera::close() {
 }
 
 cv::Mat GstCVCamera::pullData() {
-    GstSample* sample = gst_app_sink_try_pull_sample(appsink_, 1000000000);
+    GstSample* const sample = gst_app_sink_try_pull_sample(appsink_, 1000000000);
 
     if (!sample) {
         qDebug() << "cannot obtain sample from sink.";
@@ -87,7 +89,7 @@ cv::Mat GstCVCamera::pullData() {
 
     GstCaps* caps = gst_sample_get_caps(sample);
 
-    cv::Mat data = preprocessData(buffer, mappedBuffer, caps);
+    const cv::Mat data = preprocessData(buffer, mappedBuffer, caps);
 
     gst_buffer_unmap(buffer, &mappedBuffer);
     gst_sample_unref(sample);

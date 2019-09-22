@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "rpicamera.h"
+#include "icamera.h"
 #include "markerdetector.h"
 
 #include <RPIMoCap/Core/line3d.h>
@@ -37,7 +37,8 @@ class RPIMoCapClient : public QObject
 {
     Q_OBJECT
 public:
-    explicit RPIMoCapClient(cv::Size2f cameraFoVRad, QObject *parent = nullptr);
+    explicit RPIMoCapClient(std::shared_ptr<ICamera> camera,
+                            cv::Size2f cameraFoVRad, QObject *parent = nullptr);
     ~RPIMoCapClient();
 
 signals:
@@ -56,7 +57,7 @@ public slots:
     virtual void timerEvent(QTimerEvent *event) override;
 
 private:
-    GstCVCamera m_camera;
+    std::shared_ptr<ICamera> m_camera;
     MarkerDetector m_markerDetector;
 
     int m_avahiCheckTimerID = -1;

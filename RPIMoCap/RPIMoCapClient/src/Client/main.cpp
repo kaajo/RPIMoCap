@@ -16,6 +16,7 @@
  */
 
 #include <RPIMoCap/ClientLib/rpimocapclient.h>
+#include <RPIMoCap/ClientLib/rpicamera.h>
 
 #include <QCoreApplication>
 
@@ -43,13 +44,20 @@ int main(int argc, char *argv[])
 {
     mosqpp::lib_init();
 
-    cv::Size2f cameraV1Fov(53.94f * degToRad, 41.78f * degToRad); //diag 64.92 https://www.scantips.com/lights/fieldofview.html#top
-    cv::Size2f cameraV2Fov = computeVGAFoVCameraV2(); //https://elinux.org/Rpi_Camera_Module#Technical_Parameters_.28v.2_board.29
+    //diag 64.92 https://www.scantips.com/lights/fieldofview.html#top
+    cv::Size2f cameraV1Fov(53.94f * degToRad, 41.78f * degToRad);
+    //https://elinux.org/Rpi_Camera_Module#Technical_Parameters_.28v.2_board.29
+    cv::Size2f cameraV2Fov = computeVGAFoVCameraV2();
 
     QCoreApplication a(argc, argv);
 
     qSetMessagePattern("%{type} %{if-category}%{category}: %{endif}%{message}");
 
-    RPIMoCapClient client(cameraV2Fov);
+    auto camera = std::make_shared<GstCVCamera>("v4l2src device=/dev/video0 ! "
+                                                "video/x-raw,width=640,height=480,framerate=90/1 ! "
+                                                "videoconvert ! video/x-raw,format=GRAY8 ! "
+                                                "appsink max-buffers=1 name=appsink");
+
+    RPIMoCapClient client(camera, cameraV2Fov);
     return a.exec();
 }
