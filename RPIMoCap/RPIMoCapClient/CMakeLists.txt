@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 
+project(RPIMoCapClient CXX)
+
 set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native -mtune=native -O3")
@@ -17,20 +19,21 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
+QT5_WRAP_CPP(QOBJECT_HEADERS
+    include/RPIMoCap/ClientLib/rpimocapclient.h)
+
 set(SOURCES
-    avahibrowser.cpp
-    markerdetector.cpp
-    rpicamera.cpp
-    rpimocapclient.cpp
-    main.cpp)
+    src/ClientLib/markerdetector.cpp
+    src/ClientLib/rpicamera.cpp
+    src/ClientLib/rpimocapclient.cpp)
 
-add_executable(RPIMoCapClient ${SOURCES})
+add_library(RPIMoCapClientLib STATIC ${QOBJECT_HEADERS} ${SOURCES})
 
-target_include_directories(RPIMoCapClient PUBLIC
-    ${PROJECT_SOURCE_DIR}
+target_include_directories(RPIMoCapClientLib PUBLIC
+    ${PROJECT_SOURCE_DIR}/include
     ${GSTREAMER_BASE_INCLUDE_DIRS})
 
-target_link_libraries(RPIMoCapClient
+target_link_libraries(RPIMoCapClientLib
     RPIMoCapBase
     ${MSGPACK_LIBRARIES}
     ${OPENCV_LIBRARIES}
@@ -40,3 +43,9 @@ target_link_libraries(RPIMoCapClient
     Qt5::Gui
     Qt5::Network
     Qt5::Concurrent)
+
+add_executable(RPIMoCapClient src/Client/main.cpp)
+target_link_libraries(RPIMoCapClient RPIMoCapClientLib)
+
+add_executable(RPIMoCapSimClient src/SimClient/main.cpp)
+target_link_libraries(RPIMoCapSimClient RPIMoCapClientLib)

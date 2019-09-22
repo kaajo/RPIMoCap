@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native -mtune=native -O3")
 
-find_package(Qt5 COMPONENTS Core REQUIRED)
+find_package(Qt5 COMPONENTS Core Network REQUIRED)
 find_library(mosquitto REQUIRED)
 find_library(mosquittopp REQUIRED)
 
@@ -15,16 +15,17 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 QT5_WRAP_CPP(QOBJECT_HEADERS
-    include/RPIMoCapBase/mqttpublisher.h
-    include/RPIMoCapBase/mqttsubscriber.h)
+    include/RPIMoCap/Core/mqttpublisher.h
+    include/RPIMoCap/Core/mqttsubscriber.h)
 
 set(SOURCES
     ${QOBJECT_HEADERS}
-    src/frame.cpp
-    src/line3d.cpp
-    src/mqttpublisher.cpp
-    src/mqttsettings.cpp
-    src/mqttsubscriber.cpp)
+    src/Core/avahibrowser.cpp
+    src/Core/frame.cpp
+    src/Core/line3d.cpp
+    src/Core/mqttpublisher.cpp
+    src/Core/mqttsettings.cpp
+    src/Core/mqttsubscriber.cpp)
 
 add_library(RPIMoCapBase STATIC ${SOURCES})
 
@@ -34,4 +35,5 @@ target_include_directories(RPIMoCapBase PUBLIC
 target_link_libraries(RPIMoCapBase
     mosquitto
     mosquittopp
-    Qt5::Core)
+    Qt5::Core
+    Qt5::Network)

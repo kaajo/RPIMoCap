@@ -16,25 +16,30 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 QT5_WRAP_CPP(QOBJECT_HEADERS
-    camerasettings.h
-    camerasettingswidget.h)
+    include/RPIMoCap/Server/camerasettings.h
+    include/RPIMoCap/Server/camerasettingswidget.h
+    include/RPIMoCap/Server/linesaggregator.h
+    include/RPIMoCap/Server/mainwindow.h
+    include/RPIMoCap/Server/mocapscene3d.h
+    include/RPIMoCap/Server/rpimocapserver.h
+    include/RPIMoCap/Server/wandcalibration.h)
 
 set(SOURCES
     ${QOBJECT_HEADERS}
-    camerasettingswidget.cpp
-    linesaggregator.cpp
-    mainwindow.cpp
-    mocapscene3d.cpp
-    munkres.cpp
-    pointchecker.cpp
-    rpimocapserver.cpp
-    wandcalibration.cpp
-    main.cpp)
+    src/Server/camerasettingswidget.cpp
+    src/Server/linesaggregator.cpp
+    src/Server/mainwindow.cpp
+    src/Server/mocapscene3d.cpp
+    src/Server/munkres.cpp
+    src/Server/pointchecker.cpp
+    src/Server/rpimocapserver.cpp
+    src/Server/wandcalibration.cpp
+    src/Server/main.cpp)
 
 add_executable(RPIMoCapServer ${SOURCES})
 
 target_include_directories(RPIMoCapServer PUBLIC
-    ${PROJECT_SOURCE_DIR})
+    ${PROJECT_SOURCE_DIR}/include)
 
 target_link_libraries(RPIMoCapServer
     RPIMoCapBase
