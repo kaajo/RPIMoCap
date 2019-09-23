@@ -15,8 +15,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "RPIMoCap/SimClient/simcamera.h"
+
 #include <RPIMoCap/ClientLib/rpimocapclient.h>
-#include <RPIMoCap/ClientLib/rpicamera.h>
 
 #include <QCoreApplication>
 
@@ -51,9 +52,20 @@ int main(int argc, char *argv[])
 
     qSetMessagePattern("%{type} %{if-category}%{category}: %{endif}%{message}");
 
-    auto camera = std::make_shared<GstCVCamera>("v4l2src device=/dev/video0 ! "
-                                                "video/x-raw,width=640,height=480,framerate=90/1 ! "
-                                                "videoconvert ! video/x-raw,format=GRAY8 ! appsink max-buffers=1 name=appsink");
+    RPIMoCap::SimClient::SimScene scene;
+
+    RPIMoCap::SimClient::SimScene::Marker marker;
+    marker.translation = cv::Point3f(0,0,10);
+    scene.setMarkers({marker});
+
+    CameraParams params;
+    params.imageSize = cv::Size(640, 480);
+    params.cameraMatrix.at<float>(0,2) = 320;
+    params.cameraMatrix.at<float>(1,2) = 240;
+    params.cameraMatrix.at<float>(0,0) = 1600;
+    params.cameraMatrix.at<float>(1,1) = 1600;
+
+    auto camera = std::make_shared<RPIMoCap::SimClient::SimCamera>(params, scene);
 
     RPIMoCapClient client(camera, cameraV2Fov);
     return a.exec();

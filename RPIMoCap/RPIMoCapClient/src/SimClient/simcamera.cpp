@@ -15,27 +15,30 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include "RPIMoCap/SimClient/simcamera.h"
 
-#include <opencv2/core/mat.hpp>
+namespace RPIMoCap::SimClient {
 
-struct CameraParams
+SimCamera::SimCamera(const CameraParams &params, const SimScene &scene)
+    : m_params(params)
+    , m_scene(scene)
 {
-    cv::Size imageSize = cv::Size(0,0);
-    cv::Vec3f translation = cv::Vec3f(0.0, 0.0, 0.0);
-    cv::Vec3f rotation = cv::Vec3f(0.0, 0.0, 0.0);
-    cv::Mat cameraMatrix = cv::Mat(3, 3, CV_32FC1, cv::Scalar(0.0f));
-    cv::Mat distortionCoeffs = cv::Mat(1, 4, CV_32FC1, cv::Scalar(0.0f));
-};
 
-class ICamera
+}
+
+bool SimCamera::open()
 {
-public:
-    ICamera() = default;
-    virtual ~ICamera() = default;
+    return true;
+}
 
-    virtual bool open() = 0;
-    virtual void close() = 0;
-    virtual bool getOpened() const = 0;
-    virtual cv::Mat pullData() = 0;
-};
+void SimCamera::close()
+{
+
+}
+
+cv::Mat SimCamera::pullData()
+{
+    return m_scene.projectScene(m_params);
+}
+
+}

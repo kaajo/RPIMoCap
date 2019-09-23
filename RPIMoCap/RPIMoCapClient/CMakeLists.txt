@@ -47,5 +47,9 @@ target_link_libraries(RPIMoCapClientLib
 add_executable(RPIMoCapClient src/Client/main.cpp)
 target_link_libraries(RPIMoCapClient RPIMoCapClientLib)
 
-add_executable(RPIMoCapSimClient src/SimClient/main.cpp)
+add_executable(RPIMoCapSimClient
+    src/SimClient/main.cpp
+    src/SimClient/simcamera.cpp
+    src/SimClient/simscene.cpp)
+
 target_link_libraries(RPIMoCapSimClient RPIMoCapClientLib)

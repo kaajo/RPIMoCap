@@ -15,27 +15,33 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <RPIMoCap/ClientLib/icamera.h>
 
 #include <opencv2/core/mat.hpp>
+#include <eigen3/Eigen/Geometry>
 
-struct CameraParams
-{
-    cv::Size imageSize = cv::Size(0,0);
-    cv::Vec3f translation = cv::Vec3f(0.0, 0.0, 0.0);
-    cv::Vec3f rotation = cv::Vec3f(0.0, 0.0, 0.0);
-    cv::Mat cameraMatrix = cv::Mat(3, 3, CV_32FC1, cv::Scalar(0.0f));
-    cv::Mat distortionCoeffs = cv::Mat(1, 4, CV_32FC1, cv::Scalar(0.0f));
-};
+#include <mutex>
 
-class ICamera
+namespace RPIMoCap::SimClient {
+
+class SimScene
 {
 public:
-    ICamera() = default;
-    virtual ~ICamera() = default;
+    struct Marker
+    {
+        size_t id;
+        uint8_t sizemm;
+        cv::Point3f translation;
+    };
 
-    virtual bool open() = 0;
-    virtual void close() = 0;
-    virtual bool getOpened() const = 0;
-    virtual cv::Mat pullData() = 0;
+    SimScene() = default;
+
+    void setMarkers(const std::vector<Marker> markers);
+    cv::Mat projectScene(const CameraParams &params) const;
+
+private:
+    mutable std::mutex m_dataMutex;
+    std::vector<Marker> m_markers;
 };
+
+}
