@@ -19,6 +19,7 @@
 
 #include <RPIMoCap/Core/line3d.h>
 #include <RPIMoCap/Core/msgpack_defs.h>
+#include <RPIMoCap/Core/cameraparams.h>
 
 #include <QObject>
 
@@ -27,17 +28,16 @@
 class MarkerDetector
 {
 public:
-    explicit MarkerDetector(cv::Size2f cameraFoVRad);
+    explicit MarkerDetector(const RPIMoCap::CameraParams &camParams);
 
-    static cv::Mat computePixelDirs(const cv::Size2i &resolution, cv::Size2f cameraFoVRad);
-    static Eigen::Vector3f computePixelDir(const cv::Size2i &resolution, cv::Size2f cameraFoVRad, cv::Point2i pixel);
+    static cv::Mat computePixelDirs(const RPIMoCap::CameraParams &camParams);
+    static Eigen::Vector3f computePixelDir(cv::Mat cameraMatrix, cv::Mat distortionCoeffs, cv::Point2i pixel);
 
     void onImage(const cv::Mat &image, std::vector<RPIMoCap::Line3D> &lines, std::vector<cv::Point2i> &points);
 
 private:
     RPIMoCap::Line3D qtConcurrentpickLine(const std::vector<cv::Point2i> &contour);
 
-    cv::Size2f m_cameraFoVRad;
+    RPIMoCap::CameraParams m_camParams;
     cv::Mat m_pixelLines;
-    //cv::Mat dilateKernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3,3));
 };

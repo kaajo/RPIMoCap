@@ -21,88 +21,39 @@
 #include <QtConcurrent/QtConcurrentMap>
 #include <QMatrix4x4>
 
+#include <opencv2/imgproc.hpp>
+
 #include <functional>
 
-MarkerDetector::MarkerDetector(cv::Size2f cameraFoVRad)
-    : m_cameraFoVRad(cameraFoVRad)
+MarkerDetector::MarkerDetector(const RPIMoCap::CameraParams &camParams)
+    : m_camParams(camParams)
 {
 
 }
 
-cv::Mat MarkerDetector::computePixelDirs(const cv::Size2i &resolution, cv::Size2f cameraFoVRad)
+cv::Mat MarkerDetector::computePixelDirs(const RPIMoCap::CameraParams &camParams)
 {
-    const float tanHorizontal_ = std::tan(cameraFoVRad.width / 2);
-    const float tanVertical_ = std::tan(cameraFoVRad.height / 2);
+    cv::Mat pixelLines(camParams.imageSize, CV_32FC3);
 
-    cv::Mat pixelLines(resolution, CV_32FC3);
-
-    for(int row = 0; row < resolution.height; ++row)
+    for(int row = 0; row < camParams.imageSize.height; ++row)
     {
-        for(int col = 0; col < resolution.width ; ++col)
+        for(int col = 0; col < camParams.imageSize.width ; ++col)
         {
-            /*
-            const Eigen::Vector2f distanceFromCenter(i - resolution.width/2.0f,j - resolution.height/2.0f);
-
-            QMatrix4x4 rotMatrix;
-            rotMatrix.rotate(distanceFromCenter.x() * horizontalFov/resolution.width, 0, 1, 0);
-
-            QMatrix4x4 rotMatrix2;
-            rotMatrix2.rotate(distanceFromCenter.y() * horizontalFov/resolution.width, 1,0,0);
-
-            const QVector3D partialRes = rotMatrix * QVector3D(0.0,0.0,1.0);
-            const QVector3D dir = rotMatrix2 * partialRes;
-            pixelLines.at<cv::Vec3f>(cv::Point(j,i)) = cv::Vec3f(dir.x(),dir.y(),dir.z());
-            */
-
-            const float directionX = (2 * ((col + 0.5f) / resolution.width) - 1) * tanHorizontal_;
-            const float directionY = (1 - 2 * (row + 0.5f) / resolution.height) * tanVertical_;
-            const auto dir = Eigen::Vector3f(directionX, directionY, 1).normalized();
-            pixelLines.at<cv::Vec3f>(cv::Point(col,row)) = cv::Vec3f(dir.x(), dir.y(), dir.z());
+            const auto v = computePixelDir(camParams.cameraMatrix, camParams.distortionCoeffs, cv::Point2i(col,row));
+            pixelLines.at<cv::Point3f>(row, col) = cv::Point3f(v.x(), v.y(), v.z());
         }
     }
 
     return pixelLines;
 }
 
-Eigen::Vector3f MarkerDetector::computePixelDir(const cv::Size2i &resolution, cv::Size2f cameraFoVRad, cv::Point2i pixel)
+Eigen::Vector3f MarkerDetector::computePixelDir(cv::Mat cameraMatrix, cv::Mat distortionCoeffs, cv::Point2i pixel)
 {
-    const float tanHorizontal_ = std::tan(cameraFoVRad.width / 2);
-    const float tanVertical_ = std::tan(cameraFoVRad.height / 2);
-
-    float directionX = (2 * ((pixel.x + 0.5f) / resolution.width) - 1) * tanHorizontal_;
-    float directionY = (1 - 2 * (pixel.y + 0.5f) / resolution.height) * tanVertical_;
-    return Eigen::Vector3f(directionX, directionY, 1).normalized();
-
-    /*
-    const Eigen::Vector2f distanceFromCenter(row - resolution.width/2,col - resolution.height/2);
-
-    QMatrix4x4 rotMatrix;
-    rotMatrix.rotate(distanceFromCenter.x() * fovHRad, 0, 1, 0);
-
-    QMatrix4x4 rotMatrix2;
-    rotMatrix2.rotate(distanceFromCenter.y() * fovHRad, 1,0,0);
-
-    const QVector3D partialRes = rotMatrix * QVector3D(0.0,0.0,1.0);
-    const QVector3D dir = rotMatrix2 * partialRes;
-    return cv::Vec3f(dir.x(),dir.y(),dir.z());
-    */
+    std::vector<cv::Point2f> points = {pixel};
+    cv::Mat undistortedPoints;
+    cv::undistortPoints(points, undistortedPoints, cameraMatrix, distortionCoeffs);
+    return Eigen::Vector3f(undistortedPoints.at<float>(0,0), undistortedPoints.at<float>(0,1), 1).normalized();
 }
-
-/*
-Eigen::ParametrizedLine<double, 3>
-RoboTrain::Utilities::FrustumFactory::pixelLineFromDirection(int x, int y) const {
-    auto newMatrix =
-            cv::getOptimalNewCameraMatrix(intrinsicMatrix_, distortionParams_, cv::Size(imageWidth_, imageHeight_), 1);
-
-    std::array<cv::Point2f, 1> points = {cv::Point2f(x, y)};
-    std::array<cv::Point2f, 1> undistortedPoints;
-    cv::undistortPoints(points, undistortedPoints, intrinsicMatrix_, distortionParams_, newMatrix);
-
-    float directionX = (2 * ((undistortedPoints[0].x + 0.5) / imageWidth_) - 1) * tanHorizontal_;
-    float directionY = (1 - 2 * (undistortedPoints[0].y + 0.5) / imageHeight_) * tanVertical_;
-    return {Eigen::Vector3d(), Eigen::Vector3d(directionX, directionY, 1).normalized()};
-}
-*/
 
 void MarkerDetector::onImage(const cv::Mat &image, std::vector<RPIMoCap::Line3D> &lines, std::vector<cv::Point2i> &points)
 {
@@ -110,8 +61,8 @@ void MarkerDetector::onImage(const cv::Mat &image, std::vector<RPIMoCap::Line3D>
     points.clear();
 
     if (m_pixelLines.empty()) {
-        m_pixelLines = computePixelDirs(cv::Size2i(image.cols,image.rows) ,m_cameraFoVRad);
-        qDebug() << "compute lines: " << image.cols << " " << image.rows;
+        m_pixelLines = computePixelDirs(m_camParams);
+        qDebug() << "compute lines: " << image.cols << "x" << image.rows;
     }
 
     cv::Mat filterImage;
@@ -121,7 +72,7 @@ void MarkerDetector::onImage(const cv::Mat &image, std::vector<RPIMoCap::Line3D>
 
     cv::threshold(image, filterImage, 220, 255, cv::THRESH_BINARY);
 
-   // cv::morphologyEx(filterImage, filterImage, cv::MORPH_OPEN , dilateKernel);
+    // cv::morphologyEx(filterImage, filterImage, cv::MORPH_OPEN , dilateKernel);
 
     std::vector<std::vector<cv::Point>> contours;
 
@@ -136,7 +87,7 @@ void MarkerDetector::onImage(const cv::Mat &image, std::vector<RPIMoCap::Line3D>
     });
 
     lines = QtConcurrent::blockingMapped<std::vector<RPIMoCap::Line3D>>(contours,
-              std::bind(&MarkerDetector::qtConcurrentpickLine, this, std::placeholders::_1));
+                                                                        std::bind(&MarkerDetector::qtConcurrentpickLine, this, std::placeholders::_1));
 }
 
 RPIMoCap::Line3D MarkerDetector::qtConcurrentpickLine(const std::vector<cv::Point2i> &contour)

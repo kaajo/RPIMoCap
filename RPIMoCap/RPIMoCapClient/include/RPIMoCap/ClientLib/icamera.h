@@ -19,15 +19,6 @@
 
 #include <opencv2/core/mat.hpp>
 
-struct CameraParams
-{
-    cv::Size imageSize = cv::Size(0,0);
-    cv::Vec3f translation = cv::Vec3f(0.0, 0.0, 0.0);
-    cv::Vec3f rotation = cv::Vec3f(0.0, 0.0, 0.0);
-    cv::Mat cameraMatrix = cv::Mat(3, 3, CV_32FC1, cv::Scalar(0.0f));
-    cv::Mat distortionCoeffs = cv::Mat(1, 4, CV_32FC1, cv::Scalar(0.0f));
-};
-
 class ICamera
 {
 public:

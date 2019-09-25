@@ -38,7 +38,7 @@ class RPIMoCapClient : public QObject
     Q_OBJECT
 public:
     explicit RPIMoCapClient(std::shared_ptr<ICamera> camera,
-                            cv::Size2f cameraFoVRad, QObject *parent = nullptr);
+                            RPIMoCap::CameraParams camParams, QObject *parent = nullptr);
     ~RPIMoCapClient();
 
 signals:

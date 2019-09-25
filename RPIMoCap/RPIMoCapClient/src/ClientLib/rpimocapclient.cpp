@@ -24,13 +24,13 @@
 #include <chrono>
 
 RPIMoCapClient::RPIMoCapClient(std::shared_ptr<ICamera> camera,
-                               cv::Size2f cameraFoVRad, QObject *parent)
+                               RPIMoCap::CameraParams camParams, QObject *parent)
     : QObject(parent)
     , m_camera(camera)
-    , m_markerDetector(cameraFoVRad)
+    , m_markerDetector(camParams)
 {
-    qDebug() << "starting RPIMoCapClient, camera FoV" << cameraFoVRad.width * 180.0f/M_PI
-             << "x" << cameraFoVRad.height * 180.0f/M_PI;
+    //qDebug() << "starting RPIMoCapClient, camera FoV" << camParams.cameraMatrix.at<float>() * 180.0f/M_PI
+    //         << "x" << camParams.height * 180.0f/M_PI;
 
     connect(&m_rpimocaptcp, &QTcpSocket::readyRead,this,&RPIMoCapClient::onTcpMessage);
     connect(&m_rpimocaptcp, &QTcpSocket::disconnected, this, &RPIMoCapClient::onTcpDisconnected);
@@ -73,7 +73,7 @@ void RPIMoCapClient::trigger()
 
     if (currentImage.empty())
     {
-        qDebug() << "empty image from gst";
+        qDebug() << "empty image from camera";
     }
 
     std::vector<RPIMoCap::Line3D> lines;

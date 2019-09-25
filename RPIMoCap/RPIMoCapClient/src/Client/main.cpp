@@ -22,11 +22,27 @@
 
 constexpr float degToRad = M_PI/180.0f;
 
-cv::Size2f computeVGAFoVCameraV2(const cv::Size2f fullFoVRad = cv::Size2f(62.2f * degToRad,48.8f * degToRad))
+//diag 64.92 https://www.raspberrypi.org/documentation/hardware/camera/
+RPIMoCap::CameraParams computeRPICameraV1Params(const cv::Size2f fullFoVRad = cv::Size2f(53.5f * degToRad, 41.41f * degToRad))
+{
+    const cv::Size2i fullResolution(2592, 1944);
+
+    RPIMoCap::CameraParams params;
+    params.imageSize = cv::Size2i(640, 480);
+    params.cameraMatrix.at<float>(0,0) = params.imageSize.width / tanf(fullFoVRad.width/2.0f);
+    params.cameraMatrix.at<float>(1,1) = params.imageSize.height / tanf(fullFoVRad.height/2.0f);
+    params.cameraMatrix.at<float>(0,2) = 320;
+    params.cameraMatrix.at<float>(1,2) = 240;
+
+    return params;
+}
+
+//https://elinux.org/Rpi_Camera_Module#Technical_Parameters_.28v.2_board.29
+RPIMoCap::CameraParams computeRPICameraV2Params(const cv::Size2f fullFoVRad = cv::Size2f(62.2f * degToRad,48.8f * degToRad))
 {
     //https://www.raspberrypi.org/forums/viewtopic.php?t=157384
-    const cv::Size2i fullResolution(3280,2464);
-    const cv::Size2i binnedResolution(1280,960);
+    const cv::Size2i fullResolution(3280, 2464);
+    const cv::Size2i binnedResolution(1280, 960);
 
     const int leftRightCrop = 1000;
     const int topBotCrop = 752;
@@ -37,27 +53,31 @@ cv::Size2f computeVGAFoVCameraV2(const cv::Size2f fullFoVRad = cv::Size2f(62.2f 
     const float croppedFoVWidth = binnedResolution.width*fullFoVRad.width/fullResolution.width;
     const float croppedFoVHeight = binnedResolution.height*fullFoVRad.height/fullResolution.height;
 
-    return cv::Size2f(croppedFoVWidth,croppedFoVHeight);
+    RPIMoCap::CameraParams params;
+    params.imageSize = cv::Size2i(640, 480);
+    params.cameraMatrix.at<float>(0,0) = params.imageSize.width / tanf(croppedFoVWidth/2.0f);
+    params.cameraMatrix.at<float>(1,1) = params.imageSize.height / tanf(croppedFoVHeight/2.0f);
+    params.cameraMatrix.at<float>(0,2) = 320;
+    params.cameraMatrix.at<float>(1,2) = 240;
+
+    return params;
 }
 
 int main(int argc, char *argv[])
 {
     mosqpp::lib_init();
 
-    //diag 64.92 https://www.scantips.com/lights/fieldofview.html#top
-    cv::Size2f cameraV1Fov(53.94f * degToRad, 41.78f * degToRad);
-    //https://elinux.org/Rpi_Camera_Module#Technical_Parameters_.28v.2_board.29
-    cv::Size2f cameraV2Fov = computeVGAFoVCameraV2();
-
     QCoreApplication a(argc, argv);
 
     qSetMessagePattern("%{type} %{if-category}%{category}: %{endif}%{message}");
+
+    RPIMoCap::CameraParams params = computeRPICameraV2Params();
 
     auto camera = std::make_shared<GstCVCamera>("v4l2src device=/dev/video0 ! "
                                                 "video/x-raw,width=640,height=480,framerate=90/1 ! "
                                                 "videoconvert ! video/x-raw,format=GRAY8 ! "
                                                 "appsink max-buffers=1 name=appsink");
 
-    RPIMoCapClient client(camera, cameraV2Fov);
+    RPIMoCapClient client(camera, params);
     return a.exec();
 }

@@ -15,7 +15,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <RPIMoCap/ClientLib/icamera.h>
+#include <RPIMoCap/Core/cameraparams.h>
 
 #include <opencv2/core/mat.hpp>
 #include <eigen3/Eigen/Geometry>

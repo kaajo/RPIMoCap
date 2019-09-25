@@ -25,7 +25,6 @@
 class GstCVCamera : public ICamera {
 public:
     GstCVCamera(std::string pipelineDescription);
-
     ~GstCVCamera();
 
     GstCVCamera(const GstCVCamera&) = delete;
@@ -33,7 +32,6 @@ public:
 
     bool getOpened() const override {return m_opened;}
     bool open() override;
-
     void close() override;
 
     cv::Mat pullData() override;
