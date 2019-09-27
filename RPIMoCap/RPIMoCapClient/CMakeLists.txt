@@ -9,7 +9,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native -mtune=nat
 find_library(mosquitto REQUIRED)
 find_library(mosquittopp REQUIRED)
 find_package(PkgConfig REQUIRED)
-find_package(Qt5 COMPONENTS Core Gui Network Concurrent REQUIRED)
+find_package(Qt5 COMPONENTS Core Gui Widgets Network Concurrent REQUIRED)
 pkg_check_modules(MSGPACK REQUIRED msgpack)
 pkg_check_modules(OPENCV REQUIRED opencv)
 pkg_check_modules(GSTREAMER_BASE REQUIRED gstreamer-base-1.0)
@@ -47,9 +47,16 @@ target_link_libraries(RPIMoCapClientLib
 add_executable(RPIMoCapClient src/Client/main.cpp)
 target_link_libraries(RPIMoCapClient RPIMoCapClientLib)
 
+QT5_WRAP_CPP(QOBJECT_SIM_HEADERS
+    include/RPIMoCap/SimClient/mainwindow.h)
+
 add_executable(RPIMoCapSimClient
+    ${QOBJECT_SIM_HEADERS}
     src/SimClient/main.cpp
     src/SimClient/simcamera.cpp
-    src/SimClient/simscene.cpp)
+    src/SimClient/simscene.cpp
+    src/SimClient/mainwindow.cpp)
 
-target_link_libraries(RPIMoCapSimClient RPIMoCapClientLib)
+target_link_libraries(RPIMoCapSimClient
+    RPIMoCapClientLib
+    Qt5::Widgets)

@@ -39,11 +39,16 @@ cv::Mat SimScene::projectScene(const CameraParams &params) const
         std::transform(m_markers.begin(), m_markers.end(), std::back_inserter(pts),
                        [](auto &marker){return marker.translation;});
     }
+
+    cv::Mat simulatedImage(params.imageSize, CV_8UC1, cv::Scalar(0));
+
+    if (pts.empty()) {
+        return simulatedImage;
+    }
+
     std::vector<cv::Point2f> pixels;
     cv::projectPoints(pts, params.rotation, params.translation,
                       params.cameraMatrix, params.distortionCoeffs, pixels);
-
-    cv::Mat simulatedImage(params.imageSize, CV_8UC1, cv::Scalar(0));
 
     for (auto &px : pixels)
     {

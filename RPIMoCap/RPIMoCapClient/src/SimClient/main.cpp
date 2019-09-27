@@ -16,10 +16,11 @@
  */
 
 #include "RPIMoCap/SimClient/simcamera.h"
+#include "RPIMoCap/SimClient/mainwindow.h"
 
 #include <RPIMoCap/ClientLib/rpimocapclient.h>
 
-#include <QCoreApplication>
+#include <QApplication>
 
 constexpr float degToRad = M_PI/180.0f;
 
@@ -68,13 +69,15 @@ int main(int argc, char *argv[])
 {
     mosqpp::lib_init();
 
-    QCoreApplication a(argc, argv);
+    QApplication a(argc, argv);
 
     qSetMessagePattern("%{type} %{if-category}%{category}: %{endif}%{message}");
 
-    RPIMoCap::CameraParams params = computeRPICameraV2Params();
+    RPIMoCap::CameraParams params = computeRPICameraV1Params();
 
     RPIMoCap::SimClient::SimScene scene;
+
+    auto *mainWindow = new RPIMoCap::SimClient::MainWindow(scene);
 
     RPIMoCap::SimClient::SimScene::Marker marker;
     marker.translation = cv::Point3f(0,0,10);
@@ -83,5 +86,7 @@ int main(int argc, char *argv[])
     auto camera = std::make_shared<RPIMoCap::SimClient::SimCamera>(params, scene);
 
     RPIMoCapClient client(camera, params);
+
+    mainWindow->show();
     return a.exec();
 }

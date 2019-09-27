@@ -17,33 +17,17 @@
 
 #pragma once
 
-#include <RPIMoCap/Core/cameraparams.h>
-
 #include <opencv2/core/mat.hpp>
-#include <eigen3/Eigen/Geometry>
 
-#include <mutex>
+namespace RPIMoCap {
 
-namespace RPIMoCap::SimClient {
-
-class SimScene
+struct CameraParams
 {
-public:
-    struct Marker
-    {
-        size_t id;
-        uint8_t sizemm;
-        cv::Point3f translation;
-    };
-
-    SimScene() = default;
-
-    void setMarkers(const std::vector<Marker> markers);
-    cv::Mat projectScene(const CameraParams &params) const;
-
-private:
-    mutable std::mutex m_dataMutex;
-    std::vector<Marker> m_markers;
+    cv::Size imageSize = cv::Size(0,0);
+    cv::Vec3f translation = cv::Vec3f(0.0, 0.0, 0.0);
+    cv::Vec3f rotation = cv::Vec3f(0.0, 0.0, 0.0);
+    cv::Mat cameraMatrix = cv::Mat::eye(3, 3, CV_32FC1);
+    cv::Mat distortionCoeffs = cv::Mat(1, 4, CV_32FC1, cv::Scalar(0.0f));
 };
 
 }

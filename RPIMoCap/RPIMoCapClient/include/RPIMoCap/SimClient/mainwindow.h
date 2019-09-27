@@ -17,33 +17,31 @@
 
 #pragma once
 
-#include <RPIMoCap/Core/cameraparams.h>
+#include "simscene.h"
 
-#include <opencv2/core/mat.hpp>
-#include <eigen3/Eigen/Geometry>
+#include <QMainWindow>
 
-#include <mutex>
+namespace Ui {
+class MainWindow;
+}
 
 namespace RPIMoCap::SimClient {
 
-class SimScene
+class MainWindow : public QMainWindow
 {
+    Q_OBJECT
+
 public:
-    struct Marker
-    {
-        size_t id;
-        uint8_t sizemm;
-        cv::Point3f translation;
-    };
+    explicit MainWindow(SimScene &scene, QWidget *parent = nullptr);
+    ~MainWindow();
 
-    SimScene() = default;
-
-    void setMarkers(const std::vector<Marker> markers);
-    cv::Mat projectScene(const CameraParams &params) const;
+private slots:
+    void updateValue();
 
 private:
-    mutable std::mutex m_dataMutex;
-    std::vector<Marker> m_markers;
+    Ui::MainWindow *ui;
+
+    SimScene &m_scene;
 };
 
 }
