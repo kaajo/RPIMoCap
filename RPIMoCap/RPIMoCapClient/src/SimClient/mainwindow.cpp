@@ -18,6 +18,8 @@
 #include "RPIMoCap/SimClient/mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include <RPIMoCap/SimClient/simcamerawidget.h>
+
 namespace RPIMoCap::SimClient {
 
 MainWindow::MainWindow(SimScene &scene, QWidget *parent) :
@@ -30,6 +32,8 @@ MainWindow::MainWindow(SimScene &scene, QWidget *parent) :
     connect(ui->valuex,qOverload<double>(&QDoubleSpinBox::valueChanged), this, &MainWindow::updateValue);
     connect(ui->valuey,qOverload<double>(&QDoubleSpinBox::valueChanged), this, &MainWindow::updateValue);
     connect(ui->valuez,qOverload<double>(&QDoubleSpinBox::valueChanged), this, &MainWindow::updateValue);
+
+    ui->scrollAreaWidgetContents->setLayout(new QVBoxLayout);
 }
 
 MainWindow::~MainWindow()
@@ -51,6 +55,34 @@ void MainWindow::updateValue()
     markers.push_back(marker);
 
     m_scene.setMarkers(markers);
+}
+
+void RPIMoCap::SimClient::MainWindow::on_addClientButton_clicked()
+{
+    RPIMoCap::CameraParams params = RPIMoCap::CameraParams::computeRPICameraV1Params();
+
+    auto camera = std::make_shared<RPIMoCap::SimClient::SimCamera>(params, m_scene);
+    auto client = QSharedPointer<RPIMoCapClient>::create(camera,params);
+    auto widget = new SimCameraWidget(camera);
+    ui->scrollAreaWidgetContents->layout()->addWidget(widget);
+
+    m_clients.push_back(client);
+    m_clientWidgets.push_back(widget);
+}
+
+void RPIMoCap::SimClient::MainWindow::on_removeClientButton_clicked()
+{
+    if (m_clients.empty())
+    {
+        return;
+    }
+
+    QWidget *last = m_clientWidgets.last();
+    ui->scrollAreaWidgetContents->layout()->removeWidget(last);
+    last->deleteLater();
+
+    m_clientWidgets.removeLast();
+    m_clients.removeLast();
 }
 
 }

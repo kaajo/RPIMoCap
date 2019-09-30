@@ -48,12 +48,14 @@ add_executable(RPIMoCapClient src/Client/main.cpp)
 target_link_libraries(RPIMoCapClient RPIMoCapClientLib)
 
 QT5_WRAP_CPP(QOBJECT_SIM_HEADERS
+    include/RPIMoCap/SimClient/simcamerawidget.h
     include/RPIMoCap/SimClient/mainwindow.h)
 
 add_executable(RPIMoCapSimClient
     ${QOBJECT_SIM_HEADERS}
     src/SimClient/main.cpp
     src/SimClient/simcamera.cpp
+    src/SimClient/simcamerawidget.cpp
     src/SimClient/simscene.cpp
     src/SimClient/mainwindow.cpp)
 

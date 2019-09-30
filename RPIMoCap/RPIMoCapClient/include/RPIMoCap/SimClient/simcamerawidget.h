@@ -15,37 +15,35 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 #pragma once
 
-#include "simscene.h"
+#include <RPIMoCap/SimClient/simcamera.h>
 
-#include <RPIMoCap/ClientLib/icamera.h>
+#include <QWidget>
 
-#include <QElapsedTimer>
+#include <memory>
+
+namespace Ui {
+class SimCameraWidget;
+}
 
 namespace RPIMoCap::SimClient {
 
-class SimCamera : public ICamera
+class SimCameraWidget : public QWidget
 {
+    Q_OBJECT
+
 public:
-    SimCamera(const CameraParams &params, const SimScene &scene);
-    virtual ~SimCamera() override = default;
+    explicit SimCameraWidget(std::shared_ptr<SimCamera> camera, QWidget *parent = nullptr);
+    ~SimCameraWidget();
 
-    SimCamera(const SimCamera&) = delete;
-    void operator=(const SimCamera&) = delete;
+private slots:
+    void on_fpsvalue_valueChanged(int arg1);
 
-    bool getOpened() const override {return m_opened;}
-    bool open() override;
-    void close() override;
-
-    cv::Mat pullData() override;
 private:
-    bool m_opened = false;
-
-    const CameraParams m_params;
-    const SimScene &m_scene;
-
-    QElapsedTimer m_timer;
+    Ui::SimCameraWidget *m_ui;
+    std::shared_ptr<SimCamera> m_camera;
 };
 
 }

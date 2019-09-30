@@ -19,6 +19,8 @@
 
 #include "simscene.h"
 
+#include <RPIMoCap/ClientLib/rpimocapclient.h>
+
 #include <QMainWindow>
 
 namespace Ui {
@@ -38,10 +40,17 @@ public:
 private slots:
     void updateValue();
 
+    void on_addClientButton_clicked();
+
+    void on_removeClientButton_clicked();
+
 private:
     Ui::MainWindow *ui;
 
     SimScene &m_scene;
+
+    QVector<QSharedPointer<RPIMoCapClient>> m_clients;
+    QVector<QWidget*> m_clientWidgets;
 };
 
 }

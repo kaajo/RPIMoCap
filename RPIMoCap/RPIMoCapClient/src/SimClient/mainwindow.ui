@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>812</width>
-    <height>606</height>
+    <width>767</width>
+    <height>587</height>
    </rect>
   </property>
   <property name="contextMenuPolicy">
@@ -102,18 +102,42 @@
        </widget>
       </item>
       <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QPushButton" name="addClientButton">
+          <property name="text">
+           <string>+</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="removeClientButton">
+          <property name="text">
+           <string>-</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
        <widget class="QScrollArea" name="scrollArea">
         <property name="minimumSize">
          <size>
-          <width>150</width>
+          <width>170</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>150</width>
+          <width>170</width>
           <height>16777215</height>
          </size>
+        </property>
+        <property name="midLineWidth">
+         <number>0</number>
+        </property>
+        <property name="horizontalScrollBarPolicy">
+         <enum>Qt::ScrollBarAlwaysOff</enum>
         </property>
         <property name="widgetResizable">
          <bool>true</bool>
@@ -123,8 +147,8 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>148</width>
-           <height>519</height>
+           <width>168</width>
+           <height>468</height>
           </rect>
          </property>
         </widget>
@@ -139,7 +163,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>812</width>
+     <width>767</width>
      <height>21</height>
     </rect>
    </property>

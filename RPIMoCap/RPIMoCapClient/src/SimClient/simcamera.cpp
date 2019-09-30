@@ -17,13 +17,16 @@
 
 #include "RPIMoCap/SimClient/simcamera.h"
 
+#include <QThread>
+#include <QDebug>
+
 namespace RPIMoCap::SimClient {
 
 SimCamera::SimCamera(const CameraParams &params, const SimScene &scene)
     : m_params(params)
     , m_scene(scene)
 {
-
+    m_timer.start();
 }
 
 bool SimCamera::open()
@@ -38,6 +41,13 @@ void SimCamera::close()
 
 cv::Mat SimCamera::pullData()
 {
+    const int64_t waitTime = 1000.0/float(m_params.maxFPS) - m_timer.restart();
+
+    if (waitTime > 0)
+    {
+        QThread::msleep(waitTime);
+    }
+
     return m_scene.projectScene(m_params);
 }
 
