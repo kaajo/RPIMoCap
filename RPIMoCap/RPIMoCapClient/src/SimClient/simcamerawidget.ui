@@ -6,20 +6,20 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>165</width>
-    <height>250</height>
+    <width>185</width>
+    <height>251</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>165</width>
+    <width>175</width>
     <height>250</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>165</width>
-    <height>250</height>
+    <width>185</width>
+    <height>251</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -83,7 +83,7 @@
     </widget>
    </item>
    <item row="5" column="0">
-    <widget class="QLabel" name="label">
+    <widget class="QLabel" name="rotx">
      <property name="text">
       <string>RotX:</string>
      </property>
@@ -103,7 +103,7 @@
     </widget>
    </item>
    <item row="6" column="0">
-    <widget class="QLabel" name="label_2">
+    <widget class="QLabel" name="roty">
      <property name="text">
       <string>Rot Y:</string>
      </property>
@@ -153,7 +153,7 @@
     </widget>
    </item>
    <item row="7" column="0">
-    <widget class="QLabel" name="label_3">
+    <widget class="QLabel" name="rotz">
      <property name="text">
       <string>Rot Z:</string>
      </property>
@@ -163,7 +163,7 @@
     </widget>
    </item>
    <item row="5" column="1">
-    <widget class="QDoubleSpinBox" name="doubleSpinBox">
+    <widget class="QDoubleSpinBox" name="rotxvalue">
      <property name="suffix">
       <string>°</string>
      </property>
@@ -176,7 +176,7 @@
     </widget>
    </item>
    <item row="6" column="1">
-    <widget class="QDoubleSpinBox" name="doubleSpinBox_2">
+    <widget class="QDoubleSpinBox" name="rotyvalue">
      <property name="suffix">
       <string>°</string>
      </property>
@@ -189,7 +189,7 @@
     </widget>
    </item>
    <item row="7" column="1">
-    <widget class="QDoubleSpinBox" name="doubleSpinBox_3">
+    <widget class="QDoubleSpinBox" name="rotzvalue">
      <property name="suffix">
       <string>°</string>
      </property>

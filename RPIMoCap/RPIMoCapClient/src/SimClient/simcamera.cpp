@@ -51,4 +51,9 @@ cv::Mat SimCamera::pullData()
     return m_scene.projectScene(m_params);
 }
 
+CameraParams &SimCamera::getParams()
+{
+    return m_params;
+}
+
 }

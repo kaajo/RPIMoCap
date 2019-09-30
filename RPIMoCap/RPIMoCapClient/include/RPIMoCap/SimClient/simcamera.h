@@ -39,10 +39,12 @@ public:
     void close() override;
 
     cv::Mat pullData() override;
+    CameraParams& getParams();
+
 private:
     bool m_opened = false;
 
-    const CameraParams m_params;
+    CameraParams m_params;
     const SimScene &m_scene;
 
     QElapsedTimer m_timer;

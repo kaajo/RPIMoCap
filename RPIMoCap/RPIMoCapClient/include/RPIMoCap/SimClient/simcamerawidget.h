@@ -41,6 +41,18 @@ public:
 private slots:
     void on_fpsvalue_valueChanged(int arg1);
 
+    void on_xvalue_valueChanged(double arg1);
+
+    void on_yvalue_valueChanged(double arg1);
+
+    void on_zvalue_valueChanged(double arg1);
+
+    void on_rotxvalue_valueChanged(double arg1);
+
+    void on_rotyvalue_valueChanged(double arg1);
+
+    void on_rotzvalue_valueChanged(double arg1);
+
 private:
     Ui::SimCameraWidget *m_ui;
     std::shared_ptr<SimCamera> m_camera;
