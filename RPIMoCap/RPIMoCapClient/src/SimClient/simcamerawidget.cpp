@@ -28,6 +28,7 @@ SimCameraWidget::SimCameraWidget(std::shared_ptr<SimCamera> camera, QWidget *par
 {
     m_ui->setupUi(this);
 
+    //TODO set ID
     m_ui->fpsvalue->setValue(m_camera->getParams().maxFPS);
 }
 
