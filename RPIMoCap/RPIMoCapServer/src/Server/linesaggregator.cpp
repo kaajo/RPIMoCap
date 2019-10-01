@@ -64,6 +64,11 @@ void LinesAggregator::onMoCapStart(bool start)
 
 void LinesAggregator::onLinesReceived(const int clientId, const std::vector<RPIMoCap::Line3D> &lines)
 {
+    if (m_clients.find(clientId) == m_clients.end())
+    {
+        return;
+    }
+
     m_currentlines.append(QVector<RPIMoCap::Line3D>::fromStdVector(lines));
     m_currentlyReceived[clientId] = true;
 

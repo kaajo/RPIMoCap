@@ -63,6 +63,7 @@ void RPIMoCapServer::onLostConnection()
 
     if (it != m_currentClients.end())
     {
+        m_aggregator.removeCamera(it.value()->id());
         emit cameraRemoved(it.value()->id());
         m_currentClients.erase(it);
     }
@@ -77,6 +78,8 @@ void RPIMoCapServer::addClient(QTcpSocket *conn, const int id)
     m_currentClients.insert(conn,camera);
 
     connect(camera.get(),&CameraSettings::linesReceived, &m_aggregator, &LinesAggregator::onLinesReceived);
+
+    m_aggregator.addCamera(camera);
 
     emit cameraAdded(camera);
 }
