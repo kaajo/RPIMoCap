@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.13)
 
 project(RPIMoCapClient CXX)
 
@@ -19,21 +19,24 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-QT5_WRAP_CPP(QOBJECT_HEADERS
-    include/RPIMoCap/ClientLib/rpimocapclient.h)
-
-set(SOURCES
+add_library(RPIMoCapClientLib STATIC ${QOBJECT_HEADERS} ${SOURCES})
+target_sources(RPIMoCapClientLib
+    PRIVATE
     src/ClientLib/markerdetector.cpp
     src/ClientLib/rpicamera.cpp
-    src/ClientLib/rpimocapclient.cpp)
-
-add_library(RPIMoCapClientLib STATIC ${QOBJECT_HEADERS} ${SOURCES})
+    src/ClientLib/rpimocapclient.cpp
+    PUBLIC
+    include/RPIMoCap/ClientLib/markerdetector.h
+    include/RPIMoCap/ClientLib/rpicamera.h
+    include/RPIMoCap/ClientLib/rpimocapclient.h
+    INTERFACE
+    include/RPIMoCap/ClientLib/icamera.h)
 
 target_include_directories(RPIMoCapClientLib PUBLIC
     ${PROJECT_SOURCE_DIR}/include
     ${GSTREAMER_BASE_INCLUDE_DIRS})
 
-target_link_libraries(RPIMoCapClientLib
+target_link_libraries(RPIMoCapClientLib PUBLIC
     RPIMoCapBase
     ${MSGPACK_LIBRARIES}
     ${OPENCV_LIBRARIES}
@@ -44,21 +47,24 @@ target_link_libraries(RPIMoCapClientLib
     Qt5::Network
     Qt5::Concurrent)
 
-add_executable(RPIMoCapClient src/Client/main.cpp)
+add_executable(RPIMoCapClient)
+target_sources(RPIMoCapClient PRIVATE src/Client/main.cpp)
 target_link_libraries(RPIMoCapClient RPIMoCapClientLib)
 
-QT5_WRAP_CPP(QOBJECT_SIM_HEADERS
-    include/RPIMoCap/SimClient/simcamerawidget.h
-    include/RPIMoCap/SimClient/mainwindow.h)
-
-add_executable(RPIMoCapSimClient
-    ${QOBJECT_SIM_HEADERS}
+add_executable(RPIMoCapSimClient)
+target_sources(RPIMoCapSimClient
+    PRIVATE
     src/SimClient/main.cpp
     src/SimClient/simcamera.cpp
     src/SimClient/simcamerawidget.cpp
     src/SimClient/simscene.cpp
-    src/SimClient/mainwindow.cpp)
+    src/SimClient/mainwindow.cpp
+    PUBLIC
+    include/RPIMoCap/SimClient/simcamera.h
+    include/RPIMoCap/SimClient/simscene.h
+    include/RPIMoCap/SimClient/simcamerawidget.h
+    include/RPIMoCap/SimClient/mainwindow.h)
 
-target_link_libraries(RPIMoCapSimClient
+target_link_libraries(RPIMoCapSimClient PRIVATE
     RPIMoCapClientLib
     Qt5::Widgets)

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.13)
 
 project(RPIMoCapServer CXX)
 
@@ -15,17 +15,9 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-QT5_WRAP_CPP(QOBJECT_HEADERS
-    include/RPIMoCap/Server/camerasettings.h
-    include/RPIMoCap/Server/camerasettingswidget.h
-    include/RPIMoCap/Server/linesaggregator.h
-    include/RPIMoCap/Server/mainwindow.h
-    include/RPIMoCap/Server/mocapscene3d.h
-    include/RPIMoCap/Server/rpimocapserver.h
-    include/RPIMoCap/Server/wandcalibration.h)
-
-set(SOURCES
-    ${QOBJECT_HEADERS}
+add_executable(RPIMoCapServer)
+target_sources(RPIMoCapServer
+    PRIVATE
     src/Server/camerasettingswidget.cpp
     src/Server/linesaggregator.cpp
     src/Server/mainwindow.cpp
@@ -34,14 +26,24 @@ set(SOURCES
     src/Server/pointchecker.cpp
     src/Server/rpimocapserver.cpp
     src/Server/wandcalibration.cpp
-    src/Server/main.cpp)
-
-add_executable(RPIMoCapServer ${SOURCES})
+    src/Server/main.cpp
+    PUBLIC
+    include/RPIMoCap/Server/camerasettings.h
+    include/RPIMoCap/Server/camerasettingswidget.h
+    include/RPIMoCap/Server/linesaggregator.h
+    include/RPIMoCap/Server/mainwindow.h
+    include/RPIMoCap/Server/matrix.h
+    include/RPIMoCap/Server/matrix.tpp
+    include/RPIMoCap/Server/mocapscene3d.h
+    include/RPIMoCap/Server/munkres.h
+    include/RPIMoCap/Server/pointchecker.h
+    include/RPIMoCap/Server/rpimocapserver.h
+    include/RPIMoCap/Server/wandcalibration.h)
 
 target_include_directories(RPIMoCapServer PUBLIC
     ${PROJECT_SOURCE_DIR}/include)
 
-target_link_libraries(RPIMoCapServer
+target_link_libraries(RPIMoCapServer PRIVATE
     RPIMoCapBase
     ${MSGPACK_LIBRARIES}
     ${OPENCV_LIBRARIES}
