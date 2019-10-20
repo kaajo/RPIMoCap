@@ -23,7 +23,7 @@
 
 namespace RPIMoCap::SimClient {
 
-void SimScene::setMarkers(const std::vector<SimScene::Marker> markers)
+void SimScene::setMarkers(const std::vector<SimMarker> markers)
 {
     std::scoped_lock lock(m_dataMutex);
     m_markers = markers;

@@ -19,27 +19,23 @@
 
 #include "simmarker.h"
 
-#include <RPIMoCap/Core/cameraparams.h>
+#include <RPIMoCap/Core/frame.h>
 
-#include <opencv2/core/mat.hpp>
 #include <eigen3/Eigen/Geometry>
-
-#include <mutex>
 
 namespace RPIMoCap::SimClient {
 
-class SimScene
+class VirtualWand
 {
 public:
+    VirtualWand(float sizeM, float middlePointOffsetM);
 
-    SimScene() = default;
-
-    void setMarkers(const std::vector<SimMarker> markers);
-    cv::Mat projectScene(const CameraParams &params) const;
+    std::vector<SimMarker> markers(const Eigen::Affine3f &transform);
 
 private:
-    mutable std::mutex m_dataMutex;
-    std::vector<SimMarker> m_markers;
+    Eigen::Vector3f m_leftPoint;
+    Eigen::Vector3f m_middlePoint;
+    Eigen::Vector3f m_rightPoint;
 };
 
 }

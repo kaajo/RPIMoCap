@@ -18,6 +18,8 @@
 #include "RPIMoCap/SimClient/mainwindow.h"
 #include "ui_mainwindow.h"
 
+
+#include <RPIMoCap/SimClient/virtualwand.h>
 #include <RPIMoCap/SimClient/simcamerawidget.h>
 
 namespace RPIMoCap::SimClient {
@@ -43,25 +45,25 @@ MainWindow::~MainWindow()
 
 void MainWindow::updateValue()
 {
-    std::vector<SimScene::Marker> markers;
+    VirtualWand wand(100.0, 20);
 
-    SimScene::Marker marker;
-    marker.id = 0;
-    marker.sizemm = 16;
-    marker.translation = cv::Point3f(ui->valuex->value(),
-                                     ui->valuey->value(),
-                                     ui->valuez->value());
+    Eigen::Vector3f t(ui->valuex->value(),
+                      ui->valuey->value(),
+                      ui->valuez->value());
 
-    markers.push_back(marker);
+    Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+    transform.translate(t);
+
+    std::vector<SimMarker> markers = wand.markers(transform);
 
     m_scene.setMarkers(markers);
 }
 
-void RPIMoCap::SimClient::MainWindow::on_addClientButton_clicked()
+void MainWindow::on_addClientButton_clicked()
 {
     RPIMoCap::CameraParams params = RPIMoCap::CameraParams::computeRPICameraV1Params();
 
-    auto camera = std::make_shared<RPIMoCap::SimClient::SimCamera>(params, m_scene);
+    auto camera = std::make_shared<SimCamera>(params, m_scene);
     auto client = QSharedPointer<RPIMoCapClient>::create(camera,params);
     auto widget = new SimCameraWidget(camera);
     ui->scrollAreaWidgetContents->layout()->addWidget(widget);
@@ -70,7 +72,7 @@ void RPIMoCap::SimClient::MainWindow::on_addClientButton_clicked()
     m_clientWidgets.push_back(widget);
 }
 
-void RPIMoCap::SimClient::MainWindow::on_removeClientButton_clicked()
+void MainWindow::on_removeClientButton_clicked()
 {
     if (m_clients.empty())
     {

@@ -58,12 +58,17 @@ target_sources(RPIMoCapSimClient
     src/SimClient/simcamera.cpp
     src/SimClient/simcamerawidget.cpp
     src/SimClient/simscene.cpp
+    src/SimClient/virtualwand.cpp
     src/SimClient/mainwindow.cpp
+    src/SimClient/mainwindow.ui
+    src/SimClient/simcamerawidget.ui
     PUBLIC
+    include/RPIMoCap/SimClient/simmarker.h
     include/RPIMoCap/SimClient/simcamera.h
     include/RPIMoCap/SimClient/simscene.h
     include/RPIMoCap/SimClient/simcamerawidget.h
-    include/RPIMoCap/SimClient/mainwindow.h)
+    include/RPIMoCap/SimClient/mainwindow.h
+    include/RPIMoCap/SimClient/virtualwand.h)
 
 target_link_libraries(RPIMoCapSimClient PRIVATE
     RPIMoCapClientLib

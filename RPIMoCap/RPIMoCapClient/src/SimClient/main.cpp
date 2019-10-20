@@ -32,10 +32,6 @@ int main(int argc, char *argv[])
 
     auto *mainWindow = new RPIMoCap::SimClient::MainWindow(scene);
 
-    RPIMoCap::SimClient::SimScene::Marker marker;
-    marker.translation = cv::Point3f(0,0,10);
-    scene.setMarkers({marker});
-
     mainWindow->show();
     return a.exec();
 }

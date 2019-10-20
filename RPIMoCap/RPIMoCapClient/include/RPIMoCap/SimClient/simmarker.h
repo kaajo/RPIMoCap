@@ -17,29 +17,15 @@
 
 #pragma once
 
-#include "simmarker.h"
-
-#include <RPIMoCap/Core/cameraparams.h>
-
 #include <opencv2/core/mat.hpp>
-#include <eigen3/Eigen/Geometry>
-
-#include <mutex>
 
 namespace RPIMoCap::SimClient {
 
-class SimScene
+struct SimMarker
 {
-public:
-
-    SimScene() = default;
-
-    void setMarkers(const std::vector<SimMarker> markers);
-    cv::Mat projectScene(const CameraParams &params) const;
-
-private:
-    mutable std::mutex m_dataMutex;
-    std::vector<SimMarker> m_markers;
+    size_t id;
+    uint8_t sizemm;
+    cv::Point3f translation;
 };
 
 }
