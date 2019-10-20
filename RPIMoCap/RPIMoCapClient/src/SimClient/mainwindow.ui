@@ -23,26 +23,32 @@
       <item row="0" column="0">
        <widget class="QLabel" name="label">
         <property name="text">
-         <string>X:</string>
+         <string>Pos X:</string>
         </property>
        </widget>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="label_2">
         <property name="text">
-         <string>Y:</string>
+         <string>Pos Y:</string>
         </property>
        </widget>
       </item>
       <item row="2" column="0">
        <widget class="QLabel" name="label_3">
         <property name="text">
-         <string>Z:</string>
+         <string>Pos Z:</string>
         </property>
        </widget>
       </item>
       <item row="0" column="1">
        <widget class="QDoubleSpinBox" name="valuex">
+        <property name="suffix">
+         <string> cm</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
         <property name="minimum">
          <double>-1000.000000000000000</double>
         </property>
@@ -53,6 +59,12 @@
       </item>
       <item row="1" column="1">
        <widget class="QDoubleSpinBox" name="valuey">
+        <property name="suffix">
+         <string> cm</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
         <property name="minimum">
          <double>-1000.000000000000000</double>
         </property>
@@ -63,11 +75,95 @@
       </item>
       <item row="2" column="1">
        <widget class="QDoubleSpinBox" name="valuez">
+        <property name="suffix">
+         <string> cm</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
         <property name="minimum">
          <double>-1000.000000000000000</double>
         </property>
         <property name="maximum">
          <double>1000.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Rot X:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_6">
+        <property name="text">
+         <string>Rot Y:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>Rot Z:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QDoubleSpinBox" name="rotX">
+        <property name="suffix">
+         <string>°</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-180.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>180.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>5.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QDoubleSpinBox" name="rotY">
+        <property name="suffix">
+         <string>°</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-180.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>180.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>5.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QDoubleSpinBox" name="rotZ">
+        <property name="suffix">
+         <string>°</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-180.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>180.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>5.000000000000000</double>
         </property>
        </widget>
       </item>
@@ -123,7 +219,7 @@
        <widget class="QScrollArea" name="scrollArea">
         <property name="minimumSize">
          <size>
-          <width>170</width>
+          <width>200</width>
           <height>0</height>
          </size>
         </property>
@@ -147,7 +243,7 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>168</width>
+           <width>198</width>
            <height>468</height>
           </rect>
          </property>

@@ -34,6 +34,9 @@ MainWindow::MainWindow(SimScene &scene, QWidget *parent) :
     connect(ui->valuex,qOverload<double>(&QDoubleSpinBox::valueChanged), this, &MainWindow::updateValue);
     connect(ui->valuey,qOverload<double>(&QDoubleSpinBox::valueChanged), this, &MainWindow::updateValue);
     connect(ui->valuez,qOverload<double>(&QDoubleSpinBox::valueChanged), this, &MainWindow::updateValue);
+    connect(ui->rotX,qOverload<double>(&QDoubleSpinBox::valueChanged), this, &MainWindow::updateValue);
+    connect(ui->rotY,qOverload<double>(&QDoubleSpinBox::valueChanged), this, &MainWindow::updateValue);
+    connect(ui->rotZ,qOverload<double>(&QDoubleSpinBox::valueChanged), this, &MainWindow::updateValue);
 
     ui->scrollAreaWidgetContents->setLayout(new QVBoxLayout);
 }
@@ -47,14 +50,20 @@ void MainWindow::updateValue()
 {
     VirtualWand wand(100.0, 20);
 
-    Eigen::Vector3f t(ui->valuex->value(),
-                      ui->valuey->value(),
-                      ui->valuez->value());
+    const Eigen::Vector3f pos(ui->valuex->value(),
+                              ui->valuey->value(),
+                              ui->valuez->value());
 
-    Eigen::Affine3f transform = Eigen::Affine3f::Identity();
-    transform.translate(t);
+    Eigen::Matrix3f r(Eigen::AngleAxisf(ui->rotX->value()*M_PI/180.0f, Eigen::Vector3f::UnitX())
+                      * Eigen::AngleAxisf(ui->rotY->value()*M_PI/180.0f,  Eigen::Vector3f::UnitY())
+                      * Eigen::AngleAxisf(ui->rotZ->value()*M_PI/180.0f, Eigen::Vector3f::UnitZ()));
 
-    std::vector<SimMarker> markers = wand.markers(transform);
+    const Eigen::Vector3f s(1.0, 1.0, 1.0);
+
+    Eigen::Affine3f t;
+    t.fromPositionOrientationScale(pos, r, s);
+
+    std::vector<SimMarker> markers = wand.markers(t);
 
     m_scene.setMarkers(markers);
 }
