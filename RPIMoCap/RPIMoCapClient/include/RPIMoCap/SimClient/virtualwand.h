@@ -30,7 +30,7 @@ class VirtualWand
 public:
     VirtualWand(float sizeM, float middlePointOffsetM);
 
-    std::vector<SimMarker> markers(const Eigen::Affine3f &transform);
+    std::vector<SimMarker> markers(const Eigen::Affine3f &transform) const;
 
 private:
     Eigen::Vector3f m_leftPoint;

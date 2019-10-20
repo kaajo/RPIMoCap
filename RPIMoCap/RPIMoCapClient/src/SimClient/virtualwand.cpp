@@ -26,7 +26,7 @@ VirtualWand::VirtualWand(float sizecm, float middlePointOffsetcm)
 {
 }
 
-std::vector<SimMarker> VirtualWand::markers(const Eigen::Affine3f &transform)
+std::vector<SimMarker> VirtualWand::markers(const Eigen::Affine3f &transform) const
 {
     SimMarker left;
     const auto leftTr = transform * m_leftPoint;

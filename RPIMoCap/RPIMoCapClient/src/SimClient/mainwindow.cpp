@@ -48,13 +48,13 @@ MainWindow::~MainWindow()
 
 void MainWindow::updateValue()
 {
-    VirtualWand wand(100.0, 20);
+    const VirtualWand wand(100.0, 20);
 
     const Eigen::Vector3f pos(ui->valuex->value(),
                               ui->valuey->value(),
                               ui->valuez->value());
 
-    Eigen::Matrix3f r(Eigen::AngleAxisf(ui->rotX->value()*M_PI/180.0f, Eigen::Vector3f::UnitX())
+    const Eigen::Matrix3f r(Eigen::AngleAxisf(ui->rotX->value()*M_PI/180.0f, Eigen::Vector3f::UnitX())
                       * Eigen::AngleAxisf(ui->rotY->value()*M_PI/180.0f,  Eigen::Vector3f::UnitY())
                       * Eigen::AngleAxisf(ui->rotZ->value()*M_PI/180.0f, Eigen::Vector3f::UnitZ()));
 
@@ -62,10 +62,7 @@ void MainWindow::updateValue()
 
     Eigen::Affine3f t;
     t.fromPositionOrientationScale(pos, r, s);
-
-    std::vector<SimMarker> markers = wand.markers(t);
-
-    m_scene.setMarkers(markers);
+    m_scene.setMarkers(wand.markers(t));
 }
 
 void MainWindow::on_addClientButton_clicked()
