@@ -59,17 +59,17 @@ void SimCameraWidget::on_zvalue_valueChanged(double arg1)
 
 void SimCameraWidget::on_rotxvalue_valueChanged(double arg1)
 {
-    m_camera->getParams().rotation[0] = arg1;
+    m_camera->getParams().rotation[0] = arg1 * M_PI/180.0;
 }
 
 void SimCameraWidget::on_rotyvalue_valueChanged(double arg1)
 {
-    m_camera->getParams().rotation[1] = arg1;
+    m_camera->getParams().rotation[1] = arg1 * M_PI/180.0;
 }
 
 void SimCameraWidget::on_rotzvalue_valueChanged(double arg1)
 {
-    m_camera->getParams().rotation[2] = arg1;
+    m_camera->getParams().rotation[2] = arg1 * M_PI/180.0;
 }
 
 }

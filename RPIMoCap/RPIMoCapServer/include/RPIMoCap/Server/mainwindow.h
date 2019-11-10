@@ -39,6 +39,7 @@ public:
 
 signals:
     void startMoCap(bool start);
+    void startCalib(bool start);
 
 public slots:
     void onLinesReceived(const std::vector<RPIMoCap::Line3D> &lines);
@@ -47,6 +48,7 @@ public slots:
 
 private slots:
     void on_MoCapButton_clicked(bool checked);
+    void on_calibButton_clicked(bool checked);
 
 private:
     Ui::MainWindow *ui;

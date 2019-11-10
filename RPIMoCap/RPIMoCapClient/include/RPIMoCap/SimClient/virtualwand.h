@@ -28,14 +28,17 @@ namespace RPIMoCap::SimClient {
 class VirtualWand
 {
 public:
-    VirtualWand(float sizeM, float middlePointOffsetM);
+    VirtualWand(float sizecm, float middlePointOffsetcm, float crossPointOffsetcm);
 
     std::vector<SimMarker> markers(const Eigen::Affine3f &transform) const;
+
+    static constexpr size_t wandPointCount = 4;
 
 private:
     Eigen::Vector3f m_leftPoint;
     Eigen::Vector3f m_middlePoint;
     Eigen::Vector3f m_rightPoint;
+    Eigen::Vector3f m_crossPoint;
 };
 
 }

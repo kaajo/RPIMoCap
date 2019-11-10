@@ -63,3 +63,9 @@ void MainWindow::on_MoCapButton_clicked(bool checked)
     ui->MoCapButton->setText(checked ? "STOP" : "START");
     emit startMoCap(checked);
 }
+
+void MainWindow::on_calibButton_clicked(bool checked)
+{
+    ui->calibButton->setText(checked ? "STOP calib" : "START calib");
+    emit startCalib(checked);
+}

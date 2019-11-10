@@ -1,94 +1,53 @@
+/*
+ * This file is part of the RPIMoCap (https://github.com/kaajo/RPIMoCap).
+ * Copyright (c) 2019 Miroslav Krajicek.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
+#include <RPIMoCap/Core/cameraparams.h>
+#include <RPIMoCap/Server/camerasettings.h>
 #include <RPIMoCap/Core/msgpack_defs.h>
 
 #include <QObject>
+#include <QMap>
 
 #include <opencv2/core/mat.hpp>
-
-struct CalibData
-{
-    bool isEqualID(size_t first, size_t second) const
-    {
-        return (first == m_firstCamID && second == m_secondCamID)
-                || (second == m_firstCamID && first == m_secondCamID);
-    }
-
-    bool addPoints(const size_t firstId, std::vector<std::vector<cv::Point2f>> firstPoints,
-                   const size_t secondId, std::vector<std::vector<cv::Point2f>> secondPoints)
-    {
-        if (!isEqualID(firstId, secondId))
-        {
-            return false;
-        }
-
-        if (firstId == m_firstCamID)
-        {
-            m_firstPoints.insert(m_firstPoints.end(),firstPoints.begin(),firstPoints.end());
-        }
-        else if (firstId == m_secondCamID)
-        {
-            m_secondPoints.insert(m_secondPoints.end(), firstPoints.begin(), firstPoints.end());
-        }
-        else
-        {
-            return false;
-        }
-
-        if (secondId == m_firstCamID)
-        {
-            m_firstPoints.insert(m_firstPoints.end(),secondPoints.begin(),secondPoints.end());
-        }
-        else if (secondId == m_secondCamID)
-        {
-            m_secondPoints.insert(m_secondPoints.end(), secondPoints.begin(), secondPoints.end());
-        }
-        else
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    size_t m_firstCamID;
-    std::vector<std::vector<cv::Point2f>> m_firstPoints;
-    size_t m_secondCamID;
-    std::vector<std::vector<cv::Point2f>> m_secondPoints;
-};
-
 
 class WandCalibration : public QObject
 {
     Q_OBJECT
 public:
+    WandCalibration(QMap<int,std::shared_ptr<CameraSettings>> &cameraSettings,
+                    RPIMoCap::CameraParams camData, QObject *parent = nullptr);
 
-    struct CameraData {
-        cv::Mat cameraMatrix;
-        cv::Mat distortion = cv::Mat::zeros(1,4,CV_32FC1);
-    };
-
-    struct Data {
-        float wandLengthM;
-        std::array<Eigen::Vector3f,2> wandPts;
-        std::vector<Eigen::Vector3f> backgroundPts;
-    };
-
-    explicit WandCalibration(QObject *parent = nullptr);
-
-    float addPoints(size_t firstCamID, std::vector<std::vector<cv::Point2f>> firstPoints,
-                    size_t secondCamID, std::vector<std::vector<cv::Point2f>> secondPoints);
-
-signals:
-
-public slots:
+    void addFrame(const QMap<int, std::vector<cv::Point2f> > &points);
 
 private:
-    size_t m_numOfCameras = 2;
+    std::optional<Eigen::Affine3f> extrinsicGuess(const size_t camID, const std::vector<cv::Point2f> &pixels);
+    static std::vector<cv::Point2f> detect4pWand(const std::vector<cv::Point2f> &pts);
+
     std::vector<cv::Point3f> m_wandPoints;
 
+    QMap<int,std::shared_ptr<CameraSettings>> m_cameraSettings;
+    QMap<int, std::optional<Eigen::Affine3f>> m_extrinsicGuess;
+    bool haveAllExtrinsicGuess();
 
-    std::vector<CalibData> m_calibData;
+    RPIMoCap::CameraParams m_camData;
+
+    std::vector<QMap<int, std::vector<cv::Point2f>>> m_observations;
 };
 
 /*

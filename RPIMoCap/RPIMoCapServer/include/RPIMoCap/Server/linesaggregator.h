@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <RPIMoCap/Server/wandcalibration.h>
 #include <RPIMoCap/Server/camerasettings.h>
 
 #include <RPIMoCap/Core/line3d.h>
@@ -35,6 +36,9 @@ public:
     void addCamera(const std::shared_ptr<CameraSettings> &camera);
     void removeCamera(const int id);
 
+    void startCalib();
+    void stopCalib();
+
 signals:
     void trigger(const QByteArray &payload);
 
@@ -48,6 +52,7 @@ signals:
 public slots:
     void onMoCapStart(bool start);
     void onLinesReceived(const int clientId, const std::vector<RPIMoCap::Line3D> &lines);
+    void onPointsReceived(const int clientId, const std::vector<cv::Point2i> &points);
 
 private:
     QTime lastTime = QTime::currentTime();
@@ -57,5 +62,9 @@ private:
 
     QVector<RPIMoCap::Line3D> m_currentlines;
     QMap<int,bool> m_currentlyReceived;
+
+    std::unique_ptr<WandCalibration> m_wandCalib;
+    QMap<int,std::vector<cv::Point2f>> m_currentPoints;
+    QMap<int,bool> m_currentlyReceivedPoints;
 };
 

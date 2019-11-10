@@ -35,6 +35,7 @@ void LinesAggregator::addCamera(const std::shared_ptr<CameraSettings> &camera)
     {
         m_clients.insert(camera->id(), camera);
         m_currentlyReceived.insert(camera->id(), false);
+        m_currentlyReceivedPoints.insert(camera->id(), false);
     }
 }
 
@@ -44,7 +45,19 @@ void LinesAggregator::removeCamera(const int id)
     {
         m_clients.remove(id);
         m_currentlyReceived.remove(id);
+        m_currentlyReceivedPoints.remove(id);
     }
+}
+
+void LinesAggregator::startCalib()
+{
+    RPIMoCap::CameraParams params = RPIMoCap::CameraParams::computeRPICameraV1Params();
+    m_wandCalib = std::make_unique<WandCalibration>(m_clients,params);
+}
+
+void LinesAggregator::stopCalib()
+{
+    m_wandCalib.reset();
 }
 
 void LinesAggregator::onMoCapStart(bool start)
@@ -102,5 +115,45 @@ void LinesAggregator::onLinesReceived(const int clientId, const std::vector<RPIM
         emit frameReady(frame);
         emit linesReceived(m_currentlines.toStdVector());
         m_currentlines.clear();
+    }
+}
+
+void LinesAggregator::onPointsReceived(const int clientId, const std::vector<cv::Point2i> &points)
+{
+    if (m_clients.find(clientId) == m_clients.end())
+    {
+        return;
+    }
+
+    std::vector<cv::Point2f> pointsf;
+    for (size_t i = 0; i < points.size(); ++i)
+    {
+        pointsf.push_back(points[i]);
+    }
+    m_currentPoints[clientId] = pointsf;
+
+    m_currentlyReceivedPoints[clientId] = true;
+
+    bool haveAll = true;
+
+    for (auto &received : m_currentlyReceivedPoints)
+    {
+        if (!received)
+        {
+            haveAll = false;
+        }
+    }
+
+    if (running && haveAll)
+    {
+        if (m_wandCalib)
+        {
+            m_wandCalib->addFrame(m_currentPoints);
+        }
+
+        for (auto &received : m_currentlyReceivedPoints)
+        {
+            received = false;
+        }
     }
 }

@@ -43,6 +43,11 @@ void RPIMoCapServer::onMoCapStart(bool start)
     m_aggregator.onMoCapStart(start);
 }
 
+void RPIMoCapServer::onCalibStart(bool start)
+{
+    start ? m_aggregator.startCalib() : m_aggregator.stopCalib();
+}
+
 void RPIMoCapServer::onNewConnection()
 {
     const int thisID = nextId;
@@ -78,6 +83,7 @@ void RPIMoCapServer::addClient(QTcpSocket *conn, const int id)
     m_currentClients.insert(conn,camera);
 
     connect(camera.get(),&CameraSettings::linesReceived, &m_aggregator, &LinesAggregator::onLinesReceived);
+    connect(camera.get(),&CameraSettings::pointsReceived, &m_aggregator, &LinesAggregator::onPointsReceived);
 
     m_aggregator.addCamera(camera);
 

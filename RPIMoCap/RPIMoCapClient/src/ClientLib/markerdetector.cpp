@@ -86,8 +86,21 @@ void MarkerDetector::onImage(const cv::Mat &image, std::vector<RPIMoCap::Line3D>
         return contArea < 500 && contArea > 5;
     });
 
+    points = QtConcurrent::blockingMapped<std::vector<cv::Point2i>>(contours,
+                                                                    std::bind(&MarkerDetector::qtConcurrentfindPoint, this, std::placeholders::_1));
     lines = QtConcurrent::blockingMapped<std::vector<RPIMoCap::Line3D>>(contours,
                                                                         std::bind(&MarkerDetector::qtConcurrentpickLine, this, std::placeholders::_1));
+}
+
+cv::Point2i MarkerDetector::qtConcurrentfindPoint(const std::vector<cv::Point2i> &contour)
+{
+    const int m00 = contour.size();
+    const cv::Point2i sum = std::accumulate(contour.begin(),contour.end(),cv::Point2i(0,0));
+
+    const int x = std::round(sum.x/static_cast<double>(m00));
+    const int y = std::round(sum.y/static_cast<double>(m00));
+
+    return cv::Point2i(x, y);
 }
 
 RPIMoCap::Line3D MarkerDetector::qtConcurrentpickLine(const std::vector<cv::Point2i> &contour)

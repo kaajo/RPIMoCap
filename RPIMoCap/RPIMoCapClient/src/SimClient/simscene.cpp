@@ -46,8 +46,12 @@ cv::Mat SimScene::projectScene(const CameraParams &params) const
         return simulatedImage;
     }
 
+    for (size_t i = 0; i < pts.size(); ++i) {
+        pts[i] = cv::Affine3f(params.rotation, params.translation).inv() * pts[i];
+    }
+
     std::vector<cv::Point2f> pixels;
-    cv::projectPoints(pts, params.rotation, params.translation,
+    cv::projectPoints(pts, cv::Vec3f(0,0,0), cv::Vec3f(0,0,0),
                       params.cameraMatrix, params.distortionCoeffs, pixels);
 
     for (auto &px : pixels)

@@ -38,14 +38,14 @@ void CameraSettingsWidget::on_pushButton_clicked()
 {
     auto t = Eigen::Affine3f::Identity();
 
-    const float rollRad = ui->rotationX->value();
-    const float pitchRad = ui->rotationY->value();
-    const float yawRad = ui->rotationZ->value();
+    const float rollRad = ui->rotationX->value() * M_PI/180.0;
+    const float pitchRad = ui->rotationY->value() * M_PI/180.0;
+    const float yawRad = ui->rotationZ->value() * M_PI/180.0;
 
     Eigen::Matrix3f rot;
-    rot = Eigen::AngleAxisf(yawRad, Eigen::Vector3f::UnitZ())
+    rot = Eigen::AngleAxisf(rollRad, Eigen::Vector3f::UnitX())
         * Eigen::AngleAxisf(pitchRad, Eigen::Vector3f::UnitY())
-        * Eigen::AngleAxisf(rollRad, Eigen::Vector3f::UnitX());
+        * Eigen::AngleAxisf(yawRad, Eigen::Vector3f::UnitZ());
 
     t.rotate(rot);
 

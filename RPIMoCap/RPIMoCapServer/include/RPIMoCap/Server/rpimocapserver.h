@@ -40,12 +40,14 @@ public:
 
 signals:
     void linesReceived(const std::vector<RPIMoCap::Line3D> &lines);
+    void pointsReceived(const std::vector<cv::Point2i> &points);
 
     void cameraAdded(const std::shared_ptr<CameraSettings> &settings);
     void cameraRemoved(int id);
 
 public slots:
     void onMoCapStart(bool start);
+    void onCalibStart(bool start);
 
 private slots:
     void onNewConnection();
