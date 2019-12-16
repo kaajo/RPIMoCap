@@ -35,7 +35,7 @@ class RPIMoCapServer : public QObject
 {
     Q_OBJECT
 public:
-    explicit RPIMoCapServer(QObject *parent = nullptr);
+    explicit RPIMoCapServer(RPIMoCap::MQTTSettings settings, QObject *parent = nullptr);
     virtual ~RPIMoCapServer();
 
 signals:
@@ -61,7 +61,7 @@ private:
     void addClient(QTcpSocket *conn, const int id);
 
     LinesAggregator m_aggregator;
-    std::shared_ptr<RPIMoCap::MQTTPublisher> m_triggerPub;
+    RPIMoCap::MQTTPublisher<std::string> m_triggerPub;
 
     QProcess m_avahiPublish;
 };

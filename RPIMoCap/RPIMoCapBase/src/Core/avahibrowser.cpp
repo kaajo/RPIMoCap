@@ -17,9 +17,13 @@
 
 #include "RPIMoCap/Core/avahibrowser.h"
 
+#include <QProcess>
+
+using NetworkLayerProtocol = QAbstractSocket::NetworkLayerProtocol;
+
 namespace RPIMoCap {
 
-QHash<QString, AvahiBrowser::ServiceInfo> AvahiBrowser::browseServices(const AvahiBrowser::IPVersion &ipv) {
+QHash<QString, AvahiBrowser::ServiceInfo> AvahiBrowser::browseServices(const NetworkLayerProtocol &searchIPVersion) {
     QProcess avahiBrowser;
     avahiBrowser.start("avahi-browse", QStringList() << ("-atpr"));
     avahiBrowser.waitForFinished();
@@ -32,10 +36,11 @@ QHash<QString, AvahiBrowser::ServiceInfo> AvahiBrowser::browseServices(const Ava
         const QStringList d = line.split(";");
         if (d.first() == "=")
         {
-            const IPVersion ipver = d[2] == "IPv4" ? IPVersion::IPv4 : IPVersion::IPv6;
-            if (ipver == ipv)
+            const auto serviceIPVer = d[2] == "IPv4" ? NetworkLayerProtocol::IPv4Protocol : NetworkLayerProtocol::IPv6Protocol;
+
+            if (searchIPVersion == serviceIPVer || searchIPVersion == NetworkLayerProtocol::AnyIPProtocol)
             {
-                services[d[4]] = ServiceInfo(ServiceInfo{d[1],ipver, d[4], d[5], QHostAddress(d[7]), d[8].toShort(), d[9]});
+                services[d[4]] = ServiceInfo(ServiceInfo{d[1],searchIPVersion, d[4], d[5], QHostAddress(d[7]), d[8].toShort(), d[9]});
             }
         }
     }

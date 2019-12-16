@@ -19,7 +19,7 @@
 
 #include "simscene.h"
 
-#include <RPIMoCap/ClientLib/rpimocapclient.h>
+#include <RPIMoCap/ClientLib/client.h>
 
 #include <QMainWindow>
 
@@ -49,7 +49,7 @@ private:
 
     SimScene &m_scene;
 
-    QVector<QSharedPointer<RPIMoCapClient>> m_clients;
+    QVector<QSharedPointer<Client>> m_clients;
     QVector<QWidget*> m_clientWidgets;
 };
 

@@ -6,11 +6,8 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native -mtune=native -O3")
 
-find_library(mosquitto REQUIRED)
-find_library(mosquittopp REQUIRED)
 find_package(PkgConfig REQUIRED)
-find_package(Qt5 COMPONENTS Core Gui Widgets Network Concurrent REQUIRED)
-pkg_check_modules(MSGPACK REQUIRED msgpack)
+find_package(Qt5 COMPONENTS Gui Widgets Concurrent REQUIRED)
 pkg_check_modules(OPENCV REQUIRED opencv)
 pkg_check_modules(GSTREAMER_BASE REQUIRED gstreamer-base-1.0)
 pkg_check_modules(GSTREAMER_APP REQUIRED gstreamer-app-1.0)
@@ -24,11 +21,11 @@ target_sources(RPIMoCapClientLib
     PRIVATE
     src/ClientLib/markerdetector.cpp
     src/ClientLib/rpicamera.cpp
-    src/ClientLib/rpimocapclient.cpp
+    src/ClientLib/client.cpp
     PUBLIC
     include/RPIMoCap/ClientLib/markerdetector.h
     include/RPIMoCap/ClientLib/rpicamera.h
-    include/RPIMoCap/ClientLib/rpimocapclient.h
+    include/RPIMoCap/ClientLib/client.h
     INTERFACE
     include/RPIMoCap/ClientLib/icamera.h)
 
@@ -38,13 +35,10 @@ target_include_directories(RPIMoCapClientLib PUBLIC
 
 target_link_libraries(RPIMoCapClientLib PUBLIC
     RPIMoCapBase
-    ${MSGPACK_LIBRARIES}
     ${OPENCV_LIBRARIES}
     ${GSTREAMER_BASE_LIBRARIES}
     ${GSTREAMER_APP_LIBRARIES}
-    Qt5::Core
     Qt5::Gui
-    Qt5::Network
     Qt5::Concurrent)
 
 add_executable(RPIMoCapClient)

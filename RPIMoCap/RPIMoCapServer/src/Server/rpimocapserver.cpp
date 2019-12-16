@@ -17,8 +17,9 @@
 
 #include "RPIMoCap/Server/rpimocapserver.h"
 
-RPIMoCapServer::RPIMoCapServer(QObject *parent)
+RPIMoCapServer::RPIMoCapServer(RPIMoCap::MQTTSettings settings, QObject *parent)
     : QObject(parent)
+    , m_triggerPub("serverTriggerPub", "/trigger", settings)
 {
     m_avahiPublish.start("avahi-publish-service", {"RPIMoCap Server", "_rpimocap._tcp", QString::number(5000), "RPIMoCap service"});
 
@@ -27,10 +28,7 @@ RPIMoCapServer::RPIMoCapServer(QObject *parent)
     m_tcpServer.listen(QHostAddress::Any,5000);
     connect(&m_tcpServer,&QTcpServer::newConnection,this,&RPIMoCapServer::onNewConnection);
 
-    RPIMoCap::MQTTSettings settings;
-    settings.IPAddress = "127.0.0.1";
-    m_triggerPub = std::make_shared<RPIMoCap::MQTTPublisher>("serverTriggerPub", "/trigger", settings);
-    connect(&m_aggregator,&LinesAggregator::trigger,m_triggerPub.get(),&RPIMoCap::MQTTPublisher::publishData);
+    connect(&m_aggregator,&LinesAggregator::trigger, [&](){m_triggerPub.publishData("");});
 }
 
 RPIMoCapServer::~RPIMoCapServer()
@@ -89,4 +87,3 @@ void RPIMoCapServer::addClient(QTcpSocket *conn, const int id)
 
     emit cameraAdded(camera);
 }
-

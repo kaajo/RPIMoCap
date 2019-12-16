@@ -36,8 +36,7 @@ public:
     void onImage(const cv::Mat &image, std::vector<RPIMoCap::Line3D> &lines, std::vector<cv::Point2i> &points);
 
 private:
-    cv::Point2i qtConcurrentfindPoint(const std::vector<cv::Point2i> &contour);
-    RPIMoCap::Line3D qtConcurrentpickLine(const std::vector<cv::Point2i> &contour);
+    static cv::Point2i qtConcurrentfindPoint(const std::vector<cv::Point2i> &contour);
 
     RPIMoCap::CameraParams m_camParams;
     cv::Mat m_pixelLines;

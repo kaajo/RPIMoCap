@@ -40,7 +40,7 @@ public:
     void stopCalib();
 
 signals:
-    void trigger(const QByteArray &payload);
+    void trigger();
 
     /**
      * @brief When lines are received from all cameras, new RPIMoCap::Frame with proper time and lines is emitted

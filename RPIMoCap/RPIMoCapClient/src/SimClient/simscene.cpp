@@ -56,8 +56,10 @@ cv::Mat SimScene::projectScene(const CameraParams &params) const
 
     for (auto &px : pixels)
     {
-        cv::circle(simulatedImage, px, 5, cv::Scalar(255), -1);
+        cv::circle(simulatedImage, px, 3, cv::Scalar(255), -1);
     }
+
+    //cv::imwrite("/tmp/sim.png", simulatedImage);
 
     return simulatedImage;
 }

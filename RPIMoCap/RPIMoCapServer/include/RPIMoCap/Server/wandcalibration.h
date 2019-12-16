@@ -33,21 +33,41 @@ public:
     WandCalibration(QMap<int,std::shared_ptr<CameraSettings>> &cameraSettings,
                     RPIMoCap::CameraParams camData, QObject *parent = nullptr);
 
-    void addFrame(const QMap<int, std::vector<cv::Point2f> > &points);
+    void addFrame(const QMap<int, std::vector<cv::Point2f>> &points);
 
 private:
-    std::optional<Eigen::Affine3f> extrinsicGuess(const size_t camID, const std::vector<cv::Point2f> &pixels);
-    static std::vector<cv::Point2f> detect4pWand(const std::vector<cv::Point2f> &pts);
+    std::optional<Eigen::Affine3f> relativeTransform(const size_t camID, const std::vector<cv::Point2f> &pixels);
+    static std::optional<std::vector<cv::Point2f> > detect4pWand(const std::vector<cv::Point2f> &pts);
+
+    struct ExtrGuessRes {
+        int cameraID = -1;
+        float reprojectionError = std::numeric_limits<float>::max();
+        std::optional<Eigen::Affine3f> transform = std::nullopt;
+    };
+
+    std::vector<ExtrGuessRes> frameExtGuess(const QMap<int, std::vector<cv::Point2f>> &pixels);
+
+    float computeReprojectionError(const RPIMoCap::CameraParams &camData, const std::vector<cv::Point3f> wandPoints,
+                                   const std::vector<cv::Point2f> &pixels, const Eigen::Affine3f &estTransform);
 
     std::vector<cv::Point3f> m_wandPoints;
 
+    int m_referenceCameraID = -1;
+
     QMap<int,std::shared_ptr<CameraSettings>> m_cameraSettings;
-    QMap<int, std::optional<Eigen::Affine3f>> m_extrinsicGuess;
+    QMap<int, ExtrGuessRes> m_extrinsicGuess;
     bool haveAllExtrinsicGuess();
 
-    RPIMoCap::CameraParams m_camData;
+    bool done = false;
 
-    std::vector<QMap<int, std::vector<cv::Point2f>>> m_observations;
+    struct ObsDetection {
+        std::vector<cv::Point2f> firstPixels;
+        std::vector<cv::Point2f> secondPixels;
+    };
+
+    QMap<std::pair<int,int>,ObsDetection> m_observedDetections;
+
+    RPIMoCap::CameraParams m_camData;
 };
 
 /*

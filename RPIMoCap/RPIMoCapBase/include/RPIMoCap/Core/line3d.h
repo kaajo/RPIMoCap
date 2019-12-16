@@ -29,10 +29,10 @@ namespace RPIMoCap {
  */
 using Line3D = Eigen::ParametrizedLine<float,3>;
 
-/**
-     * @brief Number of intersections detected. If line has more intersections,
-     * we can inspect, which intersection is real.
-     */
+///**
+//     * @brief Number of intersections detected. If line has more intersections,
+//     * we can inspect, which intersection is real.
+//     */
 //    size_t m_numberOfIntersections = 0;
 
 /**

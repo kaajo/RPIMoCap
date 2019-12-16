@@ -33,30 +33,29 @@
 
 #include <msgpack/pack.h>
 
-class RPIMoCapClient : public QObject
+namespace RPIMoCap {
+
+class Client : public QObject
 {
     Q_OBJECT
 public:
-    explicit RPIMoCapClient(std::shared_ptr<ICamera> camera,
-                            RPIMoCap::CameraParams camParams, QObject *parent = nullptr);
-    ~RPIMoCapClient();
+    explicit Client(std::shared_ptr<ICamera> camera,
+                    CameraParams camParams, QObject *parent = nullptr);
+    ~Client();
 
 signals:
     void error(std::string error);
-    void linesSerialized(const QByteArray &lines);
-    void pointsSerialized(const QByteArray &points);
 
 public slots:
-    void onLines(const std::vector<RPIMoCap::Line3D> &lines);
-    void onPoints(const std::vector<cv::Point2i> &points);
     void trigger();
 
+private slots:
     void onTcpMessage();
     void onTcpDisconnected();
 
+private:
     virtual void timerEvent(QTimerEvent *event) override;
 
-private:
     std::shared_ptr<ICamera> m_camera;
     MarkerDetector m_markerDetector;
 
@@ -66,8 +65,10 @@ private:
 
     bool isMQTTInitialized();
     void initMQTT(const int32_t cameraid);
-    RPIMoCap::MQTTSettings m_MQTTsettings;
-    std::shared_ptr<RPIMoCap::MQTTSubscriber> m_cameraTriggerSub;
-    std::shared_ptr<RPIMoCap::MQTTPublisher> m_linePub;
-    std::shared_ptr<RPIMoCap::MQTTPublisher> m_pointPub;
+    MQTTSettings m_MQTTsettings;
+    std::shared_ptr<MQTTSubscriber> m_cameraTriggerSub;
+    std::shared_ptr<MQTTPublisher<std::vector<Line3D>>> m_linePub;
+    std::shared_ptr<MQTTPublisher<std::vector<cv::Point2i>>> m_pointPub;
 };
+
+}

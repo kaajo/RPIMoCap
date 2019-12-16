@@ -78,18 +78,15 @@ void MarkerDetector::onImage(const cv::Mat &image, std::vector<RPIMoCap::Line3D>
 
     cv::findContours(filterImage, contours , cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
 
-    QtConcurrent::blockingFilter(contours, [](const std::vector<cv::Point> &contour)
-    {
-        ///if area of component is too big, it is probably some big light or window
-        ///if                      too small, it is noise
-        double contArea = contour.size();
-        return contArea < 500 && contArea > 5;
-    });
+    contours.erase(std::remove_if(contours.begin(), contours.end(), [](const std::vector<cv::Point> &contour)
+                                  {return contour.size() > 500 && contour.size() < 5;}), contours.end());
 
-    points = QtConcurrent::blockingMapped<std::vector<cv::Point2i>>(contours,
-                                                                    std::bind(&MarkerDetector::qtConcurrentfindPoint, this, std::placeholders::_1));
-    lines = QtConcurrent::blockingMapped<std::vector<RPIMoCap::Line3D>>(contours,
-                                                                        std::bind(&MarkerDetector::qtConcurrentpickLine, this, std::placeholders::_1));
+    points = QtConcurrent::blockingMapped<std::vector<cv::Point2i>>(contours, &MarkerDetector::qtConcurrentfindPoint);
+
+    for (const auto &point : points)
+    {
+        lines.emplace_back(Eigen::Vector3f(0.0,0.0,0.0), m_pixelLines.at<Eigen::Vector3f>(point));
+    }
 }
 
 cv::Point2i MarkerDetector::qtConcurrentfindPoint(const std::vector<cv::Point2i> &contour)
@@ -97,20 +94,8 @@ cv::Point2i MarkerDetector::qtConcurrentfindPoint(const std::vector<cv::Point2i>
     const int m00 = contour.size();
     const cv::Point2i sum = std::accumulate(contour.begin(),contour.end(),cv::Point2i(0,0));
 
-    const int x = std::round(sum.x/static_cast<double>(m00));
-    const int y = std::round(sum.y/static_cast<double>(m00));
+    const int x = std::round(sum.x/static_cast<float>(m00));
+    const int y = std::round(sum.y/static_cast<float>(m00));
 
     return cv::Point2i(x, y);
 }
-
-RPIMoCap::Line3D MarkerDetector::qtConcurrentpickLine(const std::vector<cv::Point2i> &contour)
-{
-    const int m00 = contour.size();
-    const cv::Point2i sum = std::accumulate(contour.begin(),contour.end(),cv::Point2i(0,0));
-
-    const int x = std::round(sum.x/static_cast<double>(m00));
-    const int y = std::round(sum.y/static_cast<double>(m00));
-
-    return RPIMoCap::Line3D({0.0,0.0,0.0}, m_pixelLines.at<Eigen::Vector3f>(cv::Point2i(x,y)));
-}
-

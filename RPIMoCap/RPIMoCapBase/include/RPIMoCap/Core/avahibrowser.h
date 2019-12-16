@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include <QProcess>
 #include <QHash>
 #include <QHostAddress>
 
@@ -26,22 +25,17 @@ namespace RPIMoCap {
 class AvahiBrowser
 {
 public:
-    enum class IPVersion {
-        IPv4,
-        IPv6
-    };
-
     struct ServiceInfo {
         QString interface;
-        IPVersion ipVersion;
+        QAbstractSocket::NetworkLayerProtocol ipVersion = QAbstractSocket::NetworkLayerProtocol::UnknownNetworkLayerProtocol;
         QString type;
         QString domain;
         QHostAddress ipAddress;
-        int16_t port;
+        int16_t port = -1;
         QString description;
     };
 
-    static QHash<QString, ServiceInfo> browseServices(const IPVersion &ipv);
+    static QHash<QString, ServiceInfo> browseServices(const QAbstractSocket::NetworkLayerProtocol &searchIPVersion);
 };
 
 }

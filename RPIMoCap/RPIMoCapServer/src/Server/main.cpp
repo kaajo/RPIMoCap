@@ -35,7 +35,9 @@ int main(int argc, char *argv[])
     qRegisterMetaType<std::vector<RPIMoCap::Line3D>>("std::vector<RPIMoCap::Line3D>");
     qRegisterMetaType<RPIMoCap::Line3D>("RPIMoCap::Line3D");
 
-    RPIMoCapServer server;
+    RPIMoCap::MQTTSettings mqttSettings;
+
+    RPIMoCapServer server(mqttSettings);
     MainWindow w;
 
     QObject::connect(&w,&MainWindow::startMoCap, &server, &RPIMoCapServer::onMoCapStart);

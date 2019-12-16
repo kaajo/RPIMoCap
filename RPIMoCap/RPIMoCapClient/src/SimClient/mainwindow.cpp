@@ -48,7 +48,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::updateValue()
 {
-    const VirtualWand wand(100.0, 20.0, 10.0);
+    const VirtualWand wand(50.0, 10.0, 5.0);
 
     const Eigen::Vector3f pos(ui->valuex->value(),
                               ui->valuey->value(),
@@ -70,7 +70,7 @@ void MainWindow::on_addClientButton_clicked()
     RPIMoCap::CameraParams params = RPIMoCap::CameraParams::computeRPICameraV1Params();
 
     auto camera = std::make_shared<SimCamera>(params, m_scene);
-    auto client = QSharedPointer<RPIMoCapClient>::create(camera,params);
+    auto client = QSharedPointer<Client>::create(camera,params);
     auto widget = new SimCameraWidget(camera);
     ui->scrollAreaWidgetContents->layout()->addWidget(widget);
 

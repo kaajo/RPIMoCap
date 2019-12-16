@@ -15,16 +15,17 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "RPIMoCap/ClientLib/rpimocapclient.h"
-
+#include "RPIMoCap/ClientLib/client.h"
 #include "RPIMoCap/Core/avahibrowser.h"
 
 #include <QTimerEvent>
 
 #include <chrono>
 
-RPIMoCapClient::RPIMoCapClient(std::shared_ptr<ICamera> camera,
-                               RPIMoCap::CameraParams camParams, QObject *parent)
+namespace RPIMoCap {
+
+Client::Client(std::shared_ptr<ICamera> camera,
+               CameraParams camParams, QObject *parent)
     : QObject(parent)
     , m_camera(camera)
     , m_markerDetector(camParams)
@@ -32,32 +33,18 @@ RPIMoCapClient::RPIMoCapClient(std::shared_ptr<ICamera> camera,
     //qDebug() << "starting RPIMoCapClient, camera FoV" << camParams.cameraMatrix.at<float>() * 180.0f/M_PI
     //         << "x" << camParams.height * 180.0f/M_PI;
 
-    connect(&m_rpimocaptcp, &QTcpSocket::readyRead,this,&RPIMoCapClient::onTcpMessage);
-    connect(&m_rpimocaptcp, &QTcpSocket::disconnected, this, &RPIMoCapClient::onTcpDisconnected);
+    connect(&m_rpimocaptcp, &QTcpSocket::readyRead,this,&Client::onTcpMessage);
+    connect(&m_rpimocaptcp, &QTcpSocket::disconnected, this, &Client::onTcpDisconnected);
 
     m_avahiCheckTimerID = QObject::startTimer(5000);
 }
 
-RPIMoCapClient::~RPIMoCapClient()
+Client::~Client()
 {
     mosqpp::lib_cleanup();
 }
 
-void RPIMoCapClient::onLines(const std::vector<RPIMoCap::Line3D> &lines)
-{
-    std::stringstream buf;
-    msgpack::pack(buf, lines);
-    emit linesSerialized(QByteArray::fromStdString(buf.str()));
-}
-
-void RPIMoCapClient::onPoints(const std::vector<cv::Point2i> &points)
-{
-    std::stringstream buf;
-    msgpack::pack(buf, points);
-    emit pointsSerialized(QByteArray::fromStdString(buf.str()));
-}
-
-void RPIMoCapClient::trigger()
+void Client::trigger()
 {
     if (!m_camera->getOpened()) {
         if (!m_camera->open()) {
@@ -76,26 +63,26 @@ void RPIMoCapClient::trigger()
         qDebug() << "empty image from camera";
     }
 
-    std::vector<RPIMoCap::Line3D> lines;
+    std::vector<Line3D> lines;
     std::vector<cv::Point2i> points;
     m_markerDetector.onImage(currentImage, lines, points);
 
-    onLines(lines);
-    onPoints(points);
+    m_linePub->publishData(lines);
+    m_pointPub->publishData(points);
 
     auto end = std::chrono::high_resolution_clock::now();
 
     qDebug() << "elapsed: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 }
 
-void RPIMoCapClient::onTcpMessage()
+void Client::onTcpMessage()
 {
     const QByteArray id = m_rpimocaptcp.readAll();
     qDebug() << "ID assigned:" << QString(id);
     initMQTT(QString(id).toInt());
 }
 
-void RPIMoCapClient::onTcpDisconnected()
+void Client::onTcpDisconnected()
 {
     m_cameraTriggerSub.reset();
     m_linePub.reset();
@@ -105,7 +92,7 @@ void RPIMoCapClient::onTcpDisconnected()
     qDebug() << "TCP disconnect";
 }
 
-void RPIMoCapClient::timerEvent(QTimerEvent *event)
+void Client::timerEvent(QTimerEvent *event)
 {
     if (event->timerId() != m_avahiCheckTimerID)
     {
@@ -115,9 +102,9 @@ void RPIMoCapClient::timerEvent(QTimerEvent *event)
     checkAvahiServices();
 }
 
-void RPIMoCapClient::checkAvahiServices()
+void Client::checkAvahiServices()
 {
-    const auto services = RPIMoCap::AvahiBrowser::browseServices(RPIMoCap::AvahiBrowser::IPVersion::IPv4);
+    const auto services = AvahiBrowser::browseServices(QAbstractSocket::NetworkLayerProtocol::IPv4Protocol);
     const auto rpimocapService = services.find("_rpimocap._tcp");
 
     if (m_rpimocaptcp.state() != QAbstractSocket::ConnectedState)
@@ -155,25 +142,31 @@ void RPIMoCapClient::checkAvahiServices()
         QObject::killTimer(m_avahiCheckTimerID);
         m_avahiCheckTimerID = -1;
     }
+    else
+    {
+        qDebug() << "oh wow";
+    }
 }
 
-bool RPIMoCapClient::isMQTTInitialized()
+bool Client::isMQTTInitialized()
 {
     return m_cameraTriggerSub && m_linePub;
 }
 
-void RPIMoCapClient::initMQTT( const int32_t cameraid)
+void Client::initMQTT( const int32_t cameraid)
 {
     if (isMQTTInitialized())
     {
         return;
     }
 
-    m_cameraTriggerSub = std::make_shared<RPIMoCap::MQTTSubscriber>("triggersub" + QString::number(cameraid), "/trigger", m_MQTTsettings);
-    m_linePub = std::make_shared<RPIMoCap::MQTTPublisher>("linespub" + QString::number(cameraid),"/client" + QString::number(cameraid) + "/lines",m_MQTTsettings);
-    m_pointPub = std::make_shared<RPIMoCap::MQTTPublisher>("pointspub" + QString::number(cameraid),"/client" + QString::number(cameraid) + "/points",m_MQTTsettings);
+    const QString cameraIDString = QString::number(cameraid);
 
-    connect(m_cameraTriggerSub.get(), &RPIMoCap::MQTTSubscriber::messageReceived,this, &RPIMoCapClient::trigger);
-    connect(this, &RPIMoCapClient::linesSerialized, m_linePub.get(), &RPIMoCap::MQTTPublisher::publishData);
-    connect(this, &RPIMoCapClient::pointsSerialized, m_pointPub.get(), &RPIMoCap::MQTTPublisher::publishData);
+    m_cameraTriggerSub = std::make_shared<MQTTSubscriber>("triggersub" + cameraIDString, "/trigger", m_MQTTsettings);
+    m_linePub = std::make_shared<MQTTPublisher<std::vector<Line3D>>>("linespub" + cameraIDString,"/client" + cameraIDString + "/lines", m_MQTTsettings);
+    m_pointPub = std::make_shared<MQTTPublisher<std::vector<cv::Point2i>>>("pointspub" + cameraIDString,"/client" + cameraIDString + "/points", m_MQTTsettings);
+
+    connect(m_cameraTriggerSub.get(), &MQTTSubscriber::messageReceived,this, &Client::trigger);
+}
+
 }

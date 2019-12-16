@@ -31,7 +31,7 @@ struct CameraParams
     cv::Size imageSize = cv::Size(0,0);
     cv::Vec3f translation = cv::Vec3f(0.0, 0.0, 0.0);
     cv::Vec3f rotation = cv::Vec3f(0.0, 0.0, 0.0);
-    cv::Mat cameraMatrix = cv::Mat::eye(3, 3, CV_32FC1);
+    cv::Mat cameraMatrix = cv::Mat::eye(3, 3, CV_64FC1);
     cv::Mat distortionCoeffs = cv::Mat(1, 4, CV_32FC1, cv::Scalar(0.0f));
 
     //diag 64.92 https://www.raspberrypi.org/documentation/hardware/camera/
@@ -42,10 +42,10 @@ struct CameraParams
         RPIMoCap::CameraParams params;
         params.maxFPS = 90;
         params.imageSize = cv::Size2i(640, 480);
-        params.cameraMatrix.at<float>(0,0) = params.imageSize.width / tanf(fullFoVRad.width/2.0f);
-        params.cameraMatrix.at<float>(1,1) = params.imageSize.height / tanf(fullFoVRad.height/2.0f);
-        params.cameraMatrix.at<float>(0,2) = 320;
-        params.cameraMatrix.at<float>(1,2) = 240;
+        params.cameraMatrix.at<double>(0,0) = params.imageSize.width / tanf(fullFoVRad.width/2.0f);
+        params.cameraMatrix.at<double>(1,1) = params.imageSize.height / tanf(fullFoVRad.height/2.0f);
+        params.cameraMatrix.at<double>(0,2) = 320;
+        params.cameraMatrix.at<double>(1,2) = 240;
 
         return params;
     }
@@ -69,10 +69,10 @@ struct CameraParams
         RPIMoCap::CameraParams params;
         params.maxFPS = 90;
         params.imageSize = cv::Size2i(640, 480);
-        params.cameraMatrix.at<float>(0,0) = params.imageSize.width / tanf(croppedFoVWidth/2.0f);
-        params.cameraMatrix.at<float>(1,1) = params.imageSize.height / tanf(croppedFoVHeight/2.0f);
-        params.cameraMatrix.at<float>(0,2) = 320;
-        params.cameraMatrix.at<float>(1,2) = 240;
+        params.cameraMatrix.at<double>(0,0) = params.imageSize.width / tanf(croppedFoVWidth/2.0f);
+        params.cameraMatrix.at<double>(1,1) = params.imageSize.height / tanf(croppedFoVHeight/2.0f);
+        params.cameraMatrix.at<double>(0,2) = 320;
+        params.cameraMatrix.at<double>(1,2) = 240;
 
         return params;
     }

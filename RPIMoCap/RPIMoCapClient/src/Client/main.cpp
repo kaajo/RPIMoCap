@@ -15,7 +15,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <RPIMoCap/ClientLib/rpimocapclient.h>
+#include <RPIMoCap/ClientLib/client.h>
 #include <RPIMoCap/ClientLib/rpicamera.h>
 
 #include <QCoreApplication>
@@ -78,6 +78,6 @@ int main(int argc, char *argv[])
                                                 "videoconvert ! video/x-raw,format=GRAY8 ! "
                                                 "appsink max-buffers=1 name=appsink");
 
-    RPIMoCapClient client(camera, params);
+    RPIMoCap::Client client(camera, params);
     return a.exec();
 }

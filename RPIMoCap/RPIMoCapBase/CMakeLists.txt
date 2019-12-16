@@ -7,8 +7,11 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native -mtune=native -O3")
 
 find_package(Qt5 COMPONENTS Core Network REQUIRED)
+find_package(PkgConfig REQUIRED)
 find_library(mosquitto REQUIRED)
 find_library(mosquittopp REQUIRED)
+
+pkg_check_modules(MSGPACK REQUIRED msgpack)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -20,7 +23,6 @@ target_sources(RPIMoCapBase
     src/Core/avahibrowser.cpp
     src/Core/frame.cpp
     src/Core/line3d.cpp
-    src/Core/mqttpublisher.cpp
     src/Core/mqttsettings.cpp
     src/Core/mqttsubscriber.cpp
     PUBLIC
@@ -39,4 +41,5 @@ target_link_libraries(RPIMoCapBase PUBLIC
     mosquitto
     mosquittopp
     Qt5::Core
-    Qt5::Network)
+    Qt5::Network
+    ${MSGPACK_LIBRARIES})

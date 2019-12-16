@@ -71,7 +71,7 @@ void LinesAggregator::onMoCapStart(bool start)
     running = start;
     if (start)
     {
-        emit trigger({});
+        emit trigger();
     }
 }
 
@@ -107,7 +107,7 @@ void LinesAggregator::onLinesReceived(const int clientId, const std::vector<RPIM
             received = false;
         }
 
-        emit trigger({});
+        emit trigger();
 
         uint64_t currentTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 
