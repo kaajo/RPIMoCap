@@ -31,12 +31,6 @@ WandCalibration::WandCalibration(QMap<int, std::shared_ptr<CameraSettings> > &ca
     , m_cameraSettings(cameraSettings)
     , m_camData(camData)
 {
-
-    for (const auto &camSettings : m_cameraSettings)
-    {
-        m_extrinsicGuess[camSettings->id()].transform = std::nullopt;
-    }
-
     m_wandPoints.push_back({-25.0,0.0,0.0});
     m_wandPoints.push_back({10.0,0.0,0.0});
     m_wandPoints.push_back({25.0,0.0,0.0});
@@ -45,10 +39,9 @@ WandCalibration::WandCalibration(QMap<int, std::shared_ptr<CameraSettings> > &ca
 
 void WandCalibration::addFrame(const QMap<int, std::vector<cv::Point2f> > &points)
 {
-    if (done) return;
+    std::vector<std::pair<int, std::vector<cv::Point2f>>> detectedPoints;
 
-    QVector<std::pair<int, std::vector<cv::Point2f>>> detectedPoints;
-
+    //detect points (order)
     for (auto &camID : points.keys())
     {
         if (auto detPts = detect4pWand(points[camID]))
@@ -57,175 +50,76 @@ void WandCalibration::addFrame(const QMap<int, std::vector<cv::Point2f> > &point
         }
     }
 
-    for (int i = 0; i < detectedPoints.size(); ++i)
+    //add detected points to observation
+    for (size_t i = 0; i < detectedPoints.size(); ++i)
     {
-        for (int j = i + 1; j < detectedPoints.size(); ++j)
+        for (size_t j = i + 1; j < detectedPoints.size(); ++j)
         {
+            //TODO add only if points are diferent enought from previous detections
+            //we don't want many detections from same position
             ObsDetection &obsDet = m_observedDetections[{detectedPoints[i].first,detectedPoints[j].first}];
             obsDet.firstPixels.insert(obsDet.firstPixels.end(), detectedPoints[i].second.begin(), detectedPoints[i].second.end());
             obsDet.secondPixels.insert(obsDet.secondPixels.end(), detectedPoints[j].second.begin(), detectedPoints[j].second.end());
         }
     }
 
-    //find minimal point count detected
-    int min = std::numeric_limits<int>::max();
-    QMap<std::pair<int,int>,ObsDetection>::iterator detIt;
-    for (detIt = m_observedDetections.begin(); detIt != m_observedDetections.end(); ++detIt)
+    for (auto detIt = m_observedDetections.begin(); detIt != m_observedDetections.end(); ++detIt)
     {
-        std::cout << "ID: " << detIt.key().first << " pts: " << detIt->firstPixels.size() << std::endl;
-        std::cout << "ID: " << detIt.key().second << " pts: " << detIt->secondPixels.size() << std::endl;
+        const int detectedFrames = std::min(detIt->firstPixels.size(), detIt->secondPixels.size());
 
-        if (detIt->firstPixels.size() < min)
+        if (detectedFrames < 100 * m_wandPoints.size())
         {
-            min = detIt->firstPixels.size();
+            //skip cameras with small number of samples
+            continue;
         }
 
-        if (detIt->secondPixels.size() < min)
+        const cv::Mat essential = cv::findEssentialMat(detIt->firstPixels, detIt->secondPixels, m_camData.cameraMatrix, cv::RANSAC, 0.999, 0.1);
+
+        cv::Mat rotation, translation;
+        cv::recoverPose(essential, detIt->firstPixels, detIt->secondPixels, m_camData.cameraMatrix, rotation, translation);
+
+        cv::Mat transformMatrixSecond;
+        cv::hconcat(rotation, translation, transformMatrixSecond);
+
+        const cv::Mat projectionMatFirst = m_camData.cameraMatrix * cv::Mat::eye(3,4, CV_64FC1);
+        const cv::Mat projectionMatSecond = m_camData.cameraMatrix * transformMatrixSecond;
+
+        cv::Mat triangulatedPoints;
+        cv::triangulatePoints(projectionMatFirst, projectionMatSecond, detIt->firstPixels, detIt->secondPixels, triangulatedPoints);
+
+        std::vector<cv::Point3f> triangulatedPoints3D;
+
+        for (size_t i = 0; i < triangulatedPoints.cols; ++i)
         {
-            min = detIt->secondPixels.size();
-        }
-    }
-
-    if (min > 200)
-    {
-        QMap<std::pair<int,int>,ObsDetection>::iterator detIt;
-        for (detIt = m_observedDetections.begin(); detIt != m_observedDetections.end(); ++detIt)
-        {
-            cv::Mat rotVec, rotMat, translation;
-
-            cv::Mat essential = cv::findEssentialMat(detIt->firstPixels, detIt->secondPixels, m_camData.cameraMatrix, cv::RANSAC, 0.999, 0.1);
-            cv::recoverPose(essential, detIt->firstPixels, detIt->secondPixels, m_camData.cameraMatrix, rotMat, translation);
-            cv::Rodrigues(rotMat, rotVec);
-
-            std::cout << "rotation: " << rotVec.at<double>(0) * 180.0/M_PI
-                      << " " << rotVec.at<double>(1) * 180.0/M_PI
-                      << " " << rotVec.at<double>(2) * 180.0/M_PI << std::endl;
-
-            std::cout << "translation: " << translation.at<double>(0)
-                      << " " << translation.at<double>(1)
-                      << " " << translation.at<double>(2) << std::endl;
-
-            //compute scale
-            cv::Mat floatCamMat;
-            m_camData.cameraMatrix.convertTo(floatCamMat, CV_32FC1);
-            cv::Mat projectionMatFirst = floatCamMat * cv::Mat::eye(3,4, CV_32FC1);
-
-            cv::Mat tmp;
-            cv::hconcat(rotMat, translation, tmp);
-            cv::Mat projectionMatSecond = m_camData.cameraMatrix * tmp;
-            projectionMatSecond.convertTo(projectionMatSecond, CV_32FC1);
-
-            cv::Mat triangulatedPoints;
-            cv::triangulatePoints(projectionMatFirst, projectionMatSecond, detIt->firstPixels, detIt->secondPixels, triangulatedPoints);
-
-            std::vector<cv::Vec3f> triangulatedPoints3D;
-
-            for (size_t i = 0; i < triangulatedPoints.cols; ++i)
-            {
-                const float w = triangulatedPoints.at<float>(3,i);
-                triangulatedPoints3D.push_back({triangulatedPoints.at<float>(0,i)/w,
-                                                triangulatedPoints.at<float>(1,i)/w,
-                                                triangulatedPoints.at<float>(2,i)/w});
-            }
-
-            assert(triangulatedPoints3D.size() % m_wandPoints.size() == 0);
-
-            float scale = 0.0;
-            for (int i = 0; i < triangulatedPoints3D.size(); i = i+4)
-            {
-                scale += cv::norm(triangulatedPoints3D[i] - triangulatedPoints3D[i+1]);
-            }
-
-            scale = 35.0/(scale / (static_cast<double>(triangulatedPoints3D.size()/4.0)));
-
-            translation *= scale;
-
-            std::cout << "translation: " << translation.at<double>(0)
-                      << " " << translation.at<double>(1)
-                      << " " << translation.at<double>(2) << std::endl;
-
-            m_cameraSettings[detIt.key().second]->setTransform(Eigen::Affine3f(cv::Affine3d(rotMat, translation).cast<float>()));
-        }
-    }
-
-
-    /*
-    auto frameGuess = frameExtGuess(points);
-
-    if (frameGuess.empty())
-    {
-        return;
-    }
-
-    std::sort(frameGuess.begin(), frameGuess.end(), [](auto fg1, auto fg2){return fg1.cameraID < fg2.cameraID;});
-
-    if (m_referenceCameraID == -1)
-    {
-        m_referenceCameraID = frameGuess.front().cameraID;
-        m_extrinsicGuess[m_referenceCameraID] = ExtrGuessRes{m_referenceCameraID, 0.0f, Eigen::Affine3f::Identity()};
-    }
-
-
-    if (haveAllExtrinsicGuess())
-    {
-        const auto keys = m_extrinsicGuess.keys();
-
-        std::cout << "not normalised extrinsic guess:" << std::endl;
-        for (auto &guessKey : keys)
-        {
-            std::cout << m_extrinsicGuess[guessKey].transform.value().matrix() << std::endl;
+            const float w = triangulatedPoints.at<float>(3,i);
+            triangulatedPoints3D.push_back({triangulatedPoints.at<float>(0,i)/w,
+                                            triangulatedPoints.at<float>(1,i)/w,
+                                            triangulatedPoints.at<float>(2,i)/w});
         }
 
-        //change transform relative to first one
+        const float scale = computeScale(transformMatrixSecond, triangulatedPoints3D);
 
-        m_cameraSettings[keys[0]]->setTransform(Eigen::Affine3f::Identity());
 
-        const Eigen::Affine3f firstTf = m_extrinsicGuess[keys[0]].transform.value();
+        Eigen::Affine3f estimatedTransform(cv::Affine3d(rotation, translation).cast<float>());
 
-        for (size_t i = 1; i < keys.size(); ++i)
+        const float errorFirst = computeReprojectionError(detIt->firstPixels, triangulatedPoints3D, Eigen::Affine3f::Identity());
+        const float errorSecond = computeReprojectionError(detIt->secondPixels, triangulatedPoints3D, estimatedTransform);
+
+        const float error = (errorFirst + errorSecond)/2.0f;
+
+        std::cout << "error: " << detIt.key().first << errorFirst << std::endl;
+        std::cout << "error: " << detIt.key().first << errorSecond << std::endl;
+
+        estimatedTransform.translation() *= scale;
+
+        if (error < detIt->reprojectionError)
         {
-            m_cameraSettings[keys[i]]->setTransform(firstTf * m_extrinsicGuess[keys[i]].transform.value().inverse());
+            detIt->reprojectionError = error;
+            detIt->transform = estimatedTransform;
+
+            m_cameraSettings[detIt.key().second]->setTransform(estimatedTransform);
         }
     }
-    */
-}
-
-std::optional<Eigen::Affine3f> WandCalibration::relativeTransform(const size_t camID, const std::vector<cv::Point2f> &pixels)
-{
-    if (pixels.size() != m_wandPoints.size())
-    {
-        return std::nullopt;
-    }
-
-    const std::vector<cv::Point2f> detPixels = detect4pWand(pixels).value();
-
-    cv::Mat rVec;
-    cv::Mat tVec;
-
-    //    const bool solved = cv::solvePnPRansac(m_wandPoints,detPixels, m_camData.cameraMatrix,
-    //                                           m_camData.distortionCoeffs, rVec, tVec, false, 300, 8.0, 0.95);
-
-    const bool solved = cv::solvePnP(m_wandPoints,detPixels, m_camData.cameraMatrix,
-                                     m_camData.distortionCoeffs, rVec, tVec, false);
-
-    //    std::cout << "solved: " << solved << " for camera: " << camID << std::endl;
-
-    if (!solved)
-    {
-        return std::nullopt;
-    }
-    /*
-    std::cout << "rotation: " << rVec.at<double>(0) * 180.0/M_PI
-              << " " << rVec.at<double>(1) * 180.0/M_PI
-              << " " << rVec.at<double>(2) * 180.0/M_PI << std::endl;
-    std::cout << "tvec: " << tVec.at<double>(0)
-              << " " << tVec.at<double>(1)
-              << " " << tVec.at<double>(2) << std::endl;
-*/    
-    cv::Mat rMat;
-    cv::Rodrigues(rVec, rMat);
-
-    return Eigen::Affine3f(cv::Affine3d(rMat, tVec).cast<float>());
 }
 
 std::optional<std::vector<cv::Point2f>> WandCalibration::detect4pWand(const std::vector<cv::Point2f> &pts)
@@ -271,57 +165,59 @@ std::optional<std::vector<cv::Point2f>> WandCalibration::detect4pWand(const std:
     return std::vector<cv::Point2f>{pts[borderL], pts[middle], pts[borderR], pts[cross]};
 }
 
-std::vector<WandCalibration::ExtrGuessRes> WandCalibration::frameExtGuess(const QMap<int, std::vector<cv::Point2f>> &pixels)
+float WandCalibration::computeReprojectionError(const std::vector<cv::Point2f> &pixels, const std::vector<cv::Point3f> &triangulatedPoints,
+                                                const Eigen::Affine3f &estTransform)
 {
-    std::vector<WandCalibration::ExtrGuessRes> result;
+    cv::Affine3f cvEstTransform(estTransform);
 
-    for (auto &cameraID : pixels.keys())
-    {
-        if (auto transform = relativeTransform(cameraID, pixels[cameraID]))
-        {
-            const float err = computeReprojectionError(m_camData, m_wandPoints, pixels[cameraID], transform.value());
-            result.push_back({cameraID, err, transform});
-        }
-    }
+    cv::Mat rVec;
+    cv::Rodrigues(cvEstTransform.rotation(), rVec);
 
-    return result;
-}
-
-float WandCalibration::computeReprojectionError(const RPIMoCap::CameraParams &camData, const std::vector<cv::Point3f> wandPoints,
-                                                const std::vector<cv::Point2f> &pixels, const Eigen::Affine3f &estTransform)
-{
-    std::vector<cv::Point3f> transformedWandPts;
-
-    for (auto &wandPt : wandPoints)
-    {
-        Eigen::Vector3f tPt = estTransform * Eigen::Vector3f(wandPt.x, wandPt.y, wandPt.z);
-        transformedWandPts.push_back(cv::Point3f(tPt.x(), tPt.y(), tPt.z()));
-    }
+    cv::Vec3f tVec(estTransform.translation().x(),estTransform.translation().y(),estTransform.translation().z());
 
     std::vector<cv::Point2f> projPixels;
-    cv::projectPoints(transformedWandPts, cv::Vec3f(0,0,0), cv::Vec3f(0,0,0),
-                      camData.cameraMatrix, camData.distortionCoeffs, projPixels);
-
-    float error = 0.0f;
-
+    cv::projectPoints(triangulatedPoints, rVec, tVec, m_camData.cameraMatrix, m_camData.distortionCoeffs, projPixels);
     assert(projPixels.size() == pixels.size());
 
+    float sum = 0.0f;
     for (size_t i = 0; i < pixels.size(); ++i)
     {
-        error += cv::norm(projPixels[i] - pixels[i]);
+        sum += cv::norm(projPixels[i] - pixels[i]);
     }
 
-    return error;
+    return sum/pixels.size();
 }
 
 bool WandCalibration::haveAllExtrinsicGuess()
 {
-    for (auto &guess : m_extrinsicGuess)
+    for (const auto &guess : m_extrinsicGuess)
     {
-        if (!guess.transform.has_value())
+        if (guess.state == CalibrationState::Unknown)
         {
             return false;
         }
     }
     return true;
+}
+
+float WandCalibration::computeScale(const cv::Mat &transformEstimation, std::vector<cv::Point3f> &triangulatedPoints)
+{
+    assert(triangulatedPoints.size() % m_wandPoints.size() == 0);
+
+    float scale = 0.0f;
+    const int numOfObservations = triangulatedPoints.size()/m_wandPoints.size();
+    for (size_t i = 1; i < m_wandPoints.size(); ++i)
+    {
+        const float realDistance = cv::norm(m_wandPoints[i] - m_wandPoints[i -1]);
+
+        float sum = 0.0f;
+        for (size_t pntI = 0; pntI < triangulatedPoints.size(); pntI = pntI + m_wandPoints.size())
+        {
+            sum += cv::norm(triangulatedPoints[pntI + i] - triangulatedPoints[pntI + i - 1]);
+        }
+        const float averageVirtualDistance = sum/static_cast<float>(numOfObservations);
+        scale += realDistance/averageVirtualDistance;
+    }
+
+    return scale/static_cast<float>(m_wandPoints.size() - 1);
 }
