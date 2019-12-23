@@ -12,6 +12,7 @@ find_library(mosquitto REQUIRED)
 find_library(mosquittopp REQUIRED)
 
 pkg_check_modules(MSGPACK REQUIRED msgpack)
+pkg_check_modules(EIGEN3 REQUIRED eigen3)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -35,7 +36,11 @@ target_sources(RPIMoCapBase
     include/RPIMoCap/Core/mqttsubscriber.h
     include/RPIMoCap/Core/msgpack_defs.h)
 
-target_include_directories(RPIMoCapBase PUBLIC ${PROJECT_SOURCE_DIR}/include)
+target_include_directories(RPIMoCapBase PUBLIC
+    ${PROJECT_SOURCE_DIR}/include
+    ${EIGEN_INCLUDE_DIR})
+
+message(WARNING ${EIGEN3_INCLUDE_DIR})
 
 target_link_libraries(RPIMoCapBase PUBLIC
     mosquitto

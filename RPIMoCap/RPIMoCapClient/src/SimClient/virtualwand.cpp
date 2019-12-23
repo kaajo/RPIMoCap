@@ -19,11 +19,10 @@
 
 namespace RPIMoCap::SimClient {
 
-VirtualWand::VirtualWand(float sizecm, float middlePointOffsetcm, float crossPointOffsetcm)
+VirtualWand::VirtualWand(float sizecm, float middlePointOffsetcm)
     : m_leftPoint(-sizecm/2.0f, 0.0f, 0.0f)
     , m_middlePoint(middlePointOffsetcm, 0.0f, 0.0f)
     , m_rightPoint(sizecm/2.0f, 0.0f, 0.0f)
-    , m_crossPoint(middlePointOffsetcm, crossPointOffsetcm, 0.0f)
 {
 }
 
@@ -38,11 +37,8 @@ std::vector<SimMarker> VirtualWand::markers(const Eigen::Affine3f &transform) co
     SimMarker right;
     const auto rightTr = transform * m_rightPoint;
     right.translation = cv::Point3f(rightTr.x(), rightTr.y(), rightTr.z());
-    SimMarker cross;
-    const auto crossTr = transform * m_crossPoint;
-    cross.translation = cv::Point3f(crossTr.x(), crossTr.y(), crossTr.z());
 
-    return {left, middle, right, cross};
+    return {left, middle, right};
 }
 
 }

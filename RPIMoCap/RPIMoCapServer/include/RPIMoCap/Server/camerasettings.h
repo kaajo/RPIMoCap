@@ -23,7 +23,7 @@
 
 #include <QObject>
 
-#include <eigen3/Eigen/Geometry>
+#include <Eigen/Geometry>
 #include <msgpack.hpp>
 #include <opencv2/core/mat.hpp>
 

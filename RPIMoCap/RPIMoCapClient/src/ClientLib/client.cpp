@@ -142,10 +142,6 @@ void Client::checkAvahiServices()
         QObject::killTimer(m_avahiCheckTimerID);
         m_avahiCheckTimerID = -1;
     }
-    else
-    {
-        qDebug() << "oh wow";
-    }
 }
 
 bool Client::isMQTTInitialized()

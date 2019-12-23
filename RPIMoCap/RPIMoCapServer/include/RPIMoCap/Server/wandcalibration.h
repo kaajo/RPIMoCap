@@ -26,6 +26,11 @@
 
 #include <opencv2/core/mat.hpp>
 
+//TODO remove
+#include <opencv2/calib3d.hpp>
+#include <opencv2/core/eigen.hpp>
+#include <iostream>
+
 class WandCalibration : public QObject
 {
     Q_OBJECT
@@ -36,40 +41,64 @@ public:
     void addFrame(const QMap<int, std::vector<cv::Point2f>> &points);
 private:
     static std::optional<std::vector<cv::Point2f> > detect4pWand(const std::vector<cv::Point2f> &pts);
+    static std::optional<std::vector<cv::Point2f> > detect3pWand(const std::vector<cv::Point2f> &pts);
 
-    enum class CalibrationState
-    {
-        Unknown = 0,
-        ExtrinsicGuess = 10,
-        Optimized = 20
-    };
-
-    struct CameraCalibState {
-        int cameraID = -1;
-        CalibrationState state = CalibrationState::Unknown;
-        float reprojectionError = std::numeric_limits<float>::max();
-        Eigen::Affine3f transform = Eigen::Affine3f::Identity();
-    };
-
-    float computeReprojectionError(const std::vector<cv::Point2f> &pixels, const std::vector<cv::Point3f> &triangulatedPoints,
+    float computeReprojectionError(const std::vector<cv::Point2f> &pixels, const std::vector<cv::Point3d> &triangulatedPoints,
                                    const Eigen::Affine3f &estTransform);
-    bool haveAllExtrinsicGuess();
 
-    float computeScale(const cv::Mat &transformEstimation, std::vector<cv::Point3f> &triangulatedPoints);
+    float computeScale(const cv::Mat &transformEstimation, std::vector<cv::Point3d> &triangulatedPoints);
 
     std::vector<cv::Point3f> m_wandPoints;
 
-    int m_referenceCameraID = -1;
-
     QMap<int,std::shared_ptr<CameraSettings>> m_cameraSettings;
-    QMap<int, CameraCalibState> m_extrinsicGuess;
+    //QMap<int, CameraCalibState> m_extrinsicGuess;
 
+    bool finished = false;
+
+    float m_errorTreshold = 2.0f;
 
     struct ObsDetection {
         std::vector<cv::Point2f> firstPixels;
         std::vector<cv::Point2f> secondPixels;
+        std::vector<cv::Point3d> triangulatedPoints;
         float reprojectionError = std::numeric_limits<float>::max();
         Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+
+        std::array<double,9> cameraFirstData;
+        double* cameraFirstParams(double focalLength)
+        {
+            cameraFirstData[0] = 0.0;
+            cameraFirstData[1] = 0.0;
+            cameraFirstData[2] = 0.0;
+            cameraFirstData[3] = 0.0;
+            cameraFirstData[4] = 0.0;
+            cameraFirstData[5] = 0.0;
+
+            return &cameraFirstData[0];
+        }
+
+        std::array<double,9> cameraSecondData;
+        double* cameraSecondParams(double focalLength)
+        {
+            cv::Mat secondTransform;
+            cv::eigen2cv(transform.matrix(), secondTransform);
+            secondTransform.convertTo(secondTransform, CV_64FC1);
+
+            std::cout << secondTransform << std::endl;
+
+            cv::Mat rotVec;
+            cv::Rodrigues(secondTransform, rotVec);
+
+            cameraSecondData[0] = rotVec.at<double>(0);
+            cameraSecondData[1] = rotVec.at<double>(1);
+            cameraSecondData[2] = rotVec.at<double>(2);
+            cameraSecondData[3] = transform.translation().x();
+            cameraSecondData[4] = transform.translation().y();
+            cameraSecondData[5] = transform.translation().z();
+
+            return &cameraSecondData[0];
+        }
+
     };
 
     QMap<std::pair<int,int>,ObsDetection> m_observedDetections;

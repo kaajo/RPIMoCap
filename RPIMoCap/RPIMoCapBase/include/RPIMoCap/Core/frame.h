@@ -20,7 +20,7 @@
 #include "msgpack_defs.h"
 #include "line3d.h"
 
-#include <eigen3/Eigen/Geometry>
+#include <Eigen/Geometry>
 #include <msgpack/type.hpp>
 
 #include <chrono>

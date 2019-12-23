@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <eigen3/Eigen/Geometry>
+#include <Eigen/Geometry>
 
 #include <msgpack.hpp>
 

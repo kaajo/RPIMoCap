@@ -48,7 +48,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::updateValue()
 {
-    const VirtualWand wand(50.0, 10.0, 5.0);
+    const VirtualWand wand(50.0, 10.0);
 
     const Eigen::Vector3f pos(ui->valuex->value(),
                               ui->valuey->value(),

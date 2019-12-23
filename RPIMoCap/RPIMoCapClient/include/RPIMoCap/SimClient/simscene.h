@@ -22,7 +22,7 @@
 #include <RPIMoCap/Core/cameraparams.h>
 
 #include <opencv2/core/mat.hpp>
-#include <eigen3/Eigen/Geometry>
+#include <Eigen/Geometry>
 
 #include <mutex>
 

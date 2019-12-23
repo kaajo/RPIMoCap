@@ -6,9 +6,9 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native -mtune=native -O3")
 
+find_package(Ceres REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(Qt5 COMPONENTS Gui Widgets 3DCore 3DRender 3DInput 3DLogic 3DExtras REQUIRED)
-pkg_check_modules(MSGPACK REQUIRED msgpack)
 pkg_check_modules(OPENCV REQUIRED opencv)
 
 set(CMAKE_AUTOMOC ON)
@@ -45,8 +45,8 @@ target_include_directories(RPIMoCapServer PUBLIC
 
 target_link_libraries(RPIMoCapServer PRIVATE
     RPIMoCapBase
-    ${MSGPACK_LIBRARIES}
     ${OPENCV_LIBRARIES}
+    ${CERES_LIBRARIES}
     Qt5::Gui
     Qt5::Widgets
     Qt5::3DCore

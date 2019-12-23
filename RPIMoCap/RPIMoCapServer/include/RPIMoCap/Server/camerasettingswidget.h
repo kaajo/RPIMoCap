@@ -21,7 +21,7 @@
 
 #include <QWidget>
 
-#include <eigen3/Eigen/Geometry>
+#include <Eigen/Geometry>
 
 namespace Ui {
 class CameraSettingsWidget;

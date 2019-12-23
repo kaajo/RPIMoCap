@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <eigen3/Eigen/Geometry>
+#include <Eigen/Geometry>
 #include <opencv2/core/types.hpp>
 
 #include <msgpack.hpp>
