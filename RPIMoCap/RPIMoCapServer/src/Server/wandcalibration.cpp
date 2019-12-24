@@ -33,9 +33,11 @@
 
 class ReprojectionError {
 public:
-    static ceres::CostFunction* Create(cv::Point2f observation, cv::Mat cameraMatrix) {
-        return (new ceres::NumericDiffCostFunction<ReprojectionError, ceres::CENTRAL, 2, 6, 3>(
-            new ReprojectionError(observation, cameraMatrix)));
+    static ceres::CostFunction* Create(cv::Point2f observation, cv::Mat cameraMatrix,
+                                       float realDistance1, cv::Point3d &nextPoint1,
+                                       float realDistance2, cv::Point3d &nextPoint2) {
+        return (new ceres::NumericDiffCostFunction<ReprojectionError, ceres::CENTRAL, 3, 6, 3>(
+            new ReprojectionError(observation, cameraMatrix, realDistance1, nextPoint1, realDistance2, nextPoint2)));
     }
 
     bool operator()(const double* const camera, const double* const point, double* residuals) const
@@ -52,16 +54,34 @@ public:
 
         residuals[0] = res.x;
         residuals[1] = res.y;
+
+        cv::Point3d triangulatedPoint(point[0], point[1], point[2]);
+
+        residuals[2] = std::abs(cv::norm(triangulatedPoint - m_nextPoint1) - m_realDistance1) +
+                       std::abs(cv::norm(triangulatedPoint - m_nextPoint2) - m_realDistance2);
+
         return true;
     }
 
 private:
-    ReprojectionError(cv::Point2f observation, cv::Mat cameraMatrix)
+    ReprojectionError(cv::Point2f observation, cv::Mat cameraMatrix,
+                      float realDistance1, cv::Point3d &nextPoint1,
+                      float realDistance2, cv::Point3d &nextPoint2)
         : m_observation(observation)
-        , m_cameraMatrix(cameraMatrix) {}
+        , m_cameraMatrix(cameraMatrix)
+        , m_realDistance1(realDistance1)
+        , m_nextPoint1(nextPoint1)
+        , m_realDistance2(realDistance2)
+        , m_nextPoint2(nextPoint2) {}
 
     cv::Point2f m_observation;
     cv::Mat m_cameraMatrix;
+
+    float m_realDistance1;
+    cv::Point3d &m_nextPoint1;
+
+    float m_realDistance2;
+    cv::Point3d &m_nextPoint2;
 };
 
 WandCalibration::WandCalibration(QMap<int, std::shared_ptr<CameraSettings> > &cameraSettings,
@@ -250,21 +270,68 @@ void WandCalibration::addFrame(const QMap<int, std::vector<cv::Point2f> > &point
     double* dataCamFirst = data.cameraFirstParams(m_camData.cameraMatrix.at<double>(0,0));
     double* dataCamSecond = data.cameraSecondParams(m_camData.cameraMatrix.at<double>(0,0));
 
+    float leftToMiddleDist = cv::norm(m_wandPoints[1] - m_wandPoints[0]);
+    float leftToRightDist = cv::norm(m_wandPoints[2] - m_wandPoints[0]);
+    float middleToRightDist = cv::norm(m_wandPoints[2] - m_wandPoints[1]);
+
     ceres::Problem problem;
-    for (int i = 0; i < data.firstPixels.size(); ++i) {
-        ceres::CostFunction* cost_function =
-            ReprojectionError::Create(data.firstPixels[i], m_camData.cameraMatrix);
+    for (int i = 0; i < data.firstPixels.size(); i = i + m_wandPoints.size()) {
 
-        problem.AddResidualBlock(cost_function, nullptr,
-                                 dataCamFirst,
+        {
+        ceres::CostFunction* costLeftFirstFunction =
+            ReprojectionError::Create(data.firstPixels[i], m_camData.cameraMatrix,
+                                      leftToMiddleDist, data.triangulatedPoints[i+1],
+                                      leftToRightDist, data.triangulatedPoints[i+2]);
+
+        problem.AddResidualBlock(costLeftFirstFunction, nullptr, dataCamFirst,
                                  &data.triangulatedPoints[i].x);
 
-        ceres::CostFunction* cost_functionSecond =
-            ReprojectionError::Create(data.secondPixels[i], m_camData.cameraMatrix);
+        ceres::CostFunction* costLeftSecondFunction =
+            ReprojectionError::Create(data.secondPixels[i], m_camData.cameraMatrix,
+                                      leftToMiddleDist, data.triangulatedPoints[i+1],
+                                      leftToRightDist, data.triangulatedPoints[i+2]);
 
-        problem.AddResidualBlock(cost_functionSecond, nullptr,
-                                 dataCamSecond,
+        problem.AddResidualBlock(costLeftSecondFunction, nullptr, dataCamSecond,
                                  &data.triangulatedPoints[i].x);
+        }
+
+        {
+            ceres::CostFunction* costMiddleFirstFunction =
+                ReprojectionError::Create(data.firstPixels[i+1], m_camData.cameraMatrix,
+                                          leftToMiddleDist, data.triangulatedPoints[i],
+                                          middleToRightDist, data.triangulatedPoints[i+2]);
+
+            problem.AddResidualBlock(costMiddleFirstFunction, nullptr, dataCamFirst,
+                                     &data.triangulatedPoints[i+1].x);
+
+            ceres::CostFunction* costMiddleSecondFunction =
+                ReprojectionError::Create(data.secondPixels[i+1], m_camData.cameraMatrix,
+                                          leftToMiddleDist, data.triangulatedPoints[i],
+                                          middleToRightDist, data.triangulatedPoints[i+2]);
+
+            problem.AddResidualBlock(costMiddleSecondFunction, nullptr, dataCamSecond,
+                                     &data.triangulatedPoints[i+1].x);
+        }
+
+        {
+            ceres::CostFunction* costRightFirstFunction =
+                ReprojectionError::Create(data.firstPixels[i+2], m_camData.cameraMatrix,
+                                          leftToRightDist, data.triangulatedPoints[i],
+                                          middleToRightDist, data.triangulatedPoints[i+1]);
+
+            problem.AddResidualBlock(costRightFirstFunction, nullptr, dataCamFirst,
+                                     &data.triangulatedPoints[i+2].x);
+
+            ceres::CostFunction* costRightSecondFunction =
+                ReprojectionError::Create(data.secondPixels[i+2], m_camData.cameraMatrix,
+                                          leftToRightDist, data.triangulatedPoints[i],
+                                          middleToRightDist, data.triangulatedPoints[i+1]);
+
+            problem.AddResidualBlock(costRightSecondFunction, nullptr, dataCamSecond,
+                                     &data.triangulatedPoints[i+2].x);
+        }
+
+
     }
 
     double minRot = -M_PI;
@@ -288,7 +355,6 @@ void WandCalibration::addFrame(const QMap<int, std::vector<cv::Point2f> > &point
     options.linear_solver_type = ceres::DENSE_SCHUR;
     options.minimizer_progress_to_stdout = true;
     options.num_threads = QThread::idealThreadCount();
-    std::cout << "THREADS: " << QThread::idealThreadCount();
 
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
