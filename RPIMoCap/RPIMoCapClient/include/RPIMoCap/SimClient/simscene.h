@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "simmarker.h"
+#include "RPIMoCap/SimClient/simmarker.h"
 
 #include <RPIMoCap/Core/cameraparams.h>
 

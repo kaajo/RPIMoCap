@@ -31,12 +31,13 @@ SimCamera::SimCamera(const CameraParams &params, const SimScene &scene)
 
 bool SimCamera::open()
 {
-    return true;
+    m_opened = true;
+    return m_opened;
 }
 
 void SimCamera::close()
 {
-
+    m_opened = false;
 }
 
 cv::Mat SimCamera::pullData()

@@ -17,9 +17,9 @@
 
 #include <RPIMoCap/SimClient/simscene.h>
 
-#include <opencv2/opencv.hpp>
-
-#include <QDebug>
+#include <opencv2/core/affine.hpp>
+#include <opencv2/calib3d.hpp>
+#include <opencv2/imgproc.hpp>
 
 namespace RPIMoCap::SimClient {
 
@@ -46,23 +46,21 @@ cv::Mat SimScene::projectScene(const CameraParams &params) const
         return simulatedImage;
     }
 
-    for (size_t i = 0; i < pts.size(); ++i) {
-        pts[i] = cv::Affine3f(params.rotation, params.translation).inv() * pts[i];
-    }
-
     std::vector<cv::Point2f> pixels;
-    cv::projectPoints(pts, cv::Vec3f(0,0,0), cv::Vec3f(0,0,0),
+    cv::projectPoints(pts, params.rotation, params.translation,
                       params.cameraMatrix, params.distortionCoeffs, pixels);
 
-    for (auto &px : pixels)
-    {
-        cv::circle(simulatedImage, px, 3, cv::Scalar(255), -1);
-    }
+    const cv::Affine3d cameraTransform(params.rotation, params.translation);
 
-    //cv::imwrite("/tmp/sim.png", simulatedImage);
+    for (size_t i = 0; i < pixels.size(); ++i)
+    {
+        if ((cameraTransform.matrix * pts[i])[2] > 0.0f)
+        {
+            cv::circle(simulatedImage, pixels[i], 3, cv::Scalar(255), -1);
+        }
+    }
 
     return simulatedImage;
 }
-
 
 }
