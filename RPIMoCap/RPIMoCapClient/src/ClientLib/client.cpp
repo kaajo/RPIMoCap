@@ -42,6 +42,11 @@ Client::Client(std::shared_ptr<ICamera> camera,
 
 Client::~Client()
 {
+    if (m_avahiCheckTimerID.has_value())
+    {
+        QObject::killTimer(m_avahiCheckTimerID.value());
+    }
+
     mosqpp::lib_cleanup();
 }
 
@@ -140,8 +145,11 @@ void Client::checkAvahiServices()
 
     if (m_rpimocaptcp.state() == QAbstractSocket::ConnectedState && isMQTTInitialized())
     {
-        QObject::killTimer(m_avahiCheckTimerID);
-        m_avahiCheckTimerID = -1;
+        if (m_avahiCheckTimerID.has_value())
+        {
+            QObject::killTimer(m_avahiCheckTimerID.value());
+            m_avahiCheckTimerID = std::nullopt;
+        }
     }
 }
 

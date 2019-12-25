@@ -44,6 +44,8 @@ MainWindow::MainWindow(SimScene &scene, QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    qDeleteAll(m_clientWidgets);
+    qDeleteAll(m_clientThreads);
     delete ui;
 }
 
@@ -71,7 +73,7 @@ void MainWindow::on_addClientButton_clicked()
     RPIMoCap::CameraParams params = RPIMoCap::CameraParams::computeRPICameraV1Params();
 
     auto camera = std::make_shared<SimCamera>(params, m_scene);
-    auto client = QSharedPointer<Client>::create(camera,params);
+    auto client = QSharedPointer<Client>(new Client(camera,params), &QObject::deleteLater);
     auto widget = new SimCameraWidget(camera);
     auto thread = new QThread;
     ui->scrollAreaWidgetContents->layout()->addWidget(widget);
@@ -98,7 +100,7 @@ void MainWindow::on_removeClientButton_clicked()
     m_clients.removeLast();
 
     QThread *lastThread = m_clientThreads.last();
-    lastThread->terminate();
+    lastThread->quit();
     lastThread->deleteLater();
     m_clientThreads.removeLast();
 }
