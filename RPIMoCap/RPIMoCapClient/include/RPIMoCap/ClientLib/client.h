@@ -68,7 +68,7 @@ private:
     MQTTSettings m_MQTTsettings;
     std::shared_ptr<MQTTSubscriber> m_cameraTriggerSub;
     std::shared_ptr<MQTTPublisher<std::vector<Line3D>>> m_linePub;
-    std::shared_ptr<MQTTPublisher<std::vector<cv::Point2i>>> m_pointPub;
+    std::shared_ptr<MQTTPublisher<std::vector<cv::Point2f>>> m_pointPub;
 };
 
 }

@@ -118,19 +118,14 @@ void LinesAggregator::onLinesReceived(const int clientId, const std::vector<RPIM
     }
 }
 
-void LinesAggregator::onPointsReceived(const int clientId, const std::vector<cv::Point2i> &points)
+void LinesAggregator::onPointsReceived(const int clientId, const std::vector<cv::Point2f> &points)
 {
     if (m_clients.find(clientId) == m_clients.end())
     {
         return;
     }
 
-    std::vector<cv::Point2f> pointsf;
-    for (size_t i = 0; i < points.size(); ++i)
-    {
-        pointsf.push_back(points[i]);
-    }
-    m_currentPoints[clientId] = pointsf;
+    m_currentPoints[clientId] = points;
 
     m_currentlyReceivedPoints[clientId] = true;
 

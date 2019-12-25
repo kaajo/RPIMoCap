@@ -31,12 +31,12 @@ public:
     explicit MarkerDetector(const RPIMoCap::CameraParams &camParams);
 
     static cv::Mat computePixelDirs(const RPIMoCap::CameraParams &camParams);
-    static Eigen::Vector3f computePixelDir(cv::Mat cameraMatrix, cv::Mat distortionCoeffs, cv::Point2i pixel);
+    static Eigen::Vector3f computePixelDir(cv::Mat cameraMatrix, cv::Mat distortionCoeffs, cv::Point2f pixel);
 
-    void onImage(const cv::Mat &image, std::vector<RPIMoCap::Line3D> &lines, std::vector<cv::Point2i> &points);
+    void onImage(const cv::Mat &image, std::vector<RPIMoCap::Line3D> &lines, std::vector<cv::Point2f> &points);
 
 private:
-    static cv::Point2i qtConcurrentfindPoint(const std::vector<cv::Point2i> &contour);
+    static cv::Point2f qtConcurrentfindPoint(const std::vector<cv::Point2i> &contour);
 
     RPIMoCap::CameraParams m_camParams;
     cv::Mat m_pixelLines;

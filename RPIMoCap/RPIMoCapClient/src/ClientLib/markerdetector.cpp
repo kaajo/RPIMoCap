@@ -47,7 +47,7 @@ cv::Mat MarkerDetector::computePixelDirs(const RPIMoCap::CameraParams &camParams
     return pixelLines;
 }
 
-Eigen::Vector3f MarkerDetector::computePixelDir(cv::Mat cameraMatrix, cv::Mat distortionCoeffs, cv::Point2i pixel)
+Eigen::Vector3f MarkerDetector::computePixelDir(cv::Mat cameraMatrix, cv::Mat distortionCoeffs, cv::Point2f pixel)
 {
     std::vector<cv::Point2f> points = {pixel};
     cv::Mat undistortedPoints;
@@ -55,7 +55,7 @@ Eigen::Vector3f MarkerDetector::computePixelDir(cv::Mat cameraMatrix, cv::Mat di
     return Eigen::Vector3f(undistortedPoints.at<float>(0,0), undistortedPoints.at<float>(0,1), 1).normalized();
 }
 
-void MarkerDetector::onImage(const cv::Mat &image, std::vector<RPIMoCap::Line3D> &lines, std::vector<cv::Point2i> &points)
+void MarkerDetector::onImage(const cv::Mat &image, std::vector<RPIMoCap::Line3D> &lines, std::vector<cv::Point2f> &points)
 {
     lines.clear();
     points.clear();
@@ -76,12 +76,12 @@ void MarkerDetector::onImage(const cv::Mat &image, std::vector<RPIMoCap::Line3D>
 
     std::vector<std::vector<cv::Point>> contours;
 
-    cv::findContours(filterImage, contours , cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
+    cv::findContours(filterImage, contours , cv::RETR_LIST, cv::CHAIN_APPROX_NONE);
 
     contours.erase(std::remove_if(contours.begin(), contours.end(), [](const std::vector<cv::Point> &contour)
                                   {return contour.size() > 500 && contour.size() < 5;}), contours.end());
 
-    points = QtConcurrent::blockingMapped<std::vector<cv::Point2i>>(contours, &MarkerDetector::qtConcurrentfindPoint);
+    points = QtConcurrent::blockingMapped<std::vector<cv::Point2f>>(contours, &MarkerDetector::qtConcurrentfindPoint);
 
     for (const auto &point : points)
     {
@@ -89,13 +89,13 @@ void MarkerDetector::onImage(const cv::Mat &image, std::vector<RPIMoCap::Line3D>
     }
 }
 
-cv::Point2i MarkerDetector::qtConcurrentfindPoint(const std::vector<cv::Point2i> &contour)
+cv::Point2f MarkerDetector::qtConcurrentfindPoint(const std::vector<cv::Point2i> &contour)
 {
     const int m00 = contour.size();
-    const cv::Point2i sum = std::accumulate(contour.begin(),contour.end(),cv::Point2i(0,0));
+    const cv::Point2i sum = std::accumulate(contour.begin(),contour.end(),cv::Point2i(.0f,.0f));
 
-    const int x = std::round(sum.x/static_cast<float>(m00));
-    const int y = std::round(sum.y/static_cast<float>(m00));
+    const float x = static_cast<float>(sum.x)/static_cast<float>(m00);
+    const float y = static_cast<float>(sum.y)/static_cast<float>(m00);
 
-    return cv::Point2i(x, y);
+    return cv::Point2f(x, y);
 }

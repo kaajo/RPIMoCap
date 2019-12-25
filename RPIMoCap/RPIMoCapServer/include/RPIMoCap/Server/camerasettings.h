@@ -65,7 +65,7 @@ public:
 
 signals:
     void linesReceived(int cameraID, std::vector<RPIMoCap::Line3D> lines);
-    void pointsReceived(int cameraID, const std::vector<cv::Point2i> &points);
+    void pointsReceived(int cameraID, const std::vector<cv::Point2f> &points);
     void changed();
 
 private slots:
@@ -91,7 +91,7 @@ private slots:
         msgpack::object_handle result;
         msgpack::unpack(result, data.data(), data.length());
 
-        const std::vector<cv::Point2i> points(result.get().as<std::vector<cv::Point2i>>());
+        const std::vector<cv::Point2f> points(result.get().as<std::vector<cv::Point2f>>());
         emit pointsReceived(m_id, points);
     }
 

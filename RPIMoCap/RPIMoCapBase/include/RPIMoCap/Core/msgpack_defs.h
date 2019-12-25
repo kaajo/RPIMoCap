@@ -65,8 +65,8 @@ struct object_with_zone<my_class> {
 */
 
 template <>
-struct convert<cv::Point2i> {
-    msgpack::object const& operator()(msgpack::object const &o, cv::Point2i &t) const {
+struct convert<cv::Point2f> {
+    msgpack::object const& operator()(msgpack::object const &o, cv::Point2f &t) const {
         if (o.type != msgpack::type::ARRAY) throw msgpack::type_error();
         if (o.via.array.size != 2) throw msgpack::type_error();
         o.via.array.ptr[0] >> t.x;
@@ -76,9 +76,9 @@ struct convert<cv::Point2i> {
 };
 
 template <>
-struct pack<cv::Point2i> {
+struct pack<cv::Point2f> {
     template <typename Stream>
-    msgpack::packer<Stream>& operator()(msgpack::packer<Stream> &o, cv::Point2i const &t) const {
+    msgpack::packer<Stream>& operator()(msgpack::packer<Stream> &o, cv::Point2f const &t) const {
         o.pack_array(2);
         o.pack(t.x);
         o.pack(t.y);

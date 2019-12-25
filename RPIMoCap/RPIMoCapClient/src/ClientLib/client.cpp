@@ -64,7 +64,7 @@ void Client::trigger()
     }
 
     std::vector<Line3D> lines;
-    std::vector<cv::Point2i> points;
+    std::vector<cv::Point2f> points;
     m_markerDetector.onImage(currentImage, lines, points);
 
     m_linePub->publishData(lines);
@@ -160,7 +160,7 @@ void Client::initMQTT( const int32_t cameraid)
 
     m_cameraTriggerSub = std::make_shared<MQTTSubscriber>("triggersub" + cameraIDString, "/trigger", m_MQTTsettings);
     m_linePub = std::make_shared<MQTTPublisher<std::vector<Line3D>>>("linespub" + cameraIDString,"/client" + cameraIDString + "/lines", m_MQTTsettings);
-    m_pointPub = std::make_shared<MQTTPublisher<std::vector<cv::Point2i>>>("pointspub" + cameraIDString,"/client" + cameraIDString + "/points", m_MQTTsettings);
+    m_pointPub = std::make_shared<MQTTPublisher<std::vector<cv::Point2f>>>("pointspub" + cameraIDString,"/client" + cameraIDString + "/points", m_MQTTsettings);
 
     connect(m_cameraTriggerSub.get(), &MQTTSubscriber::messageReceived,this, &Client::trigger);
 }

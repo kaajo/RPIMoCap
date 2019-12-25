@@ -52,7 +52,7 @@ signals:
 public slots:
     void onMoCapStart(bool start);
     void onLinesReceived(const int clientId, const std::vector<RPIMoCap::Line3D> &lines);
-    void onPointsReceived(const int clientId, const std::vector<cv::Point2i> &points);
+    void onPointsReceived(const int clientId, const std::vector<cv::Point2f> &points);
 
 private:
     QTime lastTime = QTime::currentTime();
