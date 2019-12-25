@@ -15,12 +15,13 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "RPIMoCap/SimClient/mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include "RPIMoCap/SimClient/mainwindow.h"
+#include "RPIMoCap/SimClient/virtualwand.h"
+#include "RPIMoCap/SimClient/simcamerawidget.h"
 
-#include <RPIMoCap/SimClient/virtualwand.h>
-#include <RPIMoCap/SimClient/simcamerawidget.h>
+#include <QThread>
 
 namespace RPIMoCap::SimClient {
 
@@ -72,10 +73,14 @@ void MainWindow::on_addClientButton_clicked()
     auto camera = std::make_shared<SimCamera>(params, m_scene);
     auto client = QSharedPointer<Client>::create(camera,params);
     auto widget = new SimCameraWidget(camera);
+    auto thread = new QThread;
     ui->scrollAreaWidgetContents->layout()->addWidget(widget);
+    client->moveToThread(thread);
+    thread->start();
 
     m_clients.push_back(client);
     m_clientWidgets.push_back(widget);
+    m_clientThreads.push_back(thread);
 }
 
 void MainWindow::on_removeClientButton_clicked()
@@ -91,6 +96,11 @@ void MainWindow::on_removeClientButton_clicked()
 
     m_clientWidgets.removeLast();
     m_clients.removeLast();
+
+    QThread *lastThread = m_clientThreads.last();
+    lastThread->terminate();
+    lastThread->deleteLater();
+    m_clientThreads.removeLast();
 }
 
 }

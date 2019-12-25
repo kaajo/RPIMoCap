@@ -51,6 +51,7 @@ private:
 
     QVector<QSharedPointer<Client>> m_clients;
     QVector<QWidget*> m_clientWidgets;
+    QVector<QThread*> m_clientThreads;
 };
 
 }

@@ -29,6 +29,7 @@ Client::Client(std::shared_ptr<ICamera> camera,
     : QObject(parent)
     , m_camera(camera)
     , m_markerDetector(camParams)
+    , m_rpimocaptcp(this)
 {
     //qDebug() << "starting RPIMoCapClient, camera FoV" << camParams.cameraMatrix.at<float>() * 180.0f/M_PI
     //         << "x" << camParams.height * 180.0f/M_PI;
