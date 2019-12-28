@@ -80,6 +80,8 @@ void MainWindow::on_addClientButton_clicked()
     client->moveToThread(thread);
     thread->start();
 
+    connect(client.get(), &Client::newIDAssigned, widget, &SimCameraWidget::setID);
+
     m_clients.push_back(client);
     m_clientWidgets.push_back(widget);
     m_clientThreads.push_back(thread);
@@ -101,6 +103,7 @@ void MainWindow::on_removeClientButton_clicked()
 
     QThread *lastThread = m_clientThreads.last();
     lastThread->quit();
+    lastThread->wait();
     lastThread->deleteLater();
     m_clientThreads.removeLast();
 }

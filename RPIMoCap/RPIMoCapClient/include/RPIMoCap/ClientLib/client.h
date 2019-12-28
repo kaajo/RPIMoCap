@@ -42,6 +42,7 @@ public:
 
 signals:
     void error(std::string error);
+    void newIDAssigned(int id);
 
 public slots:
     void trigger();
@@ -56,6 +57,7 @@ private:
     std::shared_ptr<ICamera> m_camera;
     MarkerDetector m_markerDetector;
 
+    int m_clientID = -1;
     std::optional<int> m_avahiCheckTimerID = std::nullopt;
     QTcpSocket m_rpimocaptcp;
     void checkAvahiServices();

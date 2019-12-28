@@ -15,8 +15,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-#include <RPIMoCap/SimClient/simcamerawidget.h>
+#include "RPIMoCap/SimClient/simcamerawidget.h"
 #include "ui_simcamerawidget.h"
 
 namespace RPIMoCap::SimClient {
@@ -35,6 +34,11 @@ SimCameraWidget::SimCameraWidget(std::shared_ptr<SimCamera> camera, QWidget *par
 SimCameraWidget::~SimCameraWidget()
 {
     delete m_ui;
+}
+
+void SimCameraWidget::setID(int id)
+{
+    m_ui->cameraidvalue->setText(QString::number(id));
 }
 
 void SimCameraWidget::on_fpsvalue_valueChanged(int arg1)

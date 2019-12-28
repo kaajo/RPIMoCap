@@ -59,7 +59,7 @@ void Client::trigger()
         }
     }
 
-    auto start = std::chrono::high_resolution_clock::now();
+    //auto start = std::chrono::high_resolution_clock::now();
 
     cv::Mat currentImage = m_camera->pullData();
     //cv::imwrite("/tmp/image.jpg",currentImage);
@@ -76,16 +76,17 @@ void Client::trigger()
     m_linePub->publishData(lines);
     m_pointPub->publishData(points);
 
-    auto end = std::chrono::high_resolution_clock::now();
+    //auto end = std::chrono::high_resolution_clock::now();
 
-    qDebug() << "elapsed: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    //qDebug() << "elapsed: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 }
 
 void Client::onTcpMessage()
 {
-    const QByteArray id = m_rpimocaptcp.readAll();
-    qDebug() << "ID assigned:" << QString(id);
-    initMQTT(QString(id).toInt());
+    m_clientID = m_rpimocaptcp.readAll().toInt();
+    qDebug() << "ID assigned:" << m_clientID;
+    initMQTT(m_clientID);
+    emit newIDAssigned(m_clientID);
 }
 
 void Client::onTcpDisconnected()
@@ -94,6 +95,8 @@ void Client::onTcpDisconnected()
     m_linePub.reset();
 
     m_avahiCheckTimerID = QObject::startTimer(5000);
+    m_clientID = -1;
+    emit newIDAssigned(m_clientID);
 
     qDebug() << "TCP disconnect";
 }

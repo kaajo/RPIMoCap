@@ -15,10 +15,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #pragma once
 
-#include <RPIMoCap/SimClient/simcamera.h>
+#include "RPIMoCap/SimClient/simcamera.h"
 
 #include <QWidget>
 
@@ -37,6 +36,9 @@ class SimCameraWidget : public QWidget
 public:
     explicit SimCameraWidget(std::shared_ptr<SimCamera> camera, QWidget *parent = nullptr);
     ~SimCameraWidget();
+
+public slots:
+    void setID(int id);
 
 private slots:
     void on_fpsvalue_valueChanged(int arg1);
