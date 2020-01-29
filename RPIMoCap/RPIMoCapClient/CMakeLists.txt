@@ -67,3 +67,5 @@ target_sources(RPIMoCapSimClient
 target_link_libraries(RPIMoCapSimClient PRIVATE
     RPIMoCapClientLib
     Qt5::Widgets)
+
+add_subdirectory(test)

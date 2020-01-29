@@ -99,7 +99,7 @@ void LinesAggregator::onLinesReceived(const int clientId, const std::vector<RPIM
     {
         auto curTime = QTime::currentTime();
 
-        qDebug() << "ms elapsed: " << lastTime.msecsTo(curTime) << " lines received: " << lines.size() << "from client: " << clientId;
+        //qDebug() << "ms elapsed: " << lastTime.msecsTo(curTime) << " lines received: " << lines.size() << "from client: " << clientId;
         lastTime = curTime;
 
         for (auto &received : m_currentlyReceived)

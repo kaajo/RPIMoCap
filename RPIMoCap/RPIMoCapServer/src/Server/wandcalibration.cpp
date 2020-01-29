@@ -25,64 +25,10 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/core/affine.hpp>
 #include <opencv2/core/eigen.hpp>
-#include <ceres/ceres.h>
 
 #include <limits>
 #include <iostream>
 #include <queue>
-
-class ReprojectionError {
-public:
-    static ceres::CostFunction* Create(cv::Point2f observation, cv::Mat cameraMatrix,
-                                       float realDistance1, cv::Point3d &nextPoint1,
-                                       float realDistance2, cv::Point3d &nextPoint2) {
-        return (new ceres::NumericDiffCostFunction<ReprojectionError, ceres::CENTRAL, 3, 6, 3>(
-            new ReprojectionError(observation, cameraMatrix, realDistance1, nextPoint1, realDistance2, nextPoint2)));
-    }
-
-    bool operator()(const double* const camera, const double* const point, double* residuals) const
-    {
-        std::vector<cv::Point3f> triangulatedPtsFloat(1, cv::Point3f(point[0], point[1], point[2]));
-
-        const cv::Vec3f rVec(camera[0], camera[1], camera[2]);
-        const cv::Vec3f tVec(camera[3], camera[4], camera[5]);
-
-        std::vector<cv::Point2f> projPixels;
-        cv::projectPoints(triangulatedPtsFloat, rVec, tVec, m_cameraMatrix, cv::noArray(), projPixels);
-
-        const cv::Point2f res = projPixels.front() - m_observation;
-
-        residuals[0] = res.x;
-        residuals[1] = res.y;
-
-        cv::Point3d triangulatedPoint(point[0], point[1], point[2]);
-
-        residuals[2] = std::abs(cv::norm(triangulatedPoint - m_nextPoint1) - m_realDistance1) +
-                       std::abs(cv::norm(triangulatedPoint - m_nextPoint2) - m_realDistance2);
-
-        return true;
-    }
-
-private:
-    ReprojectionError(cv::Point2f observation, cv::Mat cameraMatrix,
-                      float realDistance1, cv::Point3d &nextPoint1,
-                      float realDistance2, cv::Point3d &nextPoint2)
-        : m_observation(observation)
-        , m_cameraMatrix(cameraMatrix)
-        , m_realDistance1(realDistance1)
-        , m_nextPoint1(nextPoint1)
-        , m_realDistance2(realDistance2)
-        , m_nextPoint2(nextPoint2) {}
-
-    cv::Point2f m_observation;
-    cv::Mat m_cameraMatrix;
-
-    float m_realDistance1;
-    cv::Point3d &m_nextPoint1;
-
-    float m_realDistance2;
-    cv::Point3d &m_nextPoint2;
-};
 
 WandCalibration::WandCalibration(QMap<int, std::shared_ptr<CameraSettings> > &cameraSettings,
                                  RPIMoCap::CameraParams camData, QObject *parent)
@@ -104,7 +50,7 @@ void WandCalibration::addFrame(const QMap<int, std::vector<cv::Point2f> > &point
     //detect points (order)
     for (auto &camID : points.keys())
     {
-        if (auto detPts = detect3pWand(points[camID]))
+        if (auto detPts = WandDetector::detect3pWand(points[camID]))
         {
             detectedPoints.push_back({camID, detPts.value()});
         }
@@ -146,7 +92,7 @@ void WandCalibration::addFrame(const QMap<int, std::vector<cv::Point2f> > &point
     {
         const int detectedFrames = std::min(detIt->firstPixels.size(), detIt->secondPixels.size());
 
-        if (detectedFrames < 100 * m_wandPoints.size())
+        if (detectedFrames < 300 * m_wandPoints.size())
         {
             //skip cameras with small number of samples
             continue;
@@ -188,8 +134,10 @@ void WandCalibration::addFrame(const QMap<int, std::vector<cv::Point2f> > &point
         const Eigen::Affine3f estimatedTransform(cv::Affine3d(rotation, translation).cast<float>());
 
         //compute error and update transform
-        const float errorFirst = computeReprojectionError(detIt->firstPixels, triangulatedPoints3D, Eigen::Affine3f::Identity());
-        const float errorSecond = computeReprojectionError(detIt->secondPixels, triangulatedPoints3D, estimatedTransform);
+        const float errorFirst = computeReprojectionError(detIt->firstPixels, triangulatedPoints3D,
+                                                          Eigen::Affine3f::Identity(), m_camData.cameraMatrix);
+        const float errorSecond = computeReprojectionError(detIt->secondPixels, triangulatedPoints3D,
+                                                           estimatedTransform, m_camData.cameraMatrix);
 
         const float error = (errorFirst + errorSecond)/2.0f;
 
@@ -275,86 +223,63 @@ void WandCalibration::addFrame(const QMap<int, std::vector<cv::Point2f> > &point
     float middleToRightDist = cv::norm(m_wandPoints[2] - m_wandPoints[1]);
 
     ceres::Problem problem;
+
+
     for (int i = 0; i < data.firstPixels.size(); i = i + m_wandPoints.size()) {
-
-        {
         ceres::CostFunction* costLeftFirstFunction =
-            ReprojectionError::Create(data.firstPixels[i], m_camData.cameraMatrix,
-                                      leftToMiddleDist, data.triangulatedPoints[i+1],
-                                      leftToRightDist, data.triangulatedPoints[i+2]);
+            PointDistanceError::Create(leftToMiddleDist, middleToRightDist, leftToRightDist);
 
-        problem.AddResidualBlock(costLeftFirstFunction, nullptr, dataCamFirst,
-                                 &data.triangulatedPoints[i].x);
-
-        ceres::CostFunction* costLeftSecondFunction =
-            ReprojectionError::Create(data.secondPixels[i], m_camData.cameraMatrix,
-                                      leftToMiddleDist, data.triangulatedPoints[i+1],
-                                      leftToRightDist, data.triangulatedPoints[i+2]);
-
-        problem.AddResidualBlock(costLeftSecondFunction, nullptr, dataCamSecond,
-                                 &data.triangulatedPoints[i].x);
-        }
-
-        {
-            ceres::CostFunction* costMiddleFirstFunction =
-                ReprojectionError::Create(data.firstPixels[i+1], m_camData.cameraMatrix,
-                                          leftToMiddleDist, data.triangulatedPoints[i],
-                                          middleToRightDist, data.triangulatedPoints[i+2]);
-
-            problem.AddResidualBlock(costMiddleFirstFunction, nullptr, dataCamFirst,
-                                     &data.triangulatedPoints[i+1].x);
-
-            ceres::CostFunction* costMiddleSecondFunction =
-                ReprojectionError::Create(data.secondPixels[i+1], m_camData.cameraMatrix,
-                                          leftToMiddleDist, data.triangulatedPoints[i],
-                                          middleToRightDist, data.triangulatedPoints[i+2]);
-
-            problem.AddResidualBlock(costMiddleSecondFunction, nullptr, dataCamSecond,
-                                     &data.triangulatedPoints[i+1].x);
-        }
-
-        {
-            ceres::CostFunction* costRightFirstFunction =
-                ReprojectionError::Create(data.firstPixels[i+2], m_camData.cameraMatrix,
-                                          leftToRightDist, data.triangulatedPoints[i],
-                                          middleToRightDist, data.triangulatedPoints[i+1]);
-
-            problem.AddResidualBlock(costRightFirstFunction, nullptr, dataCamFirst,
-                                     &data.triangulatedPoints[i+2].x);
-
-            ceres::CostFunction* costRightSecondFunction =
-                ReprojectionError::Create(data.secondPixels[i+2], m_camData.cameraMatrix,
-                                          leftToRightDist, data.triangulatedPoints[i],
-                                          middleToRightDist, data.triangulatedPoints[i+1]);
-
-            problem.AddResidualBlock(costRightSecondFunction, nullptr, dataCamSecond,
-                                     &data.triangulatedPoints[i+2].x);
-        }
-
-
+        problem.AddResidualBlock(costLeftFirstFunction, new ceres::CauchyLoss(0.5),
+                                 &data.triangulatedPoints[i].x,
+                                 &data.triangulatedPoints[i+1].x,
+                                 &data.triangulatedPoints[i+2].x);
     }
 
-    double minRot = -M_PI;
-    double maxRot = M_PI;
 
-    problem.SetParameterLowerBound(dataCamFirst, 0, minRot);
-    problem.SetParameterUpperBound(dataCamFirst, 0, maxRot);
-    problem.SetParameterLowerBound(dataCamFirst, 1, minRot);
-    problem.SetParameterUpperBound(dataCamFirst, 1, maxRot);
-    problem.SetParameterLowerBound(dataCamFirst, 2, minRot);
-    problem.SetParameterUpperBound(dataCamFirst, 2, maxRot);
+    for (int i = 0; i < data.firstPixels.size(); ++i) {
+        ceres::CostFunction* costFirstFunction =
+            ReprojectionError::Create(data.firstPixels[i], m_camData.cameraMatrix);
 
-    problem.SetParameterLowerBound(dataCamSecond, 0, minRot);
-    problem.SetParameterUpperBound(dataCamSecond, 0, maxRot);
-    problem.SetParameterLowerBound(dataCamSecond, 1, minRot);
-    problem.SetParameterUpperBound(dataCamSecond, 1, maxRot);
-    problem.SetParameterLowerBound(dataCamSecond, 2, minRot);
-    problem.SetParameterUpperBound(dataCamSecond, 2, maxRot);
+        problem.AddResidualBlock(costFirstFunction, new ceres::CauchyLoss(0.5), dataCamFirst,
+                                 &data.triangulatedPoints[i].x);
+
+        ceres::CostFunction* costSecondFunction =
+            ReprojectionError::Create(data.secondPixels[i], m_camData.cameraMatrix);
+
+        problem.AddResidualBlock(costSecondFunction, new ceres::CauchyLoss(0.5), dataCamSecond,
+                                 &data.triangulatedPoints[i].x);
+    }
+
+    problem.SetParameterLowerBound(dataCamFirst, 0, dataCamFirst[0] - M_PI/2);
+    problem.SetParameterUpperBound(dataCamFirst, 0, dataCamFirst[0] + M_PI/2);
+    problem.SetParameterLowerBound(dataCamFirst, 1, dataCamFirst[1] - M_PI/2);
+    problem.SetParameterUpperBound(dataCamFirst, 1, dataCamFirst[1] + M_PI/2);
+    problem.SetParameterLowerBound(dataCamFirst, 2, dataCamFirst[2] - M_PI/2);
+    problem.SetParameterUpperBound(dataCamFirst, 2, dataCamFirst[2] + M_PI/2);
+
+    problem.SetParameterLowerBound(dataCamSecond, 0, dataCamSecond[0] - M_PI/2);
+    problem.SetParameterUpperBound(dataCamSecond, 0, dataCamSecond[0] + M_PI/2);
+    problem.SetParameterLowerBound(dataCamSecond, 1, dataCamSecond[1] - M_PI/2);
+    problem.SetParameterUpperBound(dataCamSecond, 1, dataCamSecond[1] + M_PI/2);
+    problem.SetParameterLowerBound(dataCamSecond, 2, dataCamSecond[2] - M_PI/2);
+    problem.SetParameterUpperBound(dataCamSecond, 2, dataCamSecond[2] + M_PI/2);
 
     ceres::Solver::Options options;
-    options.linear_solver_type = ceres::DENSE_SCHUR;
+    options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
     options.minimizer_progress_to_stdout = true;
     options.num_threads = QThread::idealThreadCount();
+    options.num_linear_solver_threads = QThread::idealThreadCount();
+    options.max_num_iterations = 300;
+    options.gradient_tolerance = 1e-16;
+    options.function_tolerance = 1e-16;
+    //options.use_nonmonotonic_steps = true;
+
+    /*
+    for (size_t i = 0; i < data.triangulatedPoints.size(); ++i)
+    {
+        std::cout << i << " :" << data.triangulatedPoints[i] << std::endl;
+    }
+    */
 
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
@@ -372,96 +297,32 @@ void WandCalibration::addFrame(const QMap<int, std::vector<cv::Point2f> > &point
     std::cout << "TRANSLATION AFTER: " << data.cameraSecondData[3] << " "
               << data.cameraSecondData[4] << " " << data.cameraSecondData[5] << std::endl;
 
+    /*
+    for (size_t i = 0; i < data.triangulatedPoints.size(); ++i)
+    {
+        std::cout << i << " :" << data.triangulatedPoints[i] << std::endl;
+    }
+    */
+
     finished = true;
 }
 
-std::optional<std::vector<cv::Point2f>> WandCalibration::detect4pWand(const std::vector<cv::Point2f> &pts)
-{
-    if (pts.size() != 4)
-    {
-        return std::nullopt;
-    }
-
-    cv::Mat distMap(pts.size(), pts.size(), CV_32FC1,
-                    cv::Scalar(std::numeric_limits<float>::infinity()));
-
-    for (size_t i = 0; i < pts.size(); ++i)
-    {
-        for (size_t j = i+1; j < pts.size(); ++j)
-        {
-            distMap.at<float>(i,j) = distMap.at<float>(j,i) = cv::norm(pts[i] - pts[j]);
-        }
-    }
-
-    double min = std::numeric_limits<double>::lowest();
-    double max = std::numeric_limits<double>::max();
-    cv::Point minLoc(-1, -1);
-    cv::Point maxLoc(-1, -1);
-    cv::Mat diagMask = cv::Scalar::all(1) - cv::Mat::eye(pts.size(), pts.size(), CV_8UC1);
-    cv::minMaxLoc(distMap, &min, &max, &minLoc, &maxLoc, diagMask);
-
-    size_t borderL = maxLoc.x;
-    size_t borderR = maxLoc.y;
-    size_t middle = minLoc.x;
-    size_t cross = minLoc.y;
-
-    if (distMap.at<float>(cross,borderL) <  distMap.at<float>(middle,borderL))
-    {
-        std::swap(cross, middle);
-    }
-
-    if (distMap.at<float>(middle,borderL) <  distMap.at<float>(middle,borderR))
-    {
-        std::swap(borderL, borderR);
-    }
-
-    return std::vector<cv::Point2f>{pts[borderL], pts[middle], pts[borderR], pts[cross]};
-}
-
-std::optional<std::vector<cv::Point2f> > WandCalibration::detect3pWand(const std::vector<cv::Point2f> &pts)
-{
-    if (pts.size() != 3)
-    {
-        return std::nullopt;
-    }
-
-    std::vector<float> distances;
-    distances.push_back(cv::norm(pts[1] - pts[0]) + cv::norm(pts[2] - pts[0]));
-    distances.push_back(cv::norm(pts[0] - pts[1]) + cv::norm(pts[2] - pts[1]));
-    distances.push_back(cv::norm(pts[0] - pts[2]) + cv::norm(pts[1] - pts[2]));
-
-    //TODO take also wand points for correct order
-    const size_t middleID = (std::min_element(distances.begin(), distances.end()) - distances.begin());
-    const size_t leftID = (std::max_element(distances.begin(), distances.end()) - distances.begin());
-
-    QSet<size_t> indexes{0, 1, 2};
-    indexes.remove(middleID);
-    indexes.remove(leftID);
-    const size_t rightID = indexes.values().first();
-
-    return std::vector<cv::Point2f>{pts[leftID], pts[middleID], pts[rightID]};
-}
-
 float WandCalibration::computeReprojectionError(const std::vector<cv::Point2f> &pixels, const std::vector<cv::Point3d> &triangulatedPoints,
-                                                const Eigen::Affine3f &estTransform)
+                                                const Eigen::Affine3f &estTransform, cv::Mat cameraMatrix)
 {
     //TODO remove
     std::vector<cv::Point3f> triangulatedPtsFloat;
 
-    for (auto &pt : triangulatedPoints)
-    {
-        triangulatedPtsFloat.push_back(cv::Point3f(pt.x, pt.y, pt.z));
-    }
-
     cv::Affine3f cvEstTransform(estTransform);
 
-    cv::Mat rVec;
-    cv::Rodrigues(cvEstTransform.rotation(), rVec);
-
-    cv::Vec3f tVec(estTransform.translation().x(),estTransform.translation().y(),estTransform.translation().z());
+    for (auto &pt : triangulatedPoints)
+    {
+        triangulatedPtsFloat.push_back(cvEstTransform * cv::Point3f(pt.x, pt.y, pt.z));
+    }
 
     std::vector<cv::Point2f> projPixels;
-    cv::projectPoints(triangulatedPtsFloat, rVec, tVec, m_camData.cameraMatrix, m_camData.distortionCoeffs, projPixels);
+    cv::projectPoints(triangulatedPtsFloat, cv::Vec3f::zeros(), cv::Vec3f::zeros(),
+                      cameraMatrix, cv::noArray(), projPixels);
     assert(projPixels.size() == pixels.size());
 
     float sum = 0.0f;

@@ -180,7 +180,7 @@ private:
             *positions++ = line.origin().y();
             *positions++ = line.origin().z();
 
-            const auto end = line.origin() + 100.0 * line.direction(); //TODO add length
+            const auto end = line.origin() + 400.0 * line.direction(); //TODO add length
             *positions++ = end.x();
             *positions++ = end.y();
             *positions++ = end.z();

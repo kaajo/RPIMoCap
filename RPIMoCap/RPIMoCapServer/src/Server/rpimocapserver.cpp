@@ -34,6 +34,7 @@ RPIMoCapServer::RPIMoCapServer(RPIMoCap::MQTTSettings settings, QObject *parent)
 RPIMoCapServer::~RPIMoCapServer()
 {
     m_avahiPublish.kill();
+    m_avahiPublish.waitForFinished(1000);
 }
 
 void RPIMoCapServer::onMoCapStart(bool start)

@@ -15,18 +15,20 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-add_executable(RPIMoCapServer)
-target_sources(RPIMoCapServer
+add_library(RPIMoCapServerLib STATIC)
+target_sources(RPIMoCapServerLib
     PRIVATE
     src/Server/camerasettingswidget.cpp
     src/Server/linesaggregator.cpp
     src/Server/mainwindow.cpp
+    src/Server/mainwindow.ui
     src/Server/mocapscene3d.cpp
+    src/Server/mocapscene3d.ui
     src/Server/munkres.cpp
     src/Server/pointchecker.cpp
     src/Server/rpimocapserver.cpp
+    src/Server/wanddetector.cpp
     src/Server/wandcalibration.cpp
-    src/Server/main.cpp
     PUBLIC
     include/RPIMoCap/Server/camerasettings.h
     include/RPIMoCap/Server/camerasettingswidget.h
@@ -38,12 +40,13 @@ target_sources(RPIMoCapServer
     include/RPIMoCap/Server/munkres.h
     include/RPIMoCap/Server/pointchecker.h
     include/RPIMoCap/Server/rpimocapserver.h
+    include/RPIMoCap/Server/wanddetector.h
     include/RPIMoCap/Server/wandcalibration.h)
 
-target_include_directories(RPIMoCapServer PUBLIC
+target_include_directories(RPIMoCapServerLib PUBLIC
     ${PROJECT_SOURCE_DIR}/include)
 
-target_link_libraries(RPIMoCapServer PRIVATE
+target_link_libraries(RPIMoCapServerLib PUBLIC
     RPIMoCapBase
     ${OPENCV_LIBRARIES}
     ${CERES_LIBRARIES}
@@ -54,3 +57,8 @@ target_link_libraries(RPIMoCapServer PRIVATE
     Qt5::3DInput
     Qt5::3DLogic
     Qt5::3DExtras)
+
+add_executable(RPIMoCapServer src/Server/main.cpp)
+target_link_libraries(RPIMoCapServer RPIMoCapServerLib)
+
+add_subdirectory(test)

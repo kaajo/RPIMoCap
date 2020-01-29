@@ -21,6 +21,9 @@
 #include <opencv2/calib3d.hpp>
 #include <opencv2/imgproc.hpp>
 
+#include <QDebug>
+#include <iostream>
+
 namespace RPIMoCap::SimClient {
 
 void SimScene::setMarkers(const std::vector<SimMarker> markers)
@@ -31,30 +34,44 @@ void SimScene::setMarkers(const std::vector<SimMarker> markers)
 
 cv::Mat SimScene::projectScene(const CameraParams &params) const
 {
-    std::vector<cv::Vec3f> pts;
+    const cv::Affine3d cameraTransform(params.rotation, params.translation);
+
+    std::vector<cv::Vec3f> pointsInCamera;
 
     {
         std::scoped_lock lock(m_dataMutex);
 
-        std::transform(m_markers.begin(), m_markers.end(), std::back_inserter(pts),
-                       [](auto &marker){return marker.translation;});
+        std::transform(m_markers.begin(), m_markers.end(), std::back_inserter(pointsInCamera),
+                       [cameraTransform](auto &marker)
+                       {return cameraTransform.inv() * marker.translation;});
     }
 
     cv::Mat simulatedImage(params.imageSize, CV_8UC1, cv::Scalar(0));
 
-    if (pts.empty()) {
+    if (pointsInCamera.empty()) {
         return simulatedImage;
     }
 
+    for (auto &pt : pointsInCamera)
+    {
+        std::cout << "point: " << pt << std::endl;
+    }
+
+    std::cout << params.translation << std::endl;
+    std::cout << params.rotation << std::endl;
+
     std::vector<cv::Point2f> pixels;
-    cv::projectPoints(pts, params.rotation, params.translation,
+    cv::projectPoints(pointsInCamera, cv::Vec3f::zeros(), cv::Vec3f::zeros(),
                       params.cameraMatrix, params.distortionCoeffs, pixels);
 
-    const cv::Affine3d cameraTransform(params.rotation, params.translation);
+    for (auto &pt : pixels)
+    {
+        std::cout << "pixel: " << pt << std::endl;
+    }
 
     for (size_t i = 0; i < pixels.size(); ++i)
     {
-        if ((cameraTransform.matrix * pts[i])[2] > 0.0f)
+        if (pointsInCamera[i][2] > 0.0f)
         {
             cv::circle(simulatedImage, pixels[i], 3, cv::Scalar(255), -1);
         }
