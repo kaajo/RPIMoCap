@@ -15,7 +15,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "RPIMoCap/Server/mocapscene3d.h"
+#include "RPIMoCap/mocapscene3d.h"
 #include "ui_mocapscene3d.h"
 
 #include <Qt3DRender/QCamera>
@@ -26,6 +26,8 @@
 #include <Qt3DExtras/Qt3DWindow>
 #include <Qt3DExtras/QFirstPersonCameraController>
 #include <Qt3DExtras>
+
+namespace RPIMoCap::Visualization {
 
 MocapScene3D::MocapScene3D(QWidget *parent) :
     QWidget(parent),
@@ -41,7 +43,7 @@ MocapScene3D::MocapScene3D(QWidget *parent) :
     ui->verticalLayout->addWidget(QWidget::createWindowContainer(view));
 
     Qt3DRender::QCamera *cameraEntity = view->camera();
-    cameraEntity->lens()->setPerspectiveProjection(45.0f, 16.0f/9.0f, 0.1f, 2000.0f);
+    cameraEntity->lens()->setPerspectiveProjection(60.0f, 16.0f/9.0f, 0.1f, 2000.0f);
     cameraEntity->setPosition(QVector3D(400, 400, 400));
     cameraEntity->setUpVector(QVector3D(0, -1, 0));
     cameraEntity->setViewCenter(QVector3D(0, 0, 0));
@@ -57,9 +59,9 @@ MocapScene3D::MocapScene3D(QWidget *parent) :
     Qt3DExtras::QOrbitCameraController *camController = new Qt3DExtras::QOrbitCameraController(m_rootEntity);
     camController->setCamera(cameraEntity);
 
-    for (size_t i = 0; i < 100; ++i)
+    for (size_t i = 0; i < 200; ++i)
     {
-        m_allLines.push_back(new Line(RPIMoCap::Line3D(),m_rootEntity));
+        m_allLines.push_back(new Line(Frame::LineSegment(), m_rootEntity));
     }
 
     view->setRootEntity(m_rootEntity);
@@ -70,10 +72,14 @@ MocapScene3D::~MocapScene3D()
     delete ui;
 }
 
-void MocapScene3D::addCamera(const std::shared_ptr<CameraSettings> &camera)
+void MocapScene3D::addCamera(const int id, const Eigen::Affine3f &transform)
 {
-    m_currentCameras[camera->id()] = {camera,std::make_shared<Camera>(camera->transform(), m_rootEntity)};
-    connect(camera.get(), &CameraSettings::changed, this, &MocapScene3D::updateCameras);
+    m_currentCameras.insert(id, std::make_shared<Camera>(transform, m_rootEntity));
+}
+
+void MocapScene3D::updateCamera(const int id, const Eigen::Affine3f &transform)
+{
+    m_currentCameras.value(id)->setTransform(transform);
 }
 
 void MocapScene3D::removeCamera(const int id)
@@ -97,10 +103,4 @@ void MocapScene3D::drawFrame(const RPIMoCap::Frame &frame)
     update(); //TODO needed?
 }
 
-void MocapScene3D::updateCameras()
-{
-    for (auto &cam : m_currentCameras)
-    {
-        cam.second->setTransform(cam.first->transform());
-    }
 }
