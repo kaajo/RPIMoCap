@@ -24,7 +24,7 @@ CameraSettingsWidget::CameraSettingsWidget(const std::shared_ptr<CameraSettings>
     , ui(new Ui::CameraSettingsWidget)
 {
     ui->setupUi(this);
-    ui->cameraid->setText(QString::number(camera->id()));
+    ui->cameraid->setText(camera->id().toString(QUuid::StringFormat::WithoutBraces));
     connect(m_camera.get(), &CameraSettings::changed, this, &CameraSettingsWidget::setValues);
     setValues();
 }

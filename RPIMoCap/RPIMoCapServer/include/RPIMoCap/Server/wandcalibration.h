@@ -125,10 +125,10 @@ class WandCalibration : public QObject
 {
     Q_OBJECT
 public:
-    WandCalibration(QMap<int,std::shared_ptr<CameraSettings>> &cameraSettings,
+    WandCalibration(QMap<QUuid,std::shared_ptr<CameraSettings>> &cameraSettings,
                     RPIMoCap::CameraParams camData, QObject *parent = nullptr);
 
-    void addFrame(const QMap<int, std::vector<cv::Point2f>> &points);
+    void addFrame(const QMap<QUuid, std::vector<cv::Point2f> > &points);
 
     static float computeReprojectionError(const std::vector<cv::Point2f> &pixels, const std::vector<cv::Point3d> &triangulatedPoints,
                                    const Eigen::Affine3f &estTransform, cv::Mat cameraMatrix);
@@ -137,7 +137,7 @@ private:
 
     std::vector<cv::Point3f> m_wandPoints;
 
-    QMap<int,std::shared_ptr<CameraSettings>> m_cameraSettings;
+    QMap<QUuid,std::shared_ptr<CameraSettings>> m_cameraSettings;
     //QMap<int, CameraCalibState> m_extrinsicGuess;
 
     bool finished = false;
@@ -186,7 +186,7 @@ private:
 
     };
 
-    QMap<std::pair<int,int>,ObsDetection> m_observedDetections;
+    QMap<std::pair<QUuid,QUuid>,ObsDetection> m_observedDetections;
 
     RPIMoCap::CameraParams m_camData;
 };

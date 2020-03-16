@@ -24,9 +24,12 @@
 #include <RPIMoCap/Core/msgpack_defs.h>
 #include <RPIMoCap/Core/mqttsubscriber.h>
 #include <RPIMoCap/Core/mqttpublisher.h>
+#include <RPIMoCap/Core/cameraparams.h>
 
 #include <QObject>
 #include <QTcpSocket>
+#include <QProcess>
+#include <QUuid>
 
 #include <msgpack/pack.h>
 
@@ -40,16 +43,13 @@ public:
                     CameraParams camParams, QObject *parent = nullptr);
     ~Client();
 
+    QUuid id() {return m_clientID;}
+
 signals:
     void error(std::string error);
-    void newIDAssigned(int id);
 
 public slots:
-    void trigger();
-
-private slots:
-    void onTcpMessage();
-    void onTcpDisconnected();
+    void cameraTrigger();
 
 private:
     virtual void timerEvent(QTimerEvent *event) override;
@@ -57,17 +57,17 @@ private:
     std::shared_ptr<ICamera> m_camera;
     MarkerDetector m_markerDetector;
 
-    int m_clientID = -1;
     std::optional<int> m_avahiCheckTimerID = std::nullopt;
-    QTcpSocket m_rpimocaptcp;
     void checkAvahiServices();
 
     bool isMQTTInitialized();
-    void initMQTT(const int32_t cameraid);
+    void initMQTT(const QString &idString);
     MQTTSettings m_MQTTsettings;
     std::shared_ptr<MQTTSubscriber> m_cameraTriggerSub;
-    std::shared_ptr<MQTTPublisher<std::vector<Line3D>>> m_linePub;
     std::shared_ptr<MQTTPublisher<std::vector<cv::Point2f>>> m_pointPub;
+
+    QUuid m_clientID = QUuid::createUuid();
+    QProcess m_avahiPublish;
 };
 
 }

@@ -17,24 +17,19 @@
 
 #include "RPIMoCap/Server/rpimocapserver.h"
 
+#include <RPIMoCap/Core/avahibrowser.h>
+
+#include <QJsonDocument>
+
 RPIMoCapServer::RPIMoCapServer(RPIMoCap::MQTTSettings settings, QObject *parent)
     : QObject(parent)
     , m_triggerPub("serverTriggerPub", "/trigger", settings)
 {
-    m_avahiPublish.start("avahi-publish-service", {"RPIMoCap Server", "_rpimocap._tcp", QString::number(5000), "RPIMoCap service"});
-
-    connect(&m_aggregator, &LinesAggregator::linesReceived, this, &RPIMoCapServer::linesReceived); //TODO intersector, TODO tracker (pipeline)
-
-    m_tcpServer.listen(QHostAddress::Any,5000);
-    connect(&m_tcpServer,&QTcpServer::newConnection,this,&RPIMoCapServer::onNewConnection);
-
     connect(&m_aggregator,&LinesAggregator::trigger, [&](){m_triggerPub.publishData("");});
 }
 
 RPIMoCapServer::~RPIMoCapServer()
 {
-    m_avahiPublish.kill();
-    m_avahiPublish.waitForFinished(1000);
 }
 
 void RPIMoCapServer::onMoCapStart(bool start)
@@ -47,44 +42,28 @@ void RPIMoCapServer::onCalibStart(bool start)
     start ? m_aggregator.startCalib() : m_aggregator.stopCalib();
 }
 
-void RPIMoCapServer::onNewConnection()
+void RPIMoCapServer::searchForCameras()
 {
-    const int thisID = nextId;
-    QTcpSocket *conn = m_tcpServer.nextPendingConnection();
+    auto services = RPIMoCap::AvahiBrowser::browseServices(QAbstractSocket::IPv4Protocol);
 
-    connect(conn,&QTcpSocket::disconnected,this,&RPIMoCapServer::onLostConnection);
-
-    conn->write(QString::number(thisID).toUtf8());
-    ++nextId;
-
-    addClient(conn,thisID);
-}
-
-void RPIMoCapServer::onLostConnection()
-{
-    QTcpSocket *socket = qobject_cast<QTcpSocket*>(sender());
-    const auto it = m_currentClients.find(socket);
-
-    if (it != m_currentClients.end())
-    {
-        m_aggregator.removeCamera(it.value()->id());
-        emit cameraRemoved(it.value()->id());
-        m_currentClients.erase(it);
-    }
-}
-
-void RPIMoCapServer::addClient(QTcpSocket *conn, const int id)
-{
     RPIMoCap::MQTTSettings settings;
     settings.IPAddress = "127.0.0.1";
 
-    auto camera = std::make_shared<CameraSettings>(id, settings);
-    m_currentClients.insert(conn,camera);
+    for (auto &service : services)
+    {
+        if (service.type == "_rpimocap._tcp")
+        {
+            const QJsonDocument json = QJsonDocument::fromJson(service.description.toUtf8());
+            const QVariantMap descVar = json.toVariant().toMap();
 
-    connect(camera.get(),&CameraSettings::linesReceived, &m_aggregator, &LinesAggregator::onLinesReceived);
-    connect(camera.get(),&CameraSettings::pointsReceived, &m_aggregator, &LinesAggregator::onPointsReceived);
+            QUuid id(descVar["id"].toString());
 
-    m_aggregator.addCamera(camera);
+            auto camera = std::make_shared<CameraSettings>(id, settings);
+            emit cameraAdded(camera);
 
-    emit cameraAdded(camera);
+            connect(camera.get(),&CameraSettings::pointsReceived, &m_aggregator, &LinesAggregator::onPointsReceived);
+
+            m_aggregator.addCamera(camera);
+        }
+    }
 }

@@ -30,8 +30,7 @@ int main(int argc, char *argv[])
 
     RPIMoCap::SimClient::SimScene scene;
 
-    auto *mainWindow = new RPIMoCap::SimClient::MainWindow(scene);
-
-    mainWindow->show();
+    auto window = std::make_unique<RPIMoCap::SimClient::MainWindow>(scene);
+    window->show();
     return a.exec();
 }

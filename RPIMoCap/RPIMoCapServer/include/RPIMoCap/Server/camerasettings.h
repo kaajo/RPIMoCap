@@ -22,6 +22,7 @@
 #include <RPIMoCap/Core/msgpack_defs.h>
 
 #include <QObject>
+#include <QUuid>
 
 #include <Eigen/Geometry>
 #include <msgpack.hpp>
@@ -34,19 +35,18 @@ struct CameraSettings : public QObject
 {
     Q_OBJECT
 public:
-    CameraSettings(int id, const RPIMoCap::MQTTSettings &settings, Eigen::Affine3f transform = Eigen::Affine3f::Identity())
+    CameraSettings(QUuid id, const RPIMoCap::MQTTSettings &settings, Eigen::Affine3f transform = Eigen::Affine3f::Identity())
         : m_id(id)
-        , m_lineSub("serverLinesSub" + QString::number(id), "/client" + QString::number(id) + "/lines",settings)
-        , m_pointSub("serverPointsSub" + QString::number(id), "/client" + QString::number(id) + "/points",settings)
+        , m_pointSub("serverPointsSub-" + id.toString(QUuid::StringFormat::WithoutBraces),
+                     "/client-" + id.toString(QUuid::StringFormat::WithoutBraces) + "/points",settings)
         , m_transform(transform)
     {
-        connect(&m_lineSub,&RPIMoCap::MQTTSubscriber::messageReceived, this, &CameraSettings::onLinesDataReceived);
         connect(&m_pointSub,&RPIMoCap::MQTTSubscriber::messageReceived, this, &CameraSettings::onPointsDataReceived);
     }
 
     virtual ~CameraSettings() {}
 
-    int id() const {return m_id;}
+    QUuid id() const {return m_id;}
 
     Eigen::Affine3f transform() const
     {
@@ -64,28 +64,10 @@ public:
     }
 
 signals:
-    void linesReceived(int cameraID, std::vector<RPIMoCap::Line3D> lines);
-    void pointsReceived(int cameraID, const std::vector<cv::Point2f> &points);
+    void pointsReceived(QUuid cameraID, const std::vector<cv::Point2f> &points);
     void changed();
 
 private slots:
-    void onLinesDataReceived(const QByteArray &data)
-    {
-        msgpack::object_handle result;
-        msgpack::unpack(result, data.data(), data.length());
-
-        std::vector<RPIMoCap::Line3D> lines(result.get().as<std::vector<RPIMoCap::Line3D>>());
-
-        for (auto &line : lines)
-        {
-            Eigen::Vector3f newDir = transform().rotation() * line.direction();
-            Eigen::Vector3f newOrigin = transform() * line.origin();
-            line = RPIMoCap::Line3D(newOrigin, newDir);
-        }
-
-        emit linesReceived(m_id, lines);
-    }
-
     void onPointsDataReceived(const QByteArray &data)
     {
         msgpack::object_handle result;
@@ -98,8 +80,7 @@ private slots:
 private:
     mutable std::mutex m_transformMutex;
 
-    int m_id = -1;
-    RPIMoCap::MQTTSubscriber m_lineSub;
+    QUuid m_id;
     RPIMoCap::MQTTSubscriber m_pointSub;
     Eigen::Affine3f m_transform;
 };

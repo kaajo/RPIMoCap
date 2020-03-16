@@ -20,6 +20,9 @@
 
 #include <QCoreApplication>
 
+#include <csignal>
+#include <iostream>
+
 constexpr float degToRad = M_PI/180.0f;
 
 //diag 64.92 https://www.raspberrypi.org/documentation/hardware/camera/
@@ -63,9 +66,19 @@ RPIMoCap::CameraParams computeRPICameraV2Params(const cv::Size2f fullFoVRad = cv
     return params;
 }
 
+std::unique_ptr<RPIMoCap::Client> client;
+
+void signal_handler(int signal)
+{
+    std::cout << "reset" << std::endl;
+    client.reset(nullptr);
+}
+
 int main(int argc, char *argv[])
 {
     mosqpp::lib_init();
+
+    std::signal(SIGINT | SIGTERM, signal_handler);
 
     QCoreApplication a(argc, argv);
 
@@ -78,6 +91,6 @@ int main(int argc, char *argv[])
                                                 "videoconvert ! video/x-raw,format=GRAY8 ! "
                                                 "appsink max-buffers=1 name=appsink");
 
-    RPIMoCap::Client client(camera, params);
+    client.reset(new RPIMoCap::Client(camera, params));
     return a.exec();
 }

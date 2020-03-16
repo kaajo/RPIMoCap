@@ -39,7 +39,7 @@ void LinesAggregator::addCamera(const std::shared_ptr<CameraSettings> &camera)
     }
 }
 
-void LinesAggregator::removeCamera(const int id)
+void LinesAggregator::removeCamera(const QUuid id)
 {
     if (m_clients.contains(id))
     {
@@ -75,7 +75,7 @@ void LinesAggregator::onMoCapStart(bool start)
     }
 }
 
-void LinesAggregator::onLinesReceived(const int clientId, const std::vector<RPIMoCap::Line3D> &lines)
+void LinesAggregator::onLinesReceived(const QUuid clientId, const std::vector<RPIMoCap::Line3D> &lines)
 {
     if (m_clients.find(clientId) == m_clients.end())
     {
@@ -99,7 +99,7 @@ void LinesAggregator::onLinesReceived(const int clientId, const std::vector<RPIM
     {
         auto curTime = QTime::currentTime();
 
-        //qDebug() << "ms elapsed: " << lastTime.msecsTo(curTime) << " lines received: " << lines.size() << "from client: " << clientId;
+        qDebug() << "ms elapsed: " << lastTime.msecsTo(curTime) << " lines received: " << lines.size() << "from client: " << clientId;
         lastTime = curTime;
 
         for (auto &received : m_currentlyReceived)
@@ -109,16 +109,21 @@ void LinesAggregator::onLinesReceived(const int clientId, const std::vector<RPIM
 
         emit trigger();
 
-        uint64_t currentTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+        std::vector<RPIMoCap::Frame::LineSegment> frameLines;
 
-        RPIMoCap::Frame frame(currentTime, m_currentlines.toStdVector());
+        for (auto &line : m_currentlines)
+        {
+            frameLines.push_back({100, line});
+        }
+
+        RPIMoCap::Frame frame(std::chrono::high_resolution_clock::now(), frameLines);
         emit frameReady(frame);
         emit linesReceived(m_currentlines.toStdVector());
         m_currentlines.clear();
     }
 }
 
-void LinesAggregator::onPointsReceived(const int clientId, const std::vector<cv::Point2f> &points)
+void LinesAggregator::onPointsReceived(const QUuid clientId, const std::vector<cv::Point2f> &points)
 {
     if (m_clients.find(clientId) == m_clients.end())
     {
@@ -143,7 +148,7 @@ void LinesAggregator::onPointsReceived(const int clientId, const std::vector<cv:
     {
         if (m_wandCalib)
         {
-            m_wandCalib->addFrame(m_currentPoints);
+            //TODO m_wandCalib->addFrame(m_currentPoints);
         }
 
         for (auto &received : m_currentlyReceivedPoints)
@@ -151,4 +156,8 @@ void LinesAggregator::onPointsReceived(const int clientId, const std::vector<cv:
             received = false;
         }
     }
+
+    const std::vector<RPIMoCap::Line3D> lines;
+
+    onLinesReceived(clientId, lines);
 }

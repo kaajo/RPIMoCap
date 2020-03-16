@@ -22,8 +22,6 @@ target_sources(RPIMoCapServerLib
     src/Server/linesaggregator.cpp
     src/Server/mainwindow.cpp
     src/Server/mainwindow.ui
-    src/Server/mocapscene3d.cpp
-    src/Server/mocapscene3d.ui
     src/Server/munkres.cpp
     src/Server/pointchecker.cpp
     src/Server/rpimocapserver.cpp
@@ -36,7 +34,6 @@ target_sources(RPIMoCapServerLib
     include/RPIMoCap/Server/mainwindow.h
     include/RPIMoCap/Server/matrix.h
     include/RPIMoCap/Server/matrix.tpp
-    include/RPIMoCap/Server/mocapscene3d.h
     include/RPIMoCap/Server/munkres.h
     include/RPIMoCap/Server/pointchecker.h
     include/RPIMoCap/Server/rpimocapserver.h
@@ -48,6 +45,7 @@ target_include_directories(RPIMoCapServerLib PUBLIC
 
 target_link_libraries(RPIMoCapServerLib PUBLIC
     RPIMoCapBase
+    RPIMoCapVisualizations
     ${OPENCV_LIBRARIES}
     ${CERES_LIBRARIES}
     Qt5::Gui

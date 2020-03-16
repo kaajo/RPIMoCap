@@ -42,9 +42,8 @@ signals:
     void startCalib(bool start);
 
 public slots:
-    void onLinesReceived(const std::vector<RPIMoCap::Line3D> &lines);
     void addCamera(const std::shared_ptr<CameraSettings> &camera);
-    void removeCamera(const int id);
+    void removeCamera(const QUuid id);
 
 private slots:
     void on_MoCapButton_clicked(bool checked);
@@ -53,5 +52,5 @@ private slots:
 private:
     Ui::MainWindow *ui;
 
-    QMap<int, CameraSettingsWidget*> m_cameraWidgets;
+    QMap<QUuid, CameraSettingsWidget*> m_cameraWidgets;
 };

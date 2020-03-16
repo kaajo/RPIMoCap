@@ -22,6 +22,7 @@
 #include "RPIMoCap/SimClient/simcamerawidget.h"
 
 #include <QThread>
+#include <QCloseEvent>
 
 namespace RPIMoCap::SimClient {
 
@@ -74,13 +75,12 @@ void MainWindow::on_addClientButton_clicked()
 
     auto camera = std::make_shared<SimCamera>(params, m_scene);
     auto client = QSharedPointer<Client>(new Client(camera,params), &QObject::deleteLater);
-    auto widget = new SimCameraWidget(camera);
+    auto widget = new SimCameraWidget(camera, client->id());
     auto thread = new QThread;
+
     ui->scrollAreaWidgetContents->layout()->addWidget(widget);
     client->moveToThread(thread);
     thread->start();
-
-    connect(client.get(), &Client::newIDAssigned, widget, &SimCameraWidget::setID);
 
     m_clients.push_back(client);
     m_clientWidgets.push_back(widget);
@@ -106,6 +106,14 @@ void MainWindow::on_removeClientButton_clicked()
     lastThread->wait();
     lastThread->deleteLater();
     m_clientThreads.removeLast();
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    event->accept();
+    m_clients.clear();
+    qDeleteAll(m_clientWidgets);
+    qDeleteAll(m_clientThreads);
 }
 
 }

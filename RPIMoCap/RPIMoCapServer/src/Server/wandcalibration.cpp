@@ -30,7 +30,7 @@
 #include <iostream>
 #include <queue>
 
-WandCalibration::WandCalibration(QMap<int, std::shared_ptr<CameraSettings> > &cameraSettings,
+WandCalibration::WandCalibration(QMap<QUuid, std::shared_ptr<CameraSettings> > &cameraSettings,
                                  RPIMoCap::CameraParams camData, QObject *parent)
     : QObject(parent)
     , m_cameraSettings(cameraSettings)
@@ -41,11 +41,11 @@ WandCalibration::WandCalibration(QMap<int, std::shared_ptr<CameraSettings> > &ca
     m_wandPoints.push_back({25.0,0.0,0.0});
 }
 
-void WandCalibration::addFrame(const QMap<int, std::vector<cv::Point2f> > &points)
+void WandCalibration::addFrame(const QMap<QUuid, std::vector<cv::Point2f> > &points)
 {
     if (finished) return;
 
-    std::vector<std::pair<int, std::vector<cv::Point2f>>> detectedPoints;
+    std::vector<std::pair<QUuid, std::vector<cv::Point2f>>> detectedPoints;
 
     //detect points (order)
     for (auto &camID : points.keys())
@@ -141,8 +141,8 @@ void WandCalibration::addFrame(const QMap<int, std::vector<cv::Point2f> > &point
 
         const float error = (errorFirst + errorSecond)/2.0f;
 
-        std::cout << "error: " << detIt.key().first << " " << errorFirst << std::endl;
-        std::cout << "error: " << detIt.key().second << " " << errorSecond << std::endl;
+        qDebug() << "error: " << detIt.key().first << errorFirst;
+        qDebug() << "error: " << detIt.key().second << errorSecond;
 
         if (error < detIt->reprojectionError)
         {
@@ -157,8 +157,8 @@ void WandCalibration::addFrame(const QMap<int, std::vector<cv::Point2f> > &point
     //check if we can go to another stage of calibration
     auto cameraIDs = m_cameraSettings.keys();
 
-    QVector<int> discovered;
-    std::queue<int> pointQueue;
+    QVector<QUuid> discovered;
+    std::queue<QUuid> pointQueue;
 
     //find first good node and mark it as reference camera
     for (auto detIt = m_observedDetections.begin(); detIt != m_observedDetections.end(); ++detIt)
@@ -174,7 +174,7 @@ void WandCalibration::addFrame(const QMap<int, std::vector<cv::Point2f> > &point
     //search
     while (!pointQueue.empty())
     {
-        const int currentNode = pointQueue.front();
+        const QUuid currentNode = pointQueue.front();
         pointQueue.pop();
 
         for (auto detIt = m_observedDetections.begin(); detIt != m_observedDetections.end(); ++detIt)
@@ -206,7 +206,7 @@ void WandCalibration::addFrame(const QMap<int, std::vector<cv::Point2f> > &point
 
     for (auto &disc : discovered)
     {
-        std::cout << "transform for camera " << disc << " ready for next stage" << std::endl;
+        qDebug() << "transform for camera" << disc << "ready for next stage";
     }
 
     //bundle adjustment stage

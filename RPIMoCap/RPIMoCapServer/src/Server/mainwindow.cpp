@@ -34,24 +34,35 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+/*
 void MainWindow::onLinesReceived(const std::vector<RPIMoCap::Line3D> &lines)
 {
-    RPIMoCap::Frame frame(0,lines);;
+    std::vector<RPIMoCap::Frame::LineSegment> lineSegments;
+
+    for (auto &line : lines)
+    {
+        lineSegments.push_back({100.0f,line});
+    }
+
+    auto time = std::chrono::high_resolution_clock::now();
+
+    RPIMoCap::Frame frame(time, lineSegments);;
     ui->widget->drawFrame(frame);
 }
+*/
 
 void MainWindow::addCamera(const std::shared_ptr<CameraSettings> &camera)
 {
-    ui->widget->addCamera(camera);
+    //TODO ui->widget->addCamera(camera);
 
     auto widget = new CameraSettingsWidget(camera);
     m_cameraWidgets[camera->id()] = widget;
     ui->scrollAreaWidgetContents->layout()->addWidget(widget);
 }
 
-void MainWindow::removeCamera(const int id)
+void MainWindow::removeCamera(const QUuid id)
 {
-    ui->widget->removeCamera(id);
+    //TODO ui->widget->removeCamera(id);
 
     ui->scrollAreaWidgetContents->layout()->removeWidget(m_cameraWidgets[id]);
     m_cameraWidgets[id]->deleteLater();

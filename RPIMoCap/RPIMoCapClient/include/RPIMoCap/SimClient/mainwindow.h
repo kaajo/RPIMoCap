@@ -45,6 +45,8 @@ private slots:
     void on_removeClientButton_clicked();
 
 private:
+    void closeEvent(QCloseEvent *event) override;
+
     Ui::MainWindow *ui;
 
     SimScene &m_scene;

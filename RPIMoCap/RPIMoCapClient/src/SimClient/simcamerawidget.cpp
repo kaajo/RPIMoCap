@@ -20,25 +20,20 @@
 
 namespace RPIMoCap::SimClient {
 
-SimCameraWidget::SimCameraWidget(std::shared_ptr<SimCamera> camera, QWidget *parent) :
+SimCameraWidget::SimCameraWidget(std::shared_ptr<SimCamera> camera, QUuid clientId, QWidget *parent) :
     QWidget(parent),
     m_ui(new Ui::SimCameraWidget),
     m_camera(camera)
 {
     m_ui->setupUi(this);
 
-    //TODO set ID
+    m_ui->cameraidvalue->setText(clientId.toString(QUuid::StringFormat::WithoutBraces).left(12));
     m_ui->fpsvalue->setValue(m_camera->getParams().maxFPS);
 }
 
 SimCameraWidget::~SimCameraWidget()
 {
     delete m_ui;
-}
-
-void SimCameraWidget::setID(int id)
-{
-    m_ui->cameraidvalue->setText(QString::number(id));
 }
 
 void SimCameraWidget::on_fpsvalue_valueChanged(int arg1)

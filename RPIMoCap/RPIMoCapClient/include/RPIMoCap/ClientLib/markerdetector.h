@@ -17,27 +17,27 @@
 
 #pragma once
 
-#include <RPIMoCap/Core/line3d.h>
-#include <RPIMoCap/Core/msgpack_defs.h>
-#include <RPIMoCap/Core/cameraparams.h>
-
-#include <QObject>
-
-#include <opencv2/opencv.hpp>
+#include <opencv2/core/types.hpp>
 
 class MarkerDetector
 {
 public:
-    explicit MarkerDetector(const RPIMoCap::CameraParams &camParams);
+    struct Params
+    {
+        int imageThreshold = 220;
+        size_t minContourSize = 5;
+        size_t maxContourSize = 500;
+    };
 
-    static cv::Mat computePixelDirs(const RPIMoCap::CameraParams &camParams);
-    static Eigen::Vector3f computePixelDir(cv::Mat cameraMatrix, cv::Mat distortionCoeffs, cv::Point2f pixel);
+    explicit MarkerDetector(const Params &algParams);
 
-    void onImage(const cv::Mat &image, std::vector<RPIMoCap::Line3D> &lines, std::vector<cv::Point2f> &points);
+//    static cv::Mat computePixelDirs(const RPIMoCap::CameraParams &camParams);
+//    static Eigen::Vector3f computePixelDir(cv::Mat cameraMatrix, cv::Mat distortionCoeffs, cv::Point2f pixel);
+
+    std::vector<cv::Point2f> detectMarkers(const cv::Mat &image);
 
 private:
-    static cv::Point2f qtConcurrentfindPoint(const std::vector<cv::Point2i> &contour);
+    static cv::Point2f findPoint(const std::vector<cv::Point2i> &contour);
 
-    RPIMoCap::CameraParams m_camParams;
-    cv::Mat m_pixelLines;
+    Params m_algParams;
 };

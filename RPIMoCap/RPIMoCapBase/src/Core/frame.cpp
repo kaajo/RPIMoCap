@@ -17,7 +17,14 @@
 
 #include "RPIMoCap/Core/frame.h"
 
-std::vector<RPIMoCap::Line3D> RPIMoCap::Frame::lines() const
+RPIMoCap::Frame::Frame(const std::chrono::high_resolution_clock::time_point time,
+                       const std::vector<RPIMoCap::Frame::LineSegment> &lines)
+    : m_time(time)
+    , m_lines(lines)
+{
+}
+
+std::vector<RPIMoCap::Frame::LineSegment> RPIMoCap::Frame::lines() const
 {
     return m_lines;
 }
@@ -27,7 +34,7 @@ std::vector<RPIMoCap::Frame::Marker>  RPIMoCap::Frame::markers() const
     return m_markers;
 }
 
-void  RPIMoCap::Frame::setMarkers(const std::vector<Marker> &markers)
+void RPIMoCap::Frame::setMarkers(const std::vector<RPIMoCap::Frame::Marker> &markers)
 {
     m_markers = markers;
 }

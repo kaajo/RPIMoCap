@@ -40,7 +40,9 @@ QHash<QString, AvahiBrowser::ServiceInfo> AvahiBrowser::browseServices(const Net
 
             if (searchIPVersion == serviceIPVer || searchIPVersion == NetworkLayerProtocol::AnyIPProtocol)
             {
-                services[d[4]] = ServiceInfo(ServiceInfo{d[1],searchIPVersion, d[4], d[5], QHostAddress(d[7]), d[8].toShort(), d[9]});
+                QString desc = d[9];
+                const QString filteredDesc = desc.remove(0,1).chopped(1);
+                services[d  [4]] = ServiceInfo{d[1],searchIPVersion, d[4], d[5], QHostAddress(d[7]), d[8].toShort(), filteredDesc};
             }
         }
     }

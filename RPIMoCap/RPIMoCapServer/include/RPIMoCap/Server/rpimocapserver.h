@@ -21,7 +21,6 @@
 #include "camerasettings.h"
 
 #include <RPIMoCap/Core/mqttpublisher.h>
-#include <RPIMoCap/Core/mqttsubscriber.h>
 
 #include <QObject>
 #include <QTcpServer>
@@ -39,29 +38,19 @@ public:
     virtual ~RPIMoCapServer();
 
 signals:
-    void linesReceived(const std::vector<RPIMoCap::Line3D> &lines);
     void pointsReceived(const std::vector<cv::Point2i> &points);
 
     void cameraAdded(const std::shared_ptr<CameraSettings> &settings);
-    void cameraRemoved(int id);
+    void cameraRemoved(QUuid id);
 
 public slots:
     void onMoCapStart(bool start);
     void onCalibStart(bool start);
-
-private slots:
-    void onNewConnection();
-    void onLostConnection();
+    void searchForCameras();
 
 private:
-    int nextId = 1;
-    QTcpServer m_tcpServer;
-    QHash<QTcpSocket*, std::shared_ptr<CameraSettings>> m_currentClients;
-
-    void addClient(QTcpSocket *conn, const int id);
-
     LinesAggregator m_aggregator;
     RPIMoCap::MQTTPublisher<std::string> m_triggerPub;
 
-    QProcess m_avahiPublish;
+    //TODO compute lines
 };

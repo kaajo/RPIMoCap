@@ -22,6 +22,7 @@
 
 #include <Eigen/Geometry>
 #include <msgpack/type.hpp>
+#include <msgpack.hpp>
 
 #include <chrono>
 
@@ -35,53 +36,32 @@ class Frame
 public:
     struct Marker
     {
-        Marker(){}
-        Marker(size_t id, Eigen::Vector3f pos) : id(id), position(pos) {}
-
         size_t id = 0;
         Eigen::Vector3f position;
 
         MSGPACK_DEFINE_MAP(id,position);
     };
 
-    Frame(const uint64_t time, const std::vector<Line3D> &lines)
-        : m_time(time)
-        , m_lines(lines)
+    struct LineSegment
     {
-    }
+        float lengthcm = 100.0f;
+        Line3D line;
 
-    /*
-    bool changeMarkerId(int oldID, int newID)
-    {
-        auto func = [](const int id, const Marker &marker){return id == marker.id();};
+        MSGPACK_DEFINE_MAP(lengthcm, line);
+    };
 
-        auto point = std::find_if(m_markers.begin(), m_markers.end(), [func, oldID](const Marker &marker){return func(oldID, marker);});
+    Frame(const std::chrono::high_resolution_clock::time_point time,
+          const std::vector<LineSegment> &lines);
 
-        if(point == m_markers.end()) return false;
-
-        auto pointWithSameID = std::find_if(m_markers.begin(), m_markers.end(), [func, newID](const Marker &marker){return func(newID, marker);});
-
-        if(pointWithSameID != m_markers.end())
-        {
-            ++m_maximalPointID;
-
-            changeMarkerId(newID, m_maximalPointID);
-        }
-
-        point->setId(newID);
-        return true;
-    }
-    */
-
-    std::vector<Line3D> lines() const;
+    std::vector<LineSegment> lines() const;
 
     std::vector<Marker> markers() const;
     void setMarkers(const std::vector<Marker> &markers);
 
 private:
-    uint64_t m_time;
+    std::chrono::high_resolution_clock::time_point m_time;
     std::vector<Marker> m_markers;
-    std::vector<Line3D> m_lines;
+    std::vector<LineSegment> m_lines;
 
     MSGPACK_DEFINE_MAP(m_time,m_markers,m_lines);
 };

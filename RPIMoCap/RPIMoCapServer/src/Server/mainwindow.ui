@@ -64,7 +64,7 @@
        </layout>
       </item>
       <item>
-       <widget class="MocapScene3D" name="widget" native="true">
+       <widget class="RPIMoCap::Visualization::MocapScene3D" name="widget" native="true">
         <property name="minimumSize">
          <size>
           <width>640</width>
@@ -129,9 +129,9 @@
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
-   <class>MocapScene3D</class>
+   <class>RPIMoCap::Visualization::MocapScene3D</class>
    <extends>QWidget</extends>
-   <header>RPIMoCap/Server/mocapscene3d.h</header>
+   <header>RPIMoCap/mocapscene3d.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

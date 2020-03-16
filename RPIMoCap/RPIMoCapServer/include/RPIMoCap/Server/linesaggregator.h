@@ -34,7 +34,7 @@ public:
     explicit LinesAggregator(QObject *parent = nullptr);
 
     void addCamera(const std::shared_ptr<CameraSettings> &camera);
-    void removeCamera(const int id);
+    void removeCamera(const QUuid id);
 
     void startCalib();
     void stopCalib();
@@ -51,20 +51,20 @@ signals:
 
 public slots:
     void onMoCapStart(bool start);
-    void onLinesReceived(const int clientId, const std::vector<RPIMoCap::Line3D> &lines);
-    void onPointsReceived(const int clientId, const std::vector<cv::Point2f> &points);
+    void onLinesReceived(const QUuid clientId, const std::vector<RPIMoCap::Line3D> &lines);
+    void onPointsReceived(const QUuid clientId, const std::vector<cv::Point2f> &points);
 
 private:
     QTime lastTime = QTime::currentTime();
     bool running = false;
 
-    QMap<int,std::shared_ptr<CameraSettings>> m_clients;
+    QMap<QUuid,std::shared_ptr<CameraSettings>> m_clients;
 
     QVector<RPIMoCap::Line3D> m_currentlines;
-    QMap<int,bool> m_currentlyReceived;
+    QMap<QUuid,bool> m_currentlyReceived;
 
     std::unique_ptr<WandCalibration> m_wandCalib;
-    QMap<int,std::vector<cv::Point2f>> m_currentPoints;
-    QMap<int,bool> m_currentlyReceivedPoints;
+    QMap<QUuid,std::vector<cv::Point2f>> m_currentPoints;
+    QMap<QUuid,bool> m_currentlyReceivedPoints;
 };
 

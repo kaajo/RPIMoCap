@@ -42,10 +42,10 @@ int main(int argc, char *argv[])
 
     QObject::connect(&w,&MainWindow::startMoCap, &server, &RPIMoCapServer::onMoCapStart);
     QObject::connect(&w,&MainWindow::startCalib, &server, &RPIMoCapServer::onCalibStart);
-    QObject::connect(&server, &RPIMoCapServer::linesReceived, &w, &MainWindow::onLinesReceived);
     QObject::connect(&server, &RPIMoCapServer::cameraAdded, &w, &MainWindow::addCamera);
     QObject::connect(&server, &RPIMoCapServer::cameraRemoved, &w, &MainWindow::removeCamera);
 
     w.show();
+    server.searchForCameras();
     return a.exec();
 }

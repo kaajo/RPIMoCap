@@ -20,6 +20,7 @@
 #include "RPIMoCap/SimClient/simcamera.h"
 
 #include <QWidget>
+#include <QUuid>
 
 #include <memory>
 
@@ -34,11 +35,8 @@ class SimCameraWidget : public QWidget
     Q_OBJECT
 
 public:
-    explicit SimCameraWidget(std::shared_ptr<SimCamera> camera, QWidget *parent = nullptr);
+    explicit SimCameraWidget(std::shared_ptr<SimCamera> camera, QUuid clientId, QWidget *parent = nullptr);
     ~SimCameraWidget();
-
-public slots:
-    void setID(int id);
 
 private slots:
     void on_fpsvalue_valueChanged(int arg1);
