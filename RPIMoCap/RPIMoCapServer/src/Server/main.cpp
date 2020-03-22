@@ -35,17 +35,15 @@ int main(int argc, char *argv[])
     qRegisterMetaType<std::vector<RPIMoCap::Line3D>>("std::vector<RPIMoCap::Line3D>");
     qRegisterMetaType<RPIMoCap::Line3D>("RPIMoCap::Line3D");
 
-    RPIMoCap::MQTTSettings mqttSettings;
-
-    RPIMoCapServer server(mqttSettings);
+    RPIMoCap::Server server;
     MainWindow w;
 
-    QObject::connect(&w,&MainWindow::startMoCap, &server, &RPIMoCapServer::onMoCapStart);
-    QObject::connect(&w,&MainWindow::startCalib, &server, &RPIMoCapServer::onCalibStart);
-    QObject::connect(&server, &RPIMoCapServer::cameraAdded, &w, &MainWindow::addCamera);
-    QObject::connect(&server, &RPIMoCapServer::cameraRemoved, &w, &MainWindow::removeCamera);
+    QObject::connect(&w, &MainWindow::searchForCameras, &server, &RPIMoCap::Server::init);
+    QObject::connect(&w,&MainWindow::startMoCap, &server, &RPIMoCap::Server::onMoCapStart);
+    QObject::connect(&w,&MainWindow::startCalib, &server, &RPIMoCap::Server::onCalibStart);
+    QObject::connect(&server, &RPIMoCap::Server::cameraAdded, &w, &MainWindow::addCamera);
+    QObject::connect(&server, &RPIMoCap::Server::cameraRemoved, &w, &MainWindow::removeCamera);
 
     w.show();
-    server.searchForCameras();
-    return a.exec();
+    return QApplication::exec();
 }

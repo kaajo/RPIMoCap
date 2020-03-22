@@ -33,9 +33,6 @@ class LinesAggregator : public QObject
 public:
     explicit LinesAggregator(QObject *parent = nullptr);
 
-    void addCamera(const std::shared_ptr<CameraSettings> &camera);
-    void removeCamera(const QUuid id);
-
     void startCalib();
     void stopCalib();
 
@@ -50,8 +47,10 @@ signals:
     void linesReceived(const std::vector<RPIMoCap::Line3D> &lines);
 
 public slots:
+    void addCamera(const std::shared_ptr<CameraSettings> &camera);
+    void removeCamera(const QUuid id);
+
     void onMoCapStart(bool start);
-    void onLinesReceived(const QUuid clientId, const std::vector<RPIMoCap::Line3D> &lines);
     void onPointsReceived(const QUuid clientId, const std::vector<cv::Point2f> &points);
 
 private:
@@ -60,11 +59,12 @@ private:
 
     QMap<QUuid,std::shared_ptr<CameraSettings>> m_clients;
 
-    QVector<RPIMoCap::Line3D> m_currentlines;
-    QMap<QUuid,bool> m_currentlyReceived;
-
     std::unique_ptr<WandCalibration> m_wandCalib;
+
     QMap<QUuid,std::vector<cv::Point2f>> m_currentPoints;
-    QMap<QUuid,bool> m_currentlyReceivedPoints;
+    QMap<QUuid,bool> m_framesReceived;
+
+
+    //TODO compute lines
 };
 

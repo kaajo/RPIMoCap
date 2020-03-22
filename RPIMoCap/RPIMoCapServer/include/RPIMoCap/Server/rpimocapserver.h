@@ -23,34 +23,35 @@
 #include <RPIMoCap/Core/mqttpublisher.h>
 
 #include <QObject>
-#include <QTcpServer>
-#include <QTcpSocket>
-#include <QHash>
-#include <QProcess>
 
 #include <memory>
 
-class RPIMoCapServer : public QObject
+namespace RPIMoCap {
+
+class Server : public QObject
 {
     Q_OBJECT
 public:
-    explicit RPIMoCapServer(RPIMoCap::MQTTSettings settings, QObject *parent = nullptr);
-    virtual ~RPIMoCapServer();
+    explicit Server(QObject *parent = nullptr);
+    ~Server() override = default;
 
 signals:
-    void pointsReceived(const std::vector<cv::Point2i> &points);
-
     void cameraAdded(const std::shared_ptr<CameraSettings> &settings);
     void cameraRemoved(QUuid id);
 
 public slots:
-    void onMoCapStart(bool start);
+    void init();
     void onCalibStart(bool start);
-    void searchForCameras();
+    void onMoCapStart(bool start);
+    void trigger();
 
 private:
     LinesAggregator m_aggregator;
-    RPIMoCap::MQTTPublisher<std::string> m_triggerPub;
 
-    //TODO compute lines
+    void setupMQTT(const RPIMoCap::MQTTSettings &settings);
+    std::unique_ptr<RPIMoCap::MQTTPublisher<std::string>> m_triggerPub;
+
+    QMap<QUuid,std::shared_ptr<CameraSettings>> m_clients;
 };
+
+}

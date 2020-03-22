@@ -40,6 +40,7 @@ public:
 signals:
     void startMoCap(bool start);
     void startCalib(bool start);
+    void searchForCameras();
 
 public slots:
     void addCamera(const std::shared_ptr<CameraSettings> &camera);

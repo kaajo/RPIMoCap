@@ -35,7 +35,7 @@ public:
         QString description;
     };
 
-    static QHash<QString, ServiceInfo> browseServices(const QAbstractSocket::NetworkLayerProtocol &searchIPVersion);
+    static QVector<ServiceInfo> browseServices(const QAbstractSocket::NetworkLayerProtocol &searchIPVersion);
 };
 
 }

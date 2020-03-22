@@ -27,6 +27,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->scrollAreaWidgetContents->setLayout(new QVBoxLayout);
     ui->scrollAreaWidgetContents->layout()->setSpacing(0);
     ui->scrollAreaWidgetContents->layout()->setMargin(0);
+
+    connect(ui->searchCameras, &QPushButton::clicked,
+            this, &MainWindow::searchForCameras);
 }
 
 MainWindow::~MainWindow()

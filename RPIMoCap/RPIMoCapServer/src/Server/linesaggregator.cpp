@@ -29,26 +29,6 @@ LinesAggregator::LinesAggregator(QObject *parent) : QObject(parent)
 
 }
 
-void LinesAggregator::addCamera(const std::shared_ptr<CameraSettings> &camera)
-{
-    if (!m_clients.contains(camera->id()))
-    {
-        m_clients.insert(camera->id(), camera);
-        m_currentlyReceived.insert(camera->id(), false);
-        m_currentlyReceivedPoints.insert(camera->id(), false);
-    }
-}
-
-void LinesAggregator::removeCamera(const QUuid id)
-{
-    if (m_clients.contains(id))
-    {
-        m_clients.remove(id);
-        m_currentlyReceived.remove(id);
-        m_currentlyReceivedPoints.remove(id);
-    }
-}
-
 void LinesAggregator::startCalib()
 {
     RPIMoCap::CameraParams params = RPIMoCap::CameraParams::computeRPICameraV1Params();
@@ -60,66 +40,35 @@ void LinesAggregator::stopCalib()
     m_wandCalib.reset();
 }
 
+void LinesAggregator::addCamera(const std::shared_ptr<CameraSettings> &camera)
+{
+    if (!m_clients.contains(camera->id()))
+    {
+        m_clients.insert(camera->id(), camera);
+        m_framesReceived.insert(camera->id(), false);
+    }
+}
+
+void LinesAggregator::removeCamera(const QUuid id)
+{
+    if (m_clients.contains(id))
+    {
+        m_clients.remove(id);
+        m_framesReceived.remove(id);
+    }
+}
+
 void LinesAggregator::onMoCapStart(bool start)
 {
-    for (auto &received : m_currentlyReceived)
+    for (auto &received : m_framesReceived)
     {
         received = false;
     }
-    m_currentlines.clear();
 
     running = start;
     if (start)
     {
         emit trigger();
-    }
-}
-
-void LinesAggregator::onLinesReceived(const QUuid clientId, const std::vector<RPIMoCap::Line3D> &lines)
-{
-    if (m_clients.find(clientId) == m_clients.end())
-    {
-        return;
-    }
-
-    m_currentlines.append(QVector<RPIMoCap::Line3D>::fromStdVector(lines));
-    m_currentlyReceived[clientId] = true;
-
-    bool haveAll = true;
-
-    for (auto &received : m_currentlyReceived)
-    {
-        if (!received)
-        {
-            haveAll = false;
-        }
-    }
-
-    if (running && haveAll)
-    {
-        auto curTime = QTime::currentTime();
-
-        qDebug() << "ms elapsed: " << lastTime.msecsTo(curTime) << " lines received: " << lines.size() << "from client: " << clientId;
-        lastTime = curTime;
-
-        for (auto &received : m_currentlyReceived)
-        {
-            received = false;
-        }
-
-        emit trigger();
-
-        std::vector<RPIMoCap::Frame::LineSegment> frameLines;
-
-        for (auto &line : m_currentlines)
-        {
-            frameLines.push_back({100, line});
-        }
-
-        RPIMoCap::Frame frame(std::chrono::high_resolution_clock::now(), frameLines);
-        emit frameReady(frame);
-        emit linesReceived(m_currentlines.toStdVector());
-        m_currentlines.clear();
     }
 }
 
@@ -131,18 +80,19 @@ void LinesAggregator::onPointsReceived(const QUuid clientId, const std::vector<c
     }
 
     m_currentPoints[clientId] = points;
-
-    m_currentlyReceivedPoints[clientId] = true;
+    m_framesReceived[clientId] = true;
 
     bool haveAll = true;
 
-    for (auto &received : m_currentlyReceivedPoints)
+    for (auto &received : m_framesReceived)
     {
         if (!received)
         {
             haveAll = false;
         }
     }
+
+    qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << points.size() << "points received from " << clientId;
 
     if (running && haveAll)
     {
@@ -151,13 +101,26 @@ void LinesAggregator::onPointsReceived(const QUuid clientId, const std::vector<c
             //TODO m_wandCalib->addFrame(m_currentPoints);
         }
 
-        for (auto &received : m_currentlyReceivedPoints)
+        for (auto &received : m_framesReceived)
         {
             received = false;
         }
+
+        auto curTime = QTime::currentTime();
+
+        qDebug() << curTime.toString("hh:mm:ss.zzz") << "ms elapsed: " << lastTime.msecsTo(curTime);
+        lastTime = curTime;
+
+        std::vector<RPIMoCap::Frame::LineSegment> frameLines;
+        /*
+        for (auto &line : m_currentlines)
+        {
+            frameLines.push_back({100, line});
+        }
+        */
+
+        RPIMoCap::Frame frame(std::chrono::high_resolution_clock::now(), frameLines);
+        emit frameReady(frame);
+        emit trigger();
     }
-
-    const std::vector<RPIMoCap::Line3D> lines;
-
-    onLinesReceived(clientId, lines);
 }

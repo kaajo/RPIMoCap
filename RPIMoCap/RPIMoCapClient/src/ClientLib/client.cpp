@@ -41,8 +41,7 @@ Client::Client(std::shared_ptr<ICamera> camera,
 
     QVariantMap data;
     data["id"] = idString;
-    data["imageWidth"] = camParams.imageSize.width;
-    data["imageHeight"] = camParams.imageSize.height;
+    data["camParams"] = camParams.toVariantMap();
 
     QString desc = QJsonDocument::fromVariant(data).toJson(QJsonDocument::JsonFormat::Compact);
     QStringList params = {"RPIMoCap-Client-" + idString, type, port, desc};
@@ -108,7 +107,8 @@ void Client::checkAvahiServices()
     if (!isMQTTInitialized())
     {
         const auto services = AvahiBrowser::browseServices(QAbstractSocket::NetworkLayerProtocol::IPv4Protocol);
-        const auto mqttService = services.find("_mqtt._tcp");
+        const auto mqttService = std::find_if(services.begin(),services.end(),
+                                              [](auto &service){return service.type == "_mqtt._tcp";});
 
         if (mqttService == services.end())
         {
@@ -117,8 +117,8 @@ void Client::checkAvahiServices()
         }
         else
         {
-            m_MQTTsettings.IPAddress = mqttService.value().ipAddress.toString().toStdString();
-            m_MQTTsettings.port = mqttService.value().port;
+            m_MQTTsettings.IPAddress = mqttService->ipAddress.toString().toStdString();
+            m_MQTTsettings.port = mqttService->port;
         }
     }
 

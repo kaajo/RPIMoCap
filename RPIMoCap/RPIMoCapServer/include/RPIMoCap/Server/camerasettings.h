@@ -64,7 +64,7 @@ public:
     }
 
 signals:
-    void pointsReceived(QUuid cameraID, const std::vector<cv::Point2f> &points);
+    void pointsReceived(const QUuid cameraID, const std::vector<cv::Point2f> &points);
     void changed();
 
 private slots:

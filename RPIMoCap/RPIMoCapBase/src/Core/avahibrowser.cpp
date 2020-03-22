@@ -23,14 +23,14 @@ using NetworkLayerProtocol = QAbstractSocket::NetworkLayerProtocol;
 
 namespace RPIMoCap {
 
-QHash<QString, AvahiBrowser::ServiceInfo> AvahiBrowser::browseServices(const NetworkLayerProtocol &searchIPVersion) {
+QVector<AvahiBrowser::ServiceInfo> AvahiBrowser::browseServices(const NetworkLayerProtocol &searchIPVersion) {
     QProcess avahiBrowser;
     avahiBrowser.start("avahi-browse", QStringList() << ("-atpr"));
     avahiBrowser.waitForFinished();
 
     const QStringList lines = QString(avahiBrowser.readAll()).split("\n",QString::SplitBehavior::SkipEmptyParts);
 
-    QHash<QString, ServiceInfo> services;
+    QVector<ServiceInfo> services;
     for (const QString &line : lines)
     {
         const QStringList d = line.split(";");
@@ -41,8 +41,13 @@ QHash<QString, AvahiBrowser::ServiceInfo> AvahiBrowser::browseServices(const Net
             if (searchIPVersion == serviceIPVer || searchIPVersion == NetworkLayerProtocol::AnyIPProtocol)
             {
                 QString desc = d[9];
-                const QString filteredDesc = desc.remove(0,1).chopped(1);
-                services[d  [4]] = ServiceInfo{d[1],searchIPVersion, d[4], d[5], QHostAddress(d[7]), d[8].toShort(), filteredDesc};
+
+                if (desc.size() > 1)
+                {
+                    desc = desc.remove(0,1).chopped(1);
+                }
+
+                services.push_back({d[1],searchIPVersion, d[4], d[5], QHostAddress(d[7]), d[8].toShort(), desc});
             }
         }
     }

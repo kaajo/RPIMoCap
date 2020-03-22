@@ -19,6 +19,8 @@
 
 #include <opencv2/core/mat.hpp>
 
+#include <QVariantMap>
+
 #include <assert.h>
 
 namespace RPIMoCap {
@@ -27,12 +29,47 @@ constexpr float degToRad = M_PI/180.0f;
 
 struct CameraParams
 {
-    size_t maxFPS = 0;
+    uint32_t maxFPS = 0;
     cv::Size imageSize = cv::Size(0,0);
     cv::Vec3f translation = cv::Vec3f(0.0, 0.0, 0.0);
     cv::Vec3f rotation = cv::Vec3f(0.0, 0.0, 0.0);
     cv::Mat cameraMatrix = cv::Mat::eye(3, 3, CV_64FC1);
     cv::Mat distortionCoeffs = cv::Mat(1, 4, CV_32FC1, cv::Scalar(0.0f));
+
+    QVariantMap toVariantMap()
+    {
+        QVariantMap data;
+        data["imageWidth"] = imageSize.width;
+        data["imageHeight"] = imageSize.height;
+        data["maxFPS"] = maxFPS;
+        data["fx"] = cameraMatrix.at<double>(0,0);
+        data["fy"] = cameraMatrix.at<double>(1,1);
+        data["cx"] = cameraMatrix.at<double>(0,2);
+        data["cy"] = cameraMatrix.at<double>(1,2);
+
+        for (size_t i = 0; i < distortionCoeffs.cols; ++i)
+        {
+            data["dist" + QString::number(i)] = distortionCoeffs.at<float>(0,i);
+        }
+
+        return data;
+    }
+
+    CameraParams fromVariantMap(const QVariantMap &varMap)
+    {
+        CameraParams params;
+        params.imageSize = cv::Size(varMap["imageWidth"].toUInt(),
+                                    varMap["imageHeight"].toUInt());
+        params.maxFPS = varMap["maxFPS"].toUInt();
+        params.cameraMatrix.at<double>(0,0) = varMap["fx"].toDouble();
+        params.cameraMatrix.at<double>(1,1) = varMap["fy"].toDouble();
+        params.cameraMatrix.at<double>(0,2) = varMap["cx"].toDouble();
+        params.cameraMatrix.at<double>(1,2) = varMap["cy"].toDouble();
+
+        //TODO distortion
+
+        return params;
+    }
 
     //diag 64.92 https://www.raspberrypi.org/documentation/hardware/camera/
     static RPIMoCap::CameraParams computeRPICameraV1Params(const cv::Size2f fullFoVRad = cv::Size2f(53.5f * degToRad, 41.41f * degToRad))
