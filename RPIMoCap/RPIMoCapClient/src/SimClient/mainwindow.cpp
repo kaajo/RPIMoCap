@@ -71,7 +71,7 @@ void MainWindow::updateValue()
 
 void MainWindow::on_addClientButton_clicked()
 {
-    RPIMoCap::CameraParams params = RPIMoCap::CameraParams::computeRPICameraV1Params();
+    RPIMoCap::Camera::Intrinsics params = RPIMoCap::Camera::Intrinsics::computeRPICameraV1Params();
 
     auto camera = std::make_shared<SimCamera>(params, m_scene);
     auto client = QSharedPointer<Client>(new Client(camera,params), &QObject::deleteLater);

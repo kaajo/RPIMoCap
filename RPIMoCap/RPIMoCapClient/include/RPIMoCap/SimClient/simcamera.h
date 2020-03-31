@@ -28,8 +28,8 @@ namespace RPIMoCap::SimClient {
 class SimCamera : public ICamera
 {
 public:
-    SimCamera(const CameraParams &params, const SimScene &scene);
-    virtual ~SimCamera() override = default;
+    SimCamera(const Camera::Intrinsics &params, const SimScene &scene);
+    ~SimCamera() override = default;
 
     SimCamera(const SimCamera&) = delete;
     void operator=(const SimCamera&) = delete;
@@ -39,15 +39,25 @@ public:
     void close() override;
 
     cv::Mat pullData() override;
-    CameraParams& getParams();
+
+    Camera::Intrinsics& getParams();
+
+    cv::Vec3f getTranslation() const;
+    void setTranslation(const cv::Vec3f &translation);
+
+    cv::Vec3f getRotation() const;
+    void setRotation(const cv::Vec3f &rotation);
 
 private:
     bool m_opened = false;
 
-    CameraParams m_params;
+    Camera::Intrinsics m_params;
     const SimScene &m_scene;
 
     QElapsedTimer m_timer;
+
+    cv::Vec3f m_translation = cv::Vec3f(0.0, 0.0, 0.0);
+    cv::Vec3f m_rotation = cv::Vec3f(0.0, 0.0, 0.0);
 };
 
 }

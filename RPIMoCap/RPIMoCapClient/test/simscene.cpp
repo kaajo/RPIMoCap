@@ -8,6 +8,7 @@
 
 using RPIMoCap::SimClient::SimScene;
 using RPIMoCap::SimClient::SimMarker;
+using RPIMoCap::Camera::Intrinsics;
 
 TEST(simscene, identity)
 {
@@ -17,10 +18,11 @@ TEST(simscene, identity)
     SimScene scene;
     scene.setMarkers({marker});
 
-    RPIMoCap::CameraParams v1params = RPIMoCap::CameraParams::computeRPICameraV1Params();
-    v1params.translation = {0.0, 0.0, 0.0};
+    const Intrinsics v1params = Intrinsics::computeRPICameraV1Params();
+    const cv::Vec3f rVec(0.0, 0.0, 0.0);
+    const cv::Vec3f tVec(0.0, 0.0, 0.0);
 
-    cv::Mat image = scene.projectScene(v1params);
+    const cv::Mat image = scene.projectScene(v1params, rVec, tVec);
 
     EXPECT_EQ(image.at<uint8_t>(240, 320), 255);
 }
@@ -33,11 +35,11 @@ TEST(simscene, cameraTranslationX)
     SimScene scene;
     scene.setMarkers({marker});
 
-    RPIMoCap::CameraParams v1params = RPIMoCap::CameraParams::computeRPICameraV1Params();
-    v1params.translation = {20.0, 0.0, 0.0};
-    v1params.rotation = {0.0, 0.0, 0.0};
+    const Intrinsics v1params = Intrinsics::computeRPICameraV1Params();
+    const cv::Vec3f rVec(0.0, 0.0, 0.0);
+    const cv::Vec3f tVec(20.0, 0.0, 0.0);
 
-    cv::Mat image = scene.projectScene(v1params);
+    const cv::Mat image = scene.projectScene(v1params, rVec, tVec);
 
     EXPECT_EQ(image.at<uint8_t>(240, 320), 255);
 }
@@ -50,11 +52,11 @@ TEST(simscene, cameraRotationX)
     SimScene scene;
     scene.setMarkers({marker});
 
-    RPIMoCap::CameraParams v1params = RPIMoCap::CameraParams::computeRPICameraV1Params();
-    v1params.translation = {0.0, 0.0, 0.0};
-    v1params.rotation = {0.0, M_PI/2.0, 0.0};
+    const Intrinsics v1params = Intrinsics::computeRPICameraV1Params();
+    const cv::Vec3f rVec(0.0, M_PI/2.0, 0.0);
+    const cv::Vec3f tVec(00.0, 0.0, 0.0);
 
-    cv::Mat image = scene.projectScene(v1params);
+    const cv::Mat image = scene.projectScene(v1params, rVec, tVec);
 
     EXPECT_EQ(image.at<uint8_t>(240, 320), 255);
 }
@@ -67,11 +69,11 @@ TEST(simscene, cameraTRX)
     SimScene scene;
     scene.setMarkers({marker});
 
-    RPIMoCap::CameraParams v1params = RPIMoCap::CameraParams::computeRPICameraV1Params();
-    v1params.translation = {0.0, 0.0, 20.0};
-    v1params.rotation = {0.0, M_PI/2.0, 0.0};
+    const Intrinsics v1params = Intrinsics::computeRPICameraV1Params();
+    const cv::Vec3f rVec(0.0, M_PI/2.0, 0.0);
+    const cv::Vec3f tVec(00.0, 0.0, 20.0);
 
-    cv::Mat image = scene.projectScene(v1params);
+    const cv::Mat image = scene.projectScene(v1params, rVec, tVec);
 
     EXPECT_EQ(image.at<uint8_t>(240, 320), 255);
 }

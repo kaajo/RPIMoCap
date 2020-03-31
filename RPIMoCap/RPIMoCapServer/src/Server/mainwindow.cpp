@@ -18,6 +18,8 @@
 #include "RPIMoCap/Server/mainwindow.h"
 #include "ui_mainwindow.h"
 
+namespace RPIMoCap {
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -56,20 +58,34 @@ void MainWindow::onLinesReceived(const std::vector<RPIMoCap::Line3D> &lines)
 
 void MainWindow::addCamera(const std::shared_ptr<CameraSettings> &camera)
 {
-    //TODO ui->widget->addCamera(camera);
+    connect(camera.get(), &CameraSettings::rotationChanged, this, &MainWindow::updateCamera);
+    connect(camera.get(), &CameraSettings::translationChanged, this, &MainWindow::updateCamera);
+
+    ui->widget->addCamera(camera->id(), camera->transform());
 
     auto widget = new CameraSettingsWidget(camera);
     m_cameraWidgets[camera->id()] = widget;
     ui->scrollAreaWidgetContents->layout()->addWidget(widget);
 }
 
+void MainWindow::updateCamera()
+{
+    CameraSettings* snd = qobject_cast<CameraSettings*>(sender());
+    ui->widget->updateCamera(snd->id(), snd->transform());
+}
+
 void MainWindow::removeCamera(const QUuid id)
 {
-    //TODO ui->widget->removeCamera(id);
+    ui->widget->removeCamera(id);
 
     ui->scrollAreaWidgetContents->layout()->removeWidget(m_cameraWidgets[id]);
     m_cameraWidgets[id]->deleteLater();
     m_cameraWidgets.remove(id);
+}
+
+void MainWindow::drawFrame(const Frame &frame)
+{
+    ui->widget->drawFrame(frame);
 }
 
 void MainWindow::on_MoCapButton_clicked(bool checked)
@@ -82,4 +98,6 @@ void MainWindow::on_calibButton_clicked(bool checked)
 {
     ui->calibButton->setText(checked ? "STOP calib" : "START calib");
     emit startCalib(checked);
+}
+
 }

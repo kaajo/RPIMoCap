@@ -6,7 +6,7 @@
 #include <opencv2/core/affine.hpp>
 #include <opencv2/calib3d.hpp>
 
-RPIMoCap::CameraParams v1params = RPIMoCap::CameraParams::computeRPICameraV1Params();
+RPIMoCap::Camera::Intrinsics v1params = RPIMoCap::Camera::Intrinsics::computeRPICameraV1Params();
 
 std::vector<cv::Point3f> create3PWand(float sizecm, float middlePointOffsetcm)
 {

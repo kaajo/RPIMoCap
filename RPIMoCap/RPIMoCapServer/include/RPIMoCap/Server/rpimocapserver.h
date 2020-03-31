@@ -38,6 +38,7 @@ public:
 signals:
     void cameraAdded(const std::shared_ptr<CameraSettings> &settings);
     void cameraRemoved(QUuid id);
+    void frameReady(const Frame &frame);
 
 public slots:
     void init();

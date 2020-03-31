@@ -22,7 +22,6 @@
 #include <RPIMoCap/Core/cameraparams.h>
 
 #include <opencv2/core/mat.hpp>
-#include <Eigen/Geometry>
 
 #include <mutex>
 
@@ -31,11 +30,21 @@ namespace RPIMoCap::SimClient {
 class SimScene
 {
 public:
+    /**
+     * @brief setMarkers
+     * @param markers Markers in absolute 3D position.
+     */
+    void setMarkers(const std::vector<SimMarker> &markers);
 
-    SimScene() = default;
-
-    void setMarkers(const std::vector<SimMarker> markers);
-    cv::Mat projectScene(const CameraParams &params) const;
+    /**
+     * @brief projectScene is function used for Camera simulation.
+     * @param params All intrinsic parameters
+     * @param rVec Rotation vector
+     * @param tVec Translation vector
+     * @return Simulated camera image with projected markers.
+     */
+    cv::Mat projectScene(const Camera::Intrinsics &params,
+                         const cv::Vec3f &rVec, const cv::Vec3f &tVec) const;
 
 private:
     mutable std::mutex m_dataMutex;

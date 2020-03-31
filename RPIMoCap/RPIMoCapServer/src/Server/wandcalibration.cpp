@@ -30,8 +30,10 @@
 #include <iostream>
 #include <queue>
 
+namespace RPIMoCap {
+
 WandCalibration::WandCalibration(QMap<QUuid, std::shared_ptr<CameraSettings> > &cameraSettings,
-                                 RPIMoCap::CameraParams camData, QObject *parent)
+                                 Camera::Intrinsics camData, QObject *parent)
     : QObject(parent)
     , m_cameraSettings(cameraSettings)
     , m_camData(camData)
@@ -150,7 +152,8 @@ void WandCalibration::addFrame(const QMap<QUuid, std::vector<cv::Point2f> > &poi
             detIt->transform = estimatedTransform;
             detIt->triangulatedPoints = triangulatedPoints3D;
 
-            m_cameraSettings[detIt.key().second]->setTransform(estimatedTransform);
+            m_cameraSettings[detIt.key().second]->setProperty("translation", QVariant::fromValue(cv::Vec3f(translation)));
+            m_cameraSettings[detIt.key().second]->setProperty("rotation", QVariant::fromValue(cv::Vec3f(rotation)));
         }
     }
 
@@ -354,4 +357,6 @@ float WandCalibration::computeScale(const cv::Mat &transformEstimation, std::vec
     }
 
     return scale/static_cast<float>(m_wandPoints.size() - 1);
+}
+
 }

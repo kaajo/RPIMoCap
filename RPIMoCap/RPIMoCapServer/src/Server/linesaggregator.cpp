@@ -24,6 +24,8 @@
 
 #include <chrono>
 
+namespace RPIMoCap {
+
 LinesAggregator::LinesAggregator(QObject *parent) : QObject(parent)
 {
 
@@ -31,7 +33,7 @@ LinesAggregator::LinesAggregator(QObject *parent) : QObject(parent)
 
 void LinesAggregator::startCalib()
 {
-    RPIMoCap::CameraParams params = RPIMoCap::CameraParams::computeRPICameraV1Params();
+    auto params = Camera::Intrinsics::computeRPICameraV1Params();
     m_wandCalib = std::make_unique<WandCalibration>(m_clients,params);
 }
 
@@ -42,6 +44,8 @@ void LinesAggregator::stopCalib()
 
 void LinesAggregator::addCamera(const std::shared_ptr<CameraSettings> &camera)
 {
+    connect(camera.get(),&CameraSettings::raysReceived, this, &LinesAggregator::onRaysReceived);
+
     if (!m_clients.contains(camera->id()))
     {
         m_clients.insert(camera->id(), camera);
@@ -53,6 +57,8 @@ void LinesAggregator::removeCamera(const QUuid id)
 {
     if (m_clients.contains(id))
     {
+        disconnect(m_clients[id].get(),&CameraSettings::raysReceived, this, &LinesAggregator::onRaysReceived);
+
         m_clients.remove(id);
         m_framesReceived.remove(id);
     }
@@ -72,14 +78,14 @@ void LinesAggregator::onMoCapStart(bool start)
     }
 }
 
-void LinesAggregator::onPointsReceived(const QUuid clientId, const std::vector<cv::Point2f> &points)
+void LinesAggregator::onRaysReceived(const QUuid clientId, const std::vector<Line3D> &rays)
 {
     if (m_clients.find(clientId) == m_clients.end())
     {
         return;
     }
 
-    m_currentPoints[clientId] = points;
+    m_currentRays[clientId] = rays;
     m_framesReceived[clientId] = true;
 
     bool haveAll = true;
@@ -92,7 +98,7 @@ void LinesAggregator::onPointsReceived(const QUuid clientId, const std::vector<c
         }
     }
 
-    qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << points.size() << "points received from " << clientId;
+    qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << rays.size() << "rays received from " << clientId;
 
     if (running && haveAll)
     {
@@ -112,15 +118,19 @@ void LinesAggregator::onPointsReceived(const QUuid clientId, const std::vector<c
         lastTime = curTime;
 
         std::vector<RPIMoCap::Frame::LineSegment> frameLines;
-        /*
-        for (auto &line : m_currentlines)
+
+        for (auto &idRays : m_currentRays)
         {
-            frameLines.push_back({100, line});
+            for (auto &ray : idRays)
+            {
+                frameLines.push_back({100, ray});
+            }
         }
-        */
 
         RPIMoCap::Frame frame(std::chrono::high_resolution_clock::now(), frameLines);
         emit frameReady(frame);
         emit trigger();
     }
+}
+
 }

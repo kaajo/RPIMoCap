@@ -72,17 +72,17 @@ MocapScene3D::~MocapScene3D()
     delete ui;
 }
 
-void MocapScene3D::addCamera(const int id, const Eigen::Affine3f &transform)
+void MocapScene3D::addCamera(const QUuid id, const Eigen::Affine3f &transform)
 {
     m_currentCameras.insert(id, std::make_shared<Camera>(transform, m_rootEntity));
 }
 
-void MocapScene3D::updateCamera(const int id, const Eigen::Affine3f &transform)
+void MocapScene3D::updateCamera(const QUuid id, const Eigen::Affine3f &transform)
 {
     m_currentCameras.value(id)->setTransform(transform);
 }
 
-void MocapScene3D::removeCamera(const int id)
+void MocapScene3D::removeCamera(const QUuid id)
 {
     m_currentCameras.remove(id);
 }

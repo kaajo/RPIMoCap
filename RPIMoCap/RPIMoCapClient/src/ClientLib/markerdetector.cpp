@@ -29,30 +29,6 @@ MarkerDetector::MarkerDetector(const Params &algParams)
 
 }
 
-//cv::Mat MarkerDetector::computePixelDirs(const RPIMoCap::CameraParams &camParams)
-//{
-//    cv::Mat pixelLines(camParams.imageSize, CV_32FC3);
-
-//for(int row = 0; row < camParams.imageSize.height; ++row)
-//{
-//    for(int col = 0; col < camParams.imageSize.width ; ++col)
-//    {
-//        const auto v = computePixelDir(camParams.cameraMatrix, camParams.distortionCoeffs, cv::Point2i(col,row));
-//        pixelLines.at<cv::Point3f>(row, col) = cv::Point3f(v.x(), v.y(), v.z());
-//    }
-//}
-
-//return pixelLines;
-//}
-
-//Eigen::Vector3f MarkerDetector::computePixelDir(cv::Mat cameraMatrix, cv::Mat distortionCoeffs, cv::Point2f pixel)
-//{
-//    std::vector<cv::Point2f> points = {pixel};
-//    cv::Mat undistortedPoints;
-//    cv::undistortPoints(points, undistortedPoints, cameraMatrix, distortionCoeffs);
-//    return Eigen::Vector3f(undistortedPoints.at<float>(0,0), undistortedPoints.at<float>(0,1), 1).normalized();
-//}
-
 std::vector<cv::Point2f> MarkerDetector::detectMarkers(const cv::Mat &image)
 {
     cv::Mat filterImage;

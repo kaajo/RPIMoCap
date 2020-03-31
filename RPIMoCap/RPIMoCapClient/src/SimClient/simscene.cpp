@@ -21,20 +21,20 @@
 #include <opencv2/calib3d.hpp>
 #include <opencv2/imgproc.hpp>
 
-#include <QDebug>
 #include <iostream>
 
 namespace RPIMoCap::SimClient {
 
-void SimScene::setMarkers(const std::vector<SimMarker> markers)
+void SimScene::setMarkers(const std::vector<SimMarker> &markers)
 {
     std::scoped_lock lock(m_dataMutex);
     m_markers = markers;
 }
 
-cv::Mat SimScene::projectScene(const CameraParams &params) const
+cv::Mat SimScene::projectScene(const Camera::Intrinsics &params,
+                               const cv::Vec3f &rVec, const cv::Vec3f &tVec) const
 {
-    const cv::Affine3d cameraTransform(params.rotation, params.translation);
+    const cv::Affine3d cameraTransform(rVec, tVec);
 
     std::vector<cv::Vec3f> pointsInCamera;
 
@@ -52,25 +52,26 @@ cv::Mat SimScene::projectScene(const CameraParams &params) const
         return simulatedImage;
     }
 
-    for (auto &pt : pointsInCamera)
-    {
-        std::cout << "point: " << pt << std::endl;
-    }
+//    for (auto &pt : pointsInCamera)
+//    {
+//        std::cout << "point: " << pt << std::endl;
+//    }
 
-    std::cout << params.translation << std::endl;
-    std::cout << params.rotation << std::endl;
+//    std::cout << rVec << std::endl;
+//    std::cout << tVec << std::endl;
 
     std::vector<cv::Point2f> pixels;
     cv::projectPoints(pointsInCamera, cv::Vec3f::zeros(), cv::Vec3f::zeros(),
                       params.cameraMatrix, params.distortionCoeffs, pixels);
 
-    for (auto &pt : pixels)
-    {
-        std::cout << "pixel: " << pt << std::endl;
-    }
+//    for (auto &pt : pixels)
+//    {
+//        std::cout << "pixel: " << pt << std::endl;
+//    }
 
     for (size_t i = 0; i < pixels.size(); ++i)
     {
+        //project only points in front of camera
         if (pointsInCamera[i][2] > 0.0f)
         {
             cv::circle(simulatedImage, pixels[i], 3, cv::Scalar(255), -1);

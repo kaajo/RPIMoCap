@@ -31,9 +31,6 @@ public:
 
     explicit MarkerDetector(const Params &algParams);
 
-//    static cv::Mat computePixelDirs(const RPIMoCap::CameraParams &camParams);
-//    static Eigen::Vector3f computePixelDir(cv::Mat cameraMatrix, cv::Mat distortionCoeffs, cv::Point2f pixel);
-
     std::vector<cv::Point2f> detectMarkers(const cv::Mat &image);
 
 private:

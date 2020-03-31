@@ -27,6 +27,8 @@ namespace Ui {
 class CameraSettingsWidget;
 }
 
+namespace RPIMoCap {
+
 class CameraSettingsWidget : public QWidget
 {
     Q_OBJECT
@@ -37,9 +39,11 @@ public:
 private slots:
     void on_pushButton_clicked();
 
-    void setValues();
+    void setRotation(const cv::Vec3f &rVec);
+    void setTranslation(const cv::Vec3f &tVec);
 private:
     std::shared_ptr<CameraSettings> m_camera;
     Ui::CameraSettingsWidget *ui;
 };
 
+}

@@ -43,32 +43,44 @@ void SimCameraWidget::on_fpsvalue_valueChanged(int arg1)
 
 void SimCameraWidget::on_xvalue_valueChanged(double arg1)
 {
-    m_camera->getParams().translation[0] = arg1;
+    auto tVec = m_camera->getTranslation();
+    tVec[0] = arg1;
+    m_camera->setTranslation(tVec);
 }
 
 void SimCameraWidget::on_yvalue_valueChanged(double arg1)
 {
-    m_camera->getParams().translation[1] = arg1;
+    auto tVec = m_camera->getTranslation();
+    tVec[1] = arg1;
+    m_camera->setTranslation(tVec);
 }
 
 void SimCameraWidget::on_zvalue_valueChanged(double arg1)
 {
-    m_camera->getParams().translation[2] = arg1;
+    auto tVec = m_camera->getTranslation();
+    tVec[2] = arg1;
+    m_camera->setTranslation(tVec);
 }
 
 void SimCameraWidget::on_rotxvalue_valueChanged(double arg1)
 {
-    m_camera->getParams().rotation[0] = arg1 * M_PI/180.0;
+    auto rVec = m_camera->getRotation();
+    rVec[0] = arg1 * M_PI/180.0;
+    m_camera->setRotation(rVec);
 }
 
 void SimCameraWidget::on_rotyvalue_valueChanged(double arg1)
 {
-    m_camera->getParams().rotation[1] = arg1 * M_PI/180.0;
+    auto rVec = m_camera->getRotation();
+    rVec[1] = arg1 * M_PI/180.0;
+    m_camera->setRotation(rVec);
 }
 
 void SimCameraWidget::on_rotzvalue_valueChanged(double arg1)
 {
-    m_camera->getParams().rotation[2] = arg1 * M_PI/180.0;
+    auto rVec = m_camera->getRotation();
+    rVec[2] = arg1 * M_PI/180.0;
+    m_camera->setRotation(rVec);
 }
 
 }

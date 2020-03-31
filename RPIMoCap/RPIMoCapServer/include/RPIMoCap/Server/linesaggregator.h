@@ -27,6 +27,8 @@
 #include <QTime>
 #include <QMap>
 
+namespace RPIMoCap {
+
 class LinesAggregator : public QObject
 {
     Q_OBJECT
@@ -43,7 +45,7 @@ signals:
      * @brief When lines are received from all cameras, new RPIMoCap::Frame with proper time and lines is emitted
      * @param frame
      */
-    void frameReady(const RPIMoCap::Frame &frame);
+    void frameReady(const Frame &frame);
     void linesReceived(const std::vector<RPIMoCap::Line3D> &lines);
 
 public slots:
@@ -51,7 +53,7 @@ public slots:
     void removeCamera(const QUuid id);
 
     void onMoCapStart(bool start);
-    void onPointsReceived(const QUuid clientId, const std::vector<cv::Point2f> &points);
+    void onRaysReceived(const QUuid clientId, const std::vector<Line3D> &rays);
 
 private:
     QTime lastTime = QTime::currentTime();
@@ -61,10 +63,8 @@ private:
 
     std::unique_ptr<WandCalibration> m_wandCalib;
 
-    QMap<QUuid,std::vector<cv::Point2f>> m_currentPoints;
+    QMap<QUuid,std::vector<Line3D>> m_currentRays;
     QMap<QUuid,bool> m_framesReceived;
-
-
-    //TODO compute lines
 };
 
+}

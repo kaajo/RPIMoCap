@@ -19,6 +19,7 @@ add_library(RPIMoCapServerLib STATIC)
 target_sources(RPIMoCapServerLib
     PRIVATE
     src/Server/camerasettingswidget.cpp
+    src/Server/camerasettingswidget.ui
     src/Server/linesaggregator.cpp
     src/Server/mainwindow.cpp
     src/Server/mainwindow.ui

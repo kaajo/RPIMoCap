@@ -22,7 +22,7 @@
 
 namespace RPIMoCap::SimClient {
 
-SimCamera::SimCamera(const CameraParams &params, const SimScene &scene)
+SimCamera::SimCamera(const Camera::Intrinsics &params, const SimScene &scene)
     : m_params(params)
     , m_scene(scene)
 {
@@ -42,19 +42,40 @@ void SimCamera::close()
 
 cv::Mat SimCamera::pullData()
 {
-    const int64_t waitTime = 1000.0/float(m_params.maxFPS) - m_timer.restart();
+    const int64_t waitTime = 1000.0/m_params.maxFPS - m_timer.restart();
 
     if (waitTime > 0)
     {
         QThread::msleep(waitTime);
+        m_timer.restart();
     }
 
-    return m_scene.projectScene(m_params);
+    return m_scene.projectScene(m_params, m_rotation, m_translation);
 }
 
-CameraParams &SimCamera::getParams()
+Camera::Intrinsics &SimCamera::getParams()
 {
     return m_params;
+}
+
+cv::Vec3f SimCamera::getTranslation() const
+{
+    return m_translation;
+}
+
+void SimCamera::setTranslation(const cv::Vec3f &translation)
+{
+    m_translation = translation;
+}
+
+cv::Vec3f SimCamera::getRotation() const
+{
+    return m_rotation;
+}
+
+void SimCamera::setRotation(const cv::Vec3f &rotation)
+{
+    m_rotation = rotation;
 }
 
 }

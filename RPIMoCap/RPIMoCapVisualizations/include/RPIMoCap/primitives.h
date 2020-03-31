@@ -32,7 +32,7 @@ using SharedEntity = QSharedPointer<Qt3DCore::QEntity>;
 class Camera
 {
 public:
-    Camera(Eigen::Affine3f transform,Qt3DCore::QEntity *rootEntity);
+    Camera(Eigen::Affine3f transform, Qt3DCore::QEntity *rootEntity);
 
     void setTransform(Eigen::Affine3f transform);
 
@@ -45,7 +45,7 @@ public:
 struct Marker
 {
 public:
-    Marker(const RPIMoCap::Frame::Marker &marker,Qt3DCore::QEntity *rootEntity);
+    Marker(const RPIMoCap::Frame::Marker &marker, Qt3DCore::QEntity *rootEntity);
 
     SharedEntity entity = SharedEntity(new Qt3DCore::QEntity(), &QObject::deleteLater);
     Qt3DCore::QTransform *sphereTransform = new Qt3DCore::QTransform();

@@ -20,7 +20,7 @@
 #include "camerasettings.h"
 #include "camerasettingswidget.h"
 
-#include <RPIMoCap/Core/line3d.h>
+#include <RPIMoCap/Core/frame.h>
 
 #include <QMainWindow>
 #include <QVector>
@@ -28,6 +28,8 @@
 namespace Ui {
 class MainWindow;
 }
+
+namespace RPIMoCap {
 
 class MainWindow : public QMainWindow
 {
@@ -44,7 +46,9 @@ signals:
 
 public slots:
     void addCamera(const std::shared_ptr<CameraSettings> &camera);
+    void updateCamera();
     void removeCamera(const QUuid id);
+    void drawFrame(const RPIMoCap::Frame &frame);
 
 private slots:
     void on_MoCapButton_clicked(bool checked);
@@ -55,3 +59,5 @@ private:
 
     QMap<QUuid, CameraSettingsWidget*> m_cameraWidgets;
 };
+
+}

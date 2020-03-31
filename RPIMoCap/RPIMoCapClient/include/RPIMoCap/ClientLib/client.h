@@ -40,7 +40,7 @@ class Client : public QObject
     Q_OBJECT
 public:
     explicit Client(std::shared_ptr<ICamera> camera,
-                    CameraParams camParams, QObject *parent = nullptr);
+                    Camera::Intrinsics camParams, QObject *parent = nullptr);
     ~Client();
 
     QUuid id() {return m_clientID;}

@@ -16,7 +16,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-add_library(RPIMoCapClientLib STATIC ${QOBJECT_HEADERS} ${SOURCES})
+add_library(RPIMoCapClientLib STATIC)
 target_sources(RPIMoCapClientLib
     PRIVATE
     src/ClientLib/markerdetector.cpp

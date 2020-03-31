@@ -26,7 +26,10 @@ namespace RPIMoCap {
 Server::Server(QObject *parent)
     : QObject(parent)
 {
-    connect(&m_aggregator,&LinesAggregator::trigger, this, &Server::trigger);
+    connect(&m_aggregator, &LinesAggregator::trigger, this, &Server::trigger);
+    connect(this, &Server::cameraAdded, &m_aggregator, &LinesAggregator::addCamera);
+    connect(this, &Server::cameraRemoved, &m_aggregator, &LinesAggregator::removeCamera);
+    connect(&m_aggregator, &LinesAggregator::frameReady, this, &Server::frameReady);
 }
 
 void Server::init()
@@ -66,16 +69,12 @@ void Server::init()
             const QVariantMap descVar = json.toVariant().toMap();
 
             const QUuid id(descVar["id"].toString());
+            const auto params = Camera::Intrinsics::fromVariantMap(descVar["camParams"].toMap());
 
             if (!m_clients.contains(id))
             {
-                auto camera = std::make_shared<CameraSettings>(id, MQTTsettings);
-
-                connect(camera.get(),&CameraSettings::pointsReceived, &m_aggregator, &LinesAggregator::onPointsReceived);
-
-                m_aggregator.addCamera(camera);
+                auto camera = std::make_shared<CameraSettings>(id, MQTTsettings, params);
                 m_clients[camera->id()] = camera;
-
                 emit cameraAdded(camera);
             }
         }

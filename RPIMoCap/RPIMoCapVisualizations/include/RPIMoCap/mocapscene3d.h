@@ -39,22 +39,21 @@ public:
     ~MocapScene3D();
 
 public slots:
-    void addCamera(const int id, const Eigen::Affine3f &transform);
-    void updateCamera(const int id, const Eigen::Affine3f &transform);
-    void removeCamera(const int id);
+    void addCamera(const QUuid id, const Eigen::Affine3f &transform);
+    void updateCamera(const QUuid id, const Eigen::Affine3f &transform);
+    void removeCamera(const QUuid id);
 
     void drawFrame(const RPIMoCap::Frame &frame);
 
 private:
-
-    Ui::MocapScene3D *ui;
+    Ui::MocapScene3D *ui = nullptr;
 
     Qt3DCore::QEntity *m_rootEntity = new Qt3DCore::QEntity();
 
     std::vector<Marker> m_currentMarkers;
     std::vector<Line*> m_allLines;
 
-    QHash<int,std::shared_ptr<Camera>> m_currentCameras;
+    QHash<QUuid,std::shared_ptr<Camera>> m_currentCameras;
 };
 
 }

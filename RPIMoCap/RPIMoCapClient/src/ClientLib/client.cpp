@@ -26,15 +26,12 @@
 namespace RPIMoCap {
 
 Client::Client(std::shared_ptr<ICamera> camera,
-               CameraParams camParams, QObject *parent)
+               Camera::Intrinsics camParams, QObject *parent)
     : QObject(parent)
     , m_camera(camera)
     , m_markerDetector({})
     , m_avahiPublish(this)
 {
-    //qDebug() << "starting RPIMoCapClient, camera FoV" << camParams.cameraMatrix.at<float>() * 180.0f/M_PI
-    //         << "x" << camParams.height * 180.0f/M_PI;
-
     QString type = "_rpimocap._tcp";
     QString port = QString::number(5000);
     QString idString = m_clientID.toString(QUuid::StringFormat::WithoutBraces);

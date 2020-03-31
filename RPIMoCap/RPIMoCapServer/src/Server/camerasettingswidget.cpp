@@ -18,6 +18,8 @@
 #include "RPIMoCap/Server/camerasettingswidget.h"
 #include "ui_camerasettingswidget.h"
 
+namespace RPIMoCap {
+
 CameraSettingsWidget::CameraSettingsWidget(const std::shared_ptr<CameraSettings> camera, QWidget *parent)
     : QWidget(parent)
     , m_camera(camera)
@@ -25,8 +27,11 @@ CameraSettingsWidget::CameraSettingsWidget(const std::shared_ptr<CameraSettings>
 {
     ui->setupUi(this);
     ui->cameraid->setText(camera->id().toString(QUuid::StringFormat::WithoutBraces));
-    connect(m_camera.get(), &CameraSettings::changed, this, &CameraSettingsWidget::setValues);
-    setValues();
+    connect(m_camera.get(), &CameraSettings::rotationChanged, this, &CameraSettingsWidget::setRotation);
+    connect(m_camera.get(), &CameraSettings::translationChanged, this, &CameraSettingsWidget::setTranslation);
+
+    setRotation(m_camera->property("rotation").value<cv::Vec3f>());
+    setTranslation(m_camera->property("translation").value<cv::Vec3f>());
 }
 
 CameraSettingsWidget::~CameraSettingsWidget()
@@ -36,35 +41,29 @@ CameraSettingsWidget::~CameraSettingsWidget()
 
 void CameraSettingsWidget::on_pushButton_clicked()
 {
-    auto t = Eigen::Affine3f::Identity();
+    const float rx = ui->rotationX->value() * M_PI/180.0;
+    const float ry = ui->rotationY->value() * M_PI/180.0;
+    const float rz = ui->rotationZ->value() * M_PI/180.0;
+    m_camera->setProperty("rotation", QVariant::fromValue(cv::Vec3f(rx, ry, rz)));
 
-    const float rollRad = ui->rotationX->value() * M_PI/180.0;
-    const float pitchRad = ui->rotationY->value() * M_PI/180.0;
-    const float yawRad = ui->rotationZ->value() * M_PI/180.0;
-
-    Eigen::Matrix3f rot;
-    rot = Eigen::AngleAxisf(rollRad, Eigen::Vector3f::UnitX())
-        * Eigen::AngleAxisf(pitchRad, Eigen::Vector3f::UnitY())
-        * Eigen::AngleAxisf(yawRad, Eigen::Vector3f::UnitZ());
-
-    t.rotate(rot);
-
-    t.translation().x() = ui->translationX->value();
-    t.translation().y() = ui->translationY->value();
-    t.translation().z() = ui->translationZ->value();
-
-    m_camera->setTransform(t);
+    const float tx = ui->translationX->value();
+    const float ty = ui->translationY->value();
+    const float tz = ui->translationZ->value();
+    m_camera->setProperty("translation", QVariant::fromValue(cv::Vec3f(tx, ty, tz)));
 }
 
-void CameraSettingsWidget::setValues()
+void CameraSettingsWidget::setRotation(const cv::Vec3f &rVec)
 {
-    const auto transVec = m_camera->transform().translation();
-    ui->translationX->setValue(transVec.x());
-    ui->translationY->setValue(transVec.y());
-    ui->translationZ->setValue(transVec.z());
+    ui->rotationX->setValue(rVec[0] * 180.0/M_PI);
+    ui->rotationY->setValue(rVec[1] * 180.0/M_PI);
+    ui->rotationZ->setValue(rVec[2] * 180.0/M_PI);
+}
 
-    const auto rotVec = m_camera->transform().rotation().eulerAngles(0,1,2);
-    ui->rotationX->setValue(rotVec.x() * 180.0/M_PI);
-    ui->rotationY->setValue(rotVec.y() * 180.0/M_PI);
-    ui->rotationZ->setValue(rotVec.z() * 180.0/M_PI);
+void CameraSettingsWidget::setTranslation(const cv::Vec3f &tVec)
+{
+    ui->translationX->setValue(tVec[0]);
+    ui->translationY->setValue(tVec[1]);
+    ui->translationZ->setValue(tVec[2]);
+}
+
 }

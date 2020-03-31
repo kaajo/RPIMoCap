@@ -34,6 +34,8 @@
 #include <ceres/rotation.h>
 #include <iostream>
 
+namespace RPIMoCap {
+
 class ReprojectionError {
 public:
     static ceres::CostFunction* Create(cv::Point2f observation, cv::Mat cameraMatrix) {
@@ -126,7 +128,7 @@ class WandCalibration : public QObject
     Q_OBJECT
 public:
     WandCalibration(QMap<QUuid,std::shared_ptr<CameraSettings>> &cameraSettings,
-                    RPIMoCap::CameraParams camData, QObject *parent = nullptr);
+                    RPIMoCap::Camera::Intrinsics camData, QObject *parent = nullptr);
 
     void addFrame(const QMap<QUuid, std::vector<cv::Point2f> > &points);
 
@@ -188,5 +190,7 @@ private:
 
     QMap<std::pair<QUuid,QUuid>,ObsDetection> m_observedDetections;
 
-    RPIMoCap::CameraParams m_camData;
+    RPIMoCap::Camera::Intrinsics m_camData;
 };
+
+}
