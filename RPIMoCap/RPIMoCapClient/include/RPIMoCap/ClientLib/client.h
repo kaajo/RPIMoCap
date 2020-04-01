@@ -31,22 +31,24 @@
 #include <QProcess>
 #include <QUuid>
 
-#include <msgpack/pack.h>
-
 namespace RPIMoCap {
 
+/**
+ * @brief The Client class is responsible for all communication with the Server.
+ * It utilizes Avahi zeroconf protocol - https://en.wikipedia.org/wiki/Avahi_(software) -
+ * for MQTT discovery and publishing RPIMoCap Client Service so that Server can discover IP address.
+ * It listens on MQTT Trigger topic (SW camera sync) and publishes all detected markers to Markers topic.
+ */
 class Client : public QObject
 {
     Q_OBJECT
 public:
-    explicit Client(std::shared_ptr<ICamera> camera,
-                    Camera::Intrinsics camParams, QObject *parent = nullptr);
-    ~Client();
+    explicit Client(std::shared_ptr<ICamera> camera, Camera::Intrinsics camParams,
+                    QObject *parent = nullptr);
 
-    QUuid id() {return m_clientID;}
+    ~Client() override;
 
-signals:
-    void error(std::string error);
+    QUuid id() const;
 
 public slots:
     void cameraTrigger();
@@ -58,7 +60,7 @@ private:
     MarkerDetector m_markerDetector;
 
     std::optional<int> m_avahiCheckTimerID = std::nullopt;
-    void checkAvahiServices();
+    void findMQTTService();
 
     bool isMQTTInitialized();
     void initMQTT(const QString &idString);
@@ -67,6 +69,8 @@ private:
     std::shared_ptr<MQTTPublisher<std::vector<cv::Point2f>>> m_pointPub;
 
     QUuid m_clientID = QUuid::createUuid();
+
+    void publishClientService(const QString &idString, const Camera::Intrinsics &params);
     QProcess m_avahiPublish;
 };
 

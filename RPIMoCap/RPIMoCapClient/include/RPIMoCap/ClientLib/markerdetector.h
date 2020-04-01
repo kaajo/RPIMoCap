@@ -19,6 +19,9 @@
 
 #include <opencv2/core/types.hpp>
 
+namespace RPIMoCap {
+
+
 class MarkerDetector
 {
 public:
@@ -38,3 +41,5 @@ private:
 
     Params m_algParams;
 };
+
+}

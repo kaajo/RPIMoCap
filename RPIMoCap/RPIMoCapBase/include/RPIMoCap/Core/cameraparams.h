@@ -35,7 +35,7 @@ struct Intrinsics
     cv::Mat cameraMatrixInv = cv::Mat::eye(3, 3, CV_32FC1);
     cv::Mat distortionCoeffs = cv::Mat(1, 4, CV_32FC1, cv::Scalar(0.0f));
 
-    QVariantMap toVariantMap()
+    QVariantMap toVariantMap() const
     {
         QVariantMap data;
         data["imageWidth"] = imageSize.width;

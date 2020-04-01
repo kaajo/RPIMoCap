@@ -23,6 +23,8 @@
 
 #include <functional>
 
+namespace RPIMoCap {
+
 MarkerDetector::MarkerDetector(const Params &algParams)
     : m_algParams(algParams)
 {
@@ -55,4 +57,6 @@ cv::Point2f MarkerDetector::findPoint(const std::vector<cv::Point2i> &contour)
     const float y = static_cast<float>(sum.y)/static_cast<float>(m00);
 
     return cv::Point2f(x, y);
+}
+
 }

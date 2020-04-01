@@ -19,14 +19,18 @@
 
 #include <opencv2/core/mat.hpp>
 
+namespace RPIMoCap {
+
+/**
+ * @brief Base class for all Camera implementations. It is usefull for simulation.
+ */
 class ICamera
 {
 public:
-    ICamera() = default;
-    virtual ~ICamera() = default;
-
     virtual bool open() = 0;
     virtual void close() = 0;
     virtual bool getOpened() const = 0;
     virtual cv::Mat pullData() = 0;
 };
+
+}

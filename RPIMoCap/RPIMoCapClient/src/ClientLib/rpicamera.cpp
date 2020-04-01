@@ -21,6 +21,8 @@
 
 #include <chrono>
 
+namespace RPIMoCap {
+
 GstCVCamera::GstCVCamera(std::__cxx11::string pipelineDescription)
     : pipelineDescription_(pipelineDescription)
 {
@@ -201,4 +203,6 @@ cv::Mat GstCVCamera::preprocessData(GstBuffer *, const GstMapInfo &mappedBuffer,
     }
 
     return dummy.clone();
+}
+
 }

@@ -29,7 +29,7 @@ class SimCamera : public ICamera
 {
 public:
     SimCamera(const Camera::Intrinsics &params, const SimScene &scene);
-    ~SimCamera() override = default;
+    ~SimCamera() = default;
 
     SimCamera(const SimCamera&) = delete;
     void operator=(const SimCamera&) = delete;

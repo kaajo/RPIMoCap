@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 
     RPIMoCap::Camera::Intrinsics params = RPIMoCap::Camera::Intrinsics::computeRPICameraV2Params();
 
-    auto camera = std::make_shared<GstCVCamera>("v4l2src device=/dev/video0 ! "
+    auto camera = std::make_shared<RPIMoCap::GstCVCamera>("v4l2src device=/dev/video0 ! "
                                                 "video/x-raw,width=640,height=480,framerate=90/1 ! "
                                                 "videoconvert ! video/x-raw,format=GRAY8 ! "
                                                 "appsink max-buffers=1 name=appsink");

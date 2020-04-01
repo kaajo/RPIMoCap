@@ -22,6 +22,8 @@
 #include <gst/gstelement.h>
 #include <gst/app/app.h>
 
+namespace RPIMoCap {
+
 class GstCVCamera : public ICamera {
 public:
     GstCVCamera(std::string pipelineDescription);
@@ -54,3 +56,5 @@ private:
 
     bool m_opened = false;
 };
+
+}
