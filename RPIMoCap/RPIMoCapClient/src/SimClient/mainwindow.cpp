@@ -66,7 +66,21 @@ void MainWindow::updateValue()
 
     Eigen::Affine3f t;
     t.fromPositionOrientationScale(pos, r, s);
-    m_scene.setMarkers(wand.markers(t));
+
+    auto markers = wand.markers(t);
+    m_scene.setMarkers(markers);
+
+    std::vector<Frame::Marker> frameMarkers;
+
+    for (auto &marker : markers)
+    {
+        frameMarkers.push_back({0,{marker.translation.x, marker.translation.y, marker.translation.z}});
+    }
+
+    Frame frame(std::chrono::high_resolution_clock::now(), {});
+    frame.setMarkers(frameMarkers);
+
+    ui->scene->drawFrame(frame);
 }
 
 void MainWindow::on_addClientButton_clicked()
@@ -77,6 +91,25 @@ void MainWindow::on_addClientButton_clicked()
     auto client = QSharedPointer<Client>(new Client(camera,params), &QObject::deleteLater);
     auto widget = new SimCameraWidget(camera, client->id());
     auto thread = new QThread;
+
+    {
+        auto rotation = camera->getRotation();
+        auto translation = camera->getTranslation();
+
+        Eigen::Affine3f t = Eigen::Affine3f::Identity();
+
+        Eigen::Matrix3f rot;
+        rot = Eigen::AngleAxisf(rotation[0], Eigen::Vector3f::UnitX())
+              * Eigen::AngleAxisf(rotation[1], Eigen::Vector3f::UnitY())
+              * Eigen::AngleAxisf(rotation[2], Eigen::Vector3f::UnitZ());
+        t.rotate(rot);
+
+        t.translation().x() = translation[0];
+        t.translation().y() = translation[1];
+        t.translation().z() = translation[2];
+
+        ui->scene->addCamera(client->id(), t);
+    }
 
     ui->scrollAreaWidgetContents->layout()->addWidget(widget);
     client->moveToThread(thread);
@@ -93,6 +126,8 @@ void MainWindow::on_removeClientButton_clicked()
     {
         return;
     }
+
+    ui->scene->removeCamera(m_clients.last().get()->id());
 
     QWidget *last = m_clientWidgets.last();
     ui->scrollAreaWidgetContents->layout()->removeWidget(last);

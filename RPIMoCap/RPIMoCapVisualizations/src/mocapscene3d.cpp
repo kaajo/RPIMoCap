@@ -64,6 +64,11 @@ MocapScene3D::MocapScene3D(QWidget *parent) :
         m_allLines.push_back(new Line(Frame::LineSegment(), m_rootEntity));
     }
 
+    for (size_t i = 0; i < 200; ++i)
+    {
+        m_currentMarkers.push_back(new Marker({0, Eigen::Vector3f()}, m_rootEntity));
+    }
+
     view->setRootEntity(m_rootEntity);
 }
 
@@ -89,6 +94,8 @@ void MocapScene3D::removeCamera(const QUuid id)
 
 void MocapScene3D::drawFrame(const RPIMoCap::Frame &frame)
 {
+    //TODO resize m_allLines and m_currentMarkers if needed
+
     for (size_t i = 0; i < frame.lines().size(); ++i)
     {
         m_allLines[i]->setLine3D(frame.lines()[i]);
@@ -100,7 +107,16 @@ void MocapScene3D::drawFrame(const RPIMoCap::Frame &frame)
         m_allLines[i]->entity->setEnabled(false);
     }
 
-    update(); //TODO needed?
+    for (size_t i = 0; i < frame.markers().size(); ++i)
+    {
+        m_currentMarkers[i]->setMarker(frame.markers()[i]);
+        m_currentMarkers[i]->entity->setEnabled(true);
+    }
+
+    for (size_t i = frame.markers().size(); i < m_currentMarkers.size(); ++i)
+    {
+        m_currentMarkers[i]->entity->setEnabled(false);
+    }
 }
 
 }

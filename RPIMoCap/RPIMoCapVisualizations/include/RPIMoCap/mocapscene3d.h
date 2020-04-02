@@ -50,7 +50,7 @@ private:
 
     Qt3DCore::QEntity *m_rootEntity = new Qt3DCore::QEntity();
 
-    std::vector<Marker> m_currentMarkers;
+    std::vector<Marker*> m_currentMarkers;
     std::vector<Line*> m_allLines;
 
     QHash<QUuid,std::shared_ptr<Camera>> m_currentCameras;

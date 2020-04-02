@@ -45,7 +45,9 @@ public:
 struct Marker
 {
 public:
-    Marker(const RPIMoCap::Frame::Marker &marker, Qt3DCore::QEntity *rootEntity);
+    Marker(const RPIMoCap::Frame::Marker marker, Qt3DCore::QEntity *rootEntity);
+
+    void setMarker(const RPIMoCap::Frame::Marker marker);
 
     SharedEntity entity = SharedEntity(new Qt3DCore::QEntity(), &QObject::deleteLater);
     Qt3DCore::QTransform *sphereTransform = new Qt3DCore::QTransform();

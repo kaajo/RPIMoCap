@@ -37,7 +37,7 @@ void Camera::setTransform(Eigen::Affine3f transform)
     cameraTransform->setRotation(QQuaternion(QVector4D(rot.x(),rot.y(),rot.z(),rot.w())));
 }
 
-Marker::Marker(const Frame::Marker &marker, Qt3DCore::QEntity *rootEntity) {
+Marker::Marker(const Frame::Marker marker, Qt3DCore::QEntity *rootEntity) {
     sphereTransform->setTranslation({marker.position.x(),marker.position.y(),marker.position.z()});
 
     sphereMesh->setRings(20);
@@ -50,6 +50,11 @@ Marker::Marker(const Frame::Marker &marker, Qt3DCore::QEntity *rootEntity) {
     entity->addComponent(sphereMesh);
     entity->addComponent(sphereMaterial);
     entity->setParent(rootEntity);
+}
+
+void Marker::setMarker(const Frame::Marker marker)
+{
+    sphereTransform->setTranslation({marker.position.x(),marker.position.y(),marker.position.z()});
 }
 
 Line::Line(const Frame::LineSegment &line, Qt3DCore::QEntity *rootEntity)

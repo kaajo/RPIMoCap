@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>767</width>
-    <height>587</height>
+    <width>1005</width>
+    <height>673</height>
    </rect>
   </property>
   <property name="contextMenuPolicy">
@@ -43,6 +43,12 @@
       </item>
       <item row="0" column="1">
        <widget class="QDoubleSpinBox" name="valuex">
+        <property name="maximumSize">
+         <size>
+          <width>200</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="suffix">
          <string> cm</string>
         </property>
@@ -59,6 +65,12 @@
       </item>
       <item row="1" column="1">
        <widget class="QDoubleSpinBox" name="valuey">
+        <property name="maximumSize">
+         <size>
+          <width>200</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="suffix">
          <string> cm</string>
         </property>
@@ -75,6 +87,12 @@
       </item>
       <item row="2" column="1">
        <widget class="QDoubleSpinBox" name="valuez">
+        <property name="maximumSize">
+         <size>
+          <width>200</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="suffix">
          <string> cm</string>
         </property>
@@ -112,6 +130,12 @@
       </item>
       <item row="3" column="1">
        <widget class="QDoubleSpinBox" name="rotX">
+        <property name="maximumSize">
+         <size>
+          <width>200</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="suffix">
          <string>°</string>
         </property>
@@ -131,6 +155,12 @@
       </item>
       <item row="4" column="1">
        <widget class="QDoubleSpinBox" name="rotY">
+        <property name="maximumSize">
+         <size>
+          <width>200</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="suffix">
          <string>°</string>
         </property>
@@ -150,6 +180,12 @@
       </item>
       <item row="5" column="1">
        <widget class="QDoubleSpinBox" name="rotZ">
+        <property name="maximumSize">
+         <size>
+          <width>200</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="suffix">
          <string>°</string>
         </property>
@@ -170,17 +206,20 @@
      </layout>
     </item>
     <item>
-     <spacer name="horizontalSpacer">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
+     <widget class="RPIMoCap::Visualization::MocapScene3D" name="scene" native="true">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
       </property>
-      <property name="sizeHint" stdset="0">
+      <property name="minimumSize">
        <size>
-        <width>40</width>
-        <height>20</height>
+        <width>640</width>
+        <height>480</height>
        </size>
       </property>
-     </spacer>
+     </widget>
     </item>
     <item>
      <layout class="QVBoxLayout" name="verticalLayout">
@@ -244,7 +283,7 @@
            <x>0</x>
            <y>0</y>
            <width>198</width>
-           <height>468</height>
+           <height>554</height>
           </rect>
          </property>
         </widget>
@@ -259,13 +298,21 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>767</width>
+     <width>1005</width>
      <height>21</height>
     </rect>
    </property>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>RPIMoCap::Visualization::MocapScene3D</class>
+   <extends>QWidget</extends>
+   <header>RPIMoCap/mocapscene3d.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
