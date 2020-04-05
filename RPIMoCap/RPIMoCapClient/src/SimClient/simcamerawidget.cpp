@@ -20,15 +20,23 @@
 
 namespace RPIMoCap::SimClient {
 
-SimCameraWidget::SimCameraWidget(std::shared_ptr<SimCamera> camera, QUuid clientId, QWidget *parent) :
+constexpr double degToRad = M_PI/180.0;
+constexpr double radToDeg = 180.0/M_PI;
+
+SimCameraWidget::SimCameraWidget(uint16_t fps, QUuid clientId, QWidget *parent) :
     QWidget(parent),
     m_ui(new Ui::SimCameraWidget),
-    m_camera(camera)
+    m_clientId(clientId)
 {
     m_ui->setupUi(this);
 
-    m_ui->cameraidvalue->setText(clientId.toString(QUuid::StringFormat::WithoutBraces).left(12));
-    m_ui->fpsvalue->setValue(m_camera->getParams().maxFPS);
+    m_ui->cameraidvalue->setText(clientId.toString(QUuid::StringFormat::WithoutBraces).left(16));
+    m_ui->fpsvalue->setValue(fps);
+
+    connect(m_ui->fpsvalue,  QOverload<int>::of(&QSpinBox::valueChanged), this, &SimCameraWidget::onfpsChanged);
+    connect(m_ui->extrinsic, &Visualization::ExtrinsicWidget::rotationChanged, this, &SimCameraWidget::onRotationChanged);
+    connect(m_ui->extrinsic, &Visualization::ExtrinsicWidget::translationChanged, this, &SimCameraWidget::onTranslationChanged);
+    connect(m_ui->extrinsic, &Visualization::ExtrinsicWidget::transformChanged, this, &SimCameraWidget::onTransformChanged);
 }
 
 SimCameraWidget::~SimCameraWidget()
@@ -36,51 +44,29 @@ SimCameraWidget::~SimCameraWidget()
     delete m_ui;
 }
 
-void SimCameraWidget::on_fpsvalue_valueChanged(int arg1)
+Visualization::ExtrinsicWidget *SimCameraWidget::extrinsic()
 {
-    m_camera->getParams().maxFPS = arg1;
+    return m_ui->extrinsic;
 }
 
-void SimCameraWidget::on_xvalue_valueChanged(double arg1)
+void SimCameraWidget::onfpsChanged(int fps)
 {
-    auto tVec = m_camera->getTranslation();
-    tVec[0] = arg1;
-    m_camera->setTranslation(tVec);
+    emit fpsChanged(m_clientId, fps);
 }
 
-void SimCameraWidget::on_yvalue_valueChanged(double arg1)
+void SimCameraWidget::onRotationChanged(cv::Vec3f rVec)
 {
-    auto tVec = m_camera->getTranslation();
-    tVec[1] = arg1;
-    m_camera->setTranslation(tVec);
+    emit rotationChanged(m_clientId, rVec);
 }
 
-void SimCameraWidget::on_zvalue_valueChanged(double arg1)
+void SimCameraWidget::onTranslationChanged(cv::Vec3f tVec)
 {
-    auto tVec = m_camera->getTranslation();
-    tVec[2] = arg1;
-    m_camera->setTranslation(tVec);
+    emit translationChanged(m_clientId, tVec);
 }
 
-void SimCameraWidget::on_rotxvalue_valueChanged(double arg1)
+void SimCameraWidget::onTransformChanged(Eigen::Affine3f transform)
 {
-    auto rVec = m_camera->getRotation();
-    rVec[0] = arg1 * M_PI/180.0;
-    m_camera->setRotation(rVec);
-}
-
-void SimCameraWidget::on_rotyvalue_valueChanged(double arg1)
-{
-    auto rVec = m_camera->getRotation();
-    rVec[1] = arg1 * M_PI/180.0;
-    m_camera->setRotation(rVec);
-}
-
-void SimCameraWidget::on_rotzvalue_valueChanged(double arg1)
-{
-    auto rVec = m_camera->getRotation();
-    rVec[2] = arg1 * M_PI/180.0;
-    m_camera->setRotation(rVec);
+    emit transformChanged(m_clientId, transform);
 }
 
 }

@@ -28,46 +28,26 @@ namespace RPIMoCap::SimClient {
 
 MainWindow::MainWindow(SimScene &scene, QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow),
+    m_ui(new Ui::MainWindow),
     m_scene(scene)
 {
-    ui->setupUi(this);
+    m_ui->setupUi(this);
 
-    connect(ui->valuex,qOverload<double>(&QDoubleSpinBox::valueChanged), this, &MainWindow::updateValue);
-    connect(ui->valuey,qOverload<double>(&QDoubleSpinBox::valueChanged), this, &MainWindow::updateValue);
-    connect(ui->valuez,qOverload<double>(&QDoubleSpinBox::valueChanged), this, &MainWindow::updateValue);
-    connect(ui->rotX,qOverload<double>(&QDoubleSpinBox::valueChanged), this, &MainWindow::updateValue);
-    connect(ui->rotY,qOverload<double>(&QDoubleSpinBox::valueChanged), this, &MainWindow::updateValue);
-    connect(ui->rotZ,qOverload<double>(&QDoubleSpinBox::valueChanged), this, &MainWindow::updateValue);
+    connect(m_ui->wandExtrinsic, &Visualization::ExtrinsicWidget::transformChanged, this, &MainWindow::updateWandTransform);
 
-    ui->scrollAreaWidgetContents->setLayout(new QVBoxLayout);
+    m_ui->scrollAreaWidgetContents->setLayout(new QVBoxLayout);
 }
 
 MainWindow::~MainWindow()
 {
-    qDeleteAll(m_clientWidgets);
-    qDeleteAll(m_clientThreads);
-    delete ui;
+    delete m_ui;
 }
 
-void MainWindow::updateValue()
+void MainWindow::updateWandTransform(Eigen::Affine3f transform)
 {
     const VirtualWand wand(50.0, 10.0);
 
-    const Eigen::Vector3f pos(ui->valuex->value(),
-                              ui->valuey->value(),
-                              ui->valuez->value());
-
-    const Eigen::Matrix3f r(Eigen::AngleAxisf(ui->rotX->value()*M_PI/180.0f, Eigen::Vector3f::UnitX())
-                      * Eigen::AngleAxisf(ui->rotY->value()*M_PI/180.0f,  Eigen::Vector3f::UnitY())
-                      * Eigen::AngleAxisf(ui->rotZ->value()*M_PI/180.0f, Eigen::Vector3f::UnitZ()));
-
-    const Eigen::Vector3f s(1.0, 1.0, 1.0);
-
-    Eigen::Affine3f t;
-    t.fromPositionOrientationScale(pos, r, s);
-
-    auto markers = wand.markers(t);
+    auto markers = wand.markers(transform);
     m_scene.setMarkers(markers);
 
     std::vector<Frame::Marker> frameMarkers;
@@ -80,7 +60,52 @@ void MainWindow::updateValue()
     Frame frame(std::chrono::high_resolution_clock::now(), {});
     frame.setMarkers(frameMarkers);
 
-    ui->scene->drawFrame(frame);
+    m_ui->scene->drawFrame(frame);
+}
+
+void MainWindow::onRotationChanged(QUuid clientId, cv::Vec3f rVec)
+{
+    auto it = std::find_if(m_clients.begin(), m_clients.end(),
+                           [&clientId](ClientData &c){return c.id == clientId;});
+
+    if (it != m_clients.end())
+    {
+        it->camera->setRotation(rVec);
+    }
+    else
+    {
+        qWarning() << clientId << " client does not exist!";
+    }
+}
+
+void MainWindow::onTranslationChanged(QUuid clientId, cv::Vec3f tVec)
+{
+    auto it = std::find_if(m_clients.begin(), m_clients.end(),
+                           [&clientId](ClientData &c){return c.id == clientId;});
+
+    if (it != m_clients.end())
+    {
+        it->camera->setTranslation(tVec);
+    }
+    else
+    {
+        qWarning() << clientId << " client does not exist!";
+    }
+}
+
+void MainWindow::onfpsChanged(QUuid clientId, int64_t fps)
+{
+    auto it = std::find_if(m_clients.begin(), m_clients.end(),
+                           [&clientId](ClientData &c){return c.id == clientId;});
+
+    if (it != m_clients.end())
+    {
+        it->camera->getParams().maxFPS = fps;
+    }
+    else
+    {
+        qWarning() << clientId << " client does not exist!";
+    }
 }
 
 void MainWindow::on_addClientButton_clicked()
@@ -89,35 +114,21 @@ void MainWindow::on_addClientButton_clicked()
 
     auto camera = std::make_shared<SimCamera>(params, m_scene);
     auto client = QSharedPointer<Client>(new Client(camera,params), &QObject::deleteLater);
-    auto widget = new SimCameraWidget(camera, client->id());
+    auto widget = new SimCameraWidget(camera->getParams().maxFPS, client->id());
+
+    connect(widget, &SimCameraWidget::fpsChanged, this, &MainWindow::onfpsChanged);
+    connect(widget, &SimCameraWidget::transformChanged, m_ui->scene, &Visualization::MocapScene3D::updateCamera);
+    connect(widget, &SimCameraWidget::rotationChanged, this, &MainWindow::onRotationChanged);
+    connect(widget, &SimCameraWidget::translationChanged, this, &MainWindow::onTranslationChanged);
+
+    m_ui->scene->addCamera(client->id(), Eigen::Affine3f::Identity());
+
     auto thread = new QThread;
-
-    {
-        auto rotation = camera->getRotation();
-        auto translation = camera->getTranslation();
-
-        Eigen::Affine3f t = Eigen::Affine3f::Identity();
-
-        Eigen::Matrix3f rot;
-        rot = Eigen::AngleAxisf(rotation[0], Eigen::Vector3f::UnitX())
-              * Eigen::AngleAxisf(rotation[1], Eigen::Vector3f::UnitY())
-              * Eigen::AngleAxisf(rotation[2], Eigen::Vector3f::UnitZ());
-        t.rotate(rot);
-
-        t.translation().x() = translation[0];
-        t.translation().y() = translation[1];
-        t.translation().z() = translation[2];
-
-        ui->scene->addCamera(client->id(), t);
-    }
-
-    ui->scrollAreaWidgetContents->layout()->addWidget(widget);
+    m_ui->scrollAreaWidgetContents->layout()->addWidget(widget);
     client->moveToThread(thread);
     thread->start();
 
-    m_clients.push_back(client);
-    m_clientWidgets.push_back(widget);
-    m_clientThreads.push_back(thread);
+    m_clients.push_back({client->id(), camera, client, widget, thread});
 }
 
 void MainWindow::on_removeClientButton_clicked()
@@ -127,28 +138,25 @@ void MainWindow::on_removeClientButton_clicked()
         return;
     }
 
-    ui->scene->removeCamera(m_clients.last().get()->id());
+    auto &last = m_clients.last();
+    m_ui->scene->removeCamera(last.id);
+    m_ui->scrollAreaWidgetContents->layout()->removeWidget(last.widget);
 
-    QWidget *last = m_clientWidgets.last();
-    ui->scrollAreaWidgetContents->layout()->removeWidget(last);
-    last->deleteLater();
+    last.clear();
 
-    m_clientWidgets.removeLast();
     m_clients.removeLast();
-
-    QThread *lastThread = m_clientThreads.last();
-    lastThread->quit();
-    lastThread->wait();
-    lastThread->deleteLater();
-    m_clientThreads.removeLast();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     event->accept();
+
+    for (auto &client : m_clients)
+    {
+        client.clear(); //TODO oh my
+    }
+
     m_clients.clear();
-    qDeleteAll(m_clientWidgets);
-    qDeleteAll(m_clientThreads);
 }
 
 }

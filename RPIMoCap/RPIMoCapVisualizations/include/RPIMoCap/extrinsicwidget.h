@@ -17,10 +17,7 @@
 
 #pragma once
 
-#include <RPIMoCap/extrinsicwidget.h>
-
 #include <QWidget>
-#include <QUuid>
 
 #include <opencv2/core/mat.hpp>
 #include <Eigen/Geometry>
@@ -28,37 +25,38 @@
 #include <memory>
 
 namespace Ui {
-class SimCameraWidget;
+class ExtrinsicWidget;
 }
 
-namespace RPIMoCap::SimClient {
+namespace RPIMoCap::Visualization {
 
-class SimCameraWidget : public QWidget
+class ExtrinsicWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit SimCameraWidget(uint16_t fps, QUuid clientId, QWidget *parent = nullptr);
-    ~SimCameraWidget() override;
+    explicit ExtrinsicWidget(QWidget *parent = nullptr);
+    ~ExtrinsicWidget() override;
 
-    Visualization::ExtrinsicWidget *extrinsic();
+    cv::Vec3f getRotation();
+    cv::Vec3f getTranslation();
+    Eigen::Affine3f getTransform();
 
 signals:
-    void fpsChanged(QUuid clientid, uint16_t fps);
-    void rotationChanged(QUuid clientId, cv::Vec3f rVec);
-    void translationChanged(QUuid clientId, cv::Vec3f tVec);
-    void transformChanged(QUuid clientId, Eigen::Affine3f transform);
+    void rotationChanged(cv::Vec3f rVec);
+    void translationChanged(cv::Vec3f tVec);
+    void transformChanged(Eigen::Affine3f transform);
+
+public slots:
+    void setRotation(cv::Vec3f rVec);
+    void setTranslation(cv::Vec3f tVec);
 
 private slots:
-    void onfpsChanged(int fps);
-    void onRotationChanged(cv::Vec3f rVec);
-    void onTranslationChanged(cv::Vec3f tVec);
-    void onTransformChanged(Eigen::Affine3f transform);
+    void onRotationChange();
+    void onTranslationChange();
 
 private:
-    Ui::SimCameraWidget *m_ui = nullptr;
-
-    QUuid m_clientId;
+    Ui::ExtrinsicWidget *m_ui = nullptr;
 };
 
 }

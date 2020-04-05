@@ -21,9 +21,12 @@ target_sources(RPIMoCapVisualizations
     PRIVATE
     src/mocapscene3d.cpp
     src/mocapscene3d.ui
+    src/extrinsicwidget.cpp
+    src/extrinsicwidget.ui
     src/primitives.cpp
     PUBLIC
     include/RPIMoCap/mocapscene3d.h
+    include/RPIMoCap/extrinsicwidget.h
     include/RPIMoCap/primitives.h
 )
 

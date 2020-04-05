@@ -20,8 +20,10 @@
 #include "simscene.h"
 
 #include <RPIMoCap/ClientLib/client.h>
+#include "RPIMoCap/SimClient/simcamera.h"
 
 #include <QMainWindow>
+#include <QThread>
 
 namespace Ui {
 class MainWindow;
@@ -38,7 +40,11 @@ public:
     ~MainWindow();
 
 private slots:
-    void updateValue();
+    void updateWandTransform(Eigen::Affine3f transform);
+
+    void onRotationChanged(QUuid clientId, cv::Vec3f rVec);
+    void onTranslationChanged(QUuid clientId, cv::Vec3f tVec);
+    void onfpsChanged(QUuid clientId, int64_t fps);
 
     void on_addClientButton_clicked();
 
@@ -47,13 +53,29 @@ private slots:
 private:
     void closeEvent(QCloseEvent *event) override;
 
-    Ui::MainWindow *ui;
+    Ui::MainWindow *m_ui = nullptr;
 
     SimScene &m_scene;
 
-    QVector<QSharedPointer<Client>> m_clients;
-    QVector<QWidget*> m_clientWidgets;
-    QVector<QThread*> m_clientThreads;
+    struct ClientData {
+        QUuid id;
+        std::shared_ptr<SimCamera> camera;
+        QSharedPointer<Client> client;
+        QWidget* widget = nullptr;
+        QThread* thread = nullptr;
+
+        void clear()
+        {
+            camera.reset();
+            client.reset();
+            thread->quit();
+            thread->wait();
+            widget->deleteLater();
+            thread->deleteLater();
+        }
+    };
+
+    QVector<ClientData> m_clients;
 };
 
 }
