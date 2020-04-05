@@ -79,6 +79,19 @@ signals:
     void translationChanged(const cv::Vec3f &tVec);
     void rotationChanged(const cv::Vec3f &rVec);
 
+public slots:
+    void setTranslation(cv::Vec3f tVec)
+    {
+        m_translation = tVec;
+        emit translationChanged(tVec);
+    }
+
+    void setRotation(cv::Vec3f rVec)
+    {
+        m_rotation = rVec;
+        emit rotationChanged(rVec);
+    }
+
 private slots:
     void onPointsDataReceived(const QByteArray &data)
     {

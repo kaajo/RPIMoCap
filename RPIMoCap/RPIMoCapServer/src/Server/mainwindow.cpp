@@ -39,31 +39,25 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-/*
-void MainWindow::onLinesReceived(const std::vector<RPIMoCap::Line3D> &lines)
-{
-    std::vector<RPIMoCap::Frame::LineSegment> lineSegments;
-
-    for (auto &line : lines)
-    {
-        lineSegments.push_back({100.0f,line});
-    }
-
-    auto time = std::chrono::high_resolution_clock::now();
-
-    RPIMoCap::Frame frame(time, lineSegments);;
-    ui->widget->drawFrame(frame);
-}
-*/
-
 void MainWindow::addCamera(const std::shared_ptr<CameraSettings> &camera)
 {
     connect(camera.get(), &CameraSettings::rotationChanged, this, &MainWindow::updateCamera);
     connect(camera.get(), &CameraSettings::translationChanged, this, &MainWindow::updateCamera);
 
-    ui->widget->addCamera(camera->id(), camera->transform());
+    ui->scene->addCamera(camera->id(), camera->transform());
 
-    auto widget = new CameraSettingsWidget(camera);
+    auto widget = new CameraSettingsWidget(camera->id());
+
+    connect(camera.get(), &CameraSettings::rotationChanged,
+            widget->extrinsic(), &Visualization::ExtrinsicWidget::setRotation);
+    connect(camera.get(), &CameraSettings::translationChanged,
+            widget->extrinsic(), &Visualization::ExtrinsicWidget::setTranslation);
+
+    connect(widget->extrinsic(), &Visualization::ExtrinsicWidget::rotationChanged,
+            camera.get(), &CameraSettings::setRotation);
+    connect(widget->extrinsic(), &Visualization::ExtrinsicWidget::translationChanged,
+            camera.get(), &CameraSettings::setTranslation);
+
     m_cameraWidgets[camera->id()] = widget;
     ui->scrollAreaWidgetContents->layout()->addWidget(widget);
 }
@@ -71,12 +65,12 @@ void MainWindow::addCamera(const std::shared_ptr<CameraSettings> &camera)
 void MainWindow::updateCamera()
 {
     CameraSettings* snd = qobject_cast<CameraSettings*>(sender());
-    ui->widget->updateCamera(snd->id(), snd->transform());
+    ui->scene->updateCamera(snd->id(), snd->transform());
 }
 
 void MainWindow::removeCamera(const QUuid id)
 {
-    ui->widget->removeCamera(id);
+    ui->scene->removeCamera(id);
 
     ui->scrollAreaWidgetContents->layout()->removeWidget(m_cameraWidgets[id]);
     m_cameraWidgets[id]->deleteLater();
@@ -85,7 +79,7 @@ void MainWindow::removeCamera(const QUuid id)
 
 void MainWindow::drawFrame(const Frame &frame)
 {
-    ui->widget->drawFrame(frame);
+    ui->scene->drawFrame(frame);
 }
 
 void MainWindow::on_MoCapButton_clicked(bool checked)

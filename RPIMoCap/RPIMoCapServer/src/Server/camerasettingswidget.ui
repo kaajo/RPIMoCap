@@ -26,12 +26,24 @@
    <string>Form</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="leftMargin">
+    <number>4</number>
+   </property>
+   <property name="topMargin">
+    <number>4</number>
+   </property>
+   <property name="rightMargin">
+    <number>4</number>
+   </property>
+   <property name="bottomMargin">
+    <number>4</number>
+   </property>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QLabel" name="cameralabel">
        <property name="text">
-        <string>Camera</string>
+        <string>ID:</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -48,165 +60,25 @@
     </layout>
    </item>
    <item>
-    <widget class="QLabel" name="translationlabel">
-     <property name="maximumSize">
-      <size>
-       <width>16777215</width>
-       <height>15</height>
-      </size>
-     </property>
-     <property name="text">
-      <string>Translation</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
+    <widget class="RPIMoCap::Visualization::ExtrinsicWidget" name="extrinsic" native="true"/>
    </item>
    <item>
-    <layout class="QFormLayout" name="formLayout">
-     <item row="0" column="0">
-      <widget class="QLabel" name="translationXlabel">
-       <property name="text">
-        <string>X:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="translationYlabel">
-       <property name="text">
-        <string>Y:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="translationZlabel">
-       <property name="text">
-        <string>Z:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QDoubleSpinBox" name="translationX">
-       <property name="suffix">
-        <string> cm</string>
-       </property>
-       <property name="minimum">
-        <double>-1000.000000000000000</double>
-       </property>
-       <property name="maximum">
-        <double>1000.000000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QDoubleSpinBox" name="translationY">
-       <property name="suffix">
-        <string> cm</string>
-       </property>
-       <property name="minimum">
-        <double>-1000.000000000000000</double>
-       </property>
-       <property name="maximum">
-        <double>1000.000000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QDoubleSpinBox" name="translationZ">
-       <property name="suffix">
-        <string> cm</string>
-       </property>
-       <property name="minimum">
-        <double>-1000.000000000000000</double>
-       </property>
-       <property name="maximum">
-        <double>1000.000000000000000</double>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <widget class="QLabel" name="rotationlabel">
-     <property name="maximumSize">
-      <size>
-       <width>16777215</width>
-       <height>15</height>
-      </size>
-     </property>
-     <property name="text">
-      <string>Rotation</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <layout class="QFormLayout" name="formLayout_2">
-     <item row="0" column="0">
-      <widget class="QLabel" name="rotationZlabel">
-       <property name="text">
-        <string>X (deg):</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="rotationYlabel">
-       <property name="text">
-        <string>Y (deg):</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="rotationXlabel">
-       <property name="text">
-        <string>Z (deg):</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QDoubleSpinBox" name="rotationX">
-       <property name="minimum">
-        <double>-180.000000000000000</double>
-       </property>
-       <property name="maximum">
-        <double>180.000000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QDoubleSpinBox" name="rotationY">
-       <property name="minimum">
-        <double>-89.900000000000006</double>
-       </property>
-       <property name="maximum">
-        <double>89.900000000000006</double>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QDoubleSpinBox" name="rotationZ">
-       <property name="minimum">
-        <double>-89.900000000000006</double>
-       </property>
-       <property name="maximum">
-        <double>89.900000000000006</double>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <widget class="QPushButton" name="pushButton">
-     <property name="text">
-      <string>Update</string>
+    <widget class="Line" name="line">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
      </property>
     </widget>
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>RPIMoCap::Visualization::ExtrinsicWidget</class>
+   <extends>QWidget</extends>
+   <header>RPIMoCap/extrinsicwidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

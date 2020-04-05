@@ -17,9 +17,10 @@
 
 #pragma once
 
-#include "camerasettings.h"
+#include <RPIMoCap/extrinsicwidget.h>
 
 #include <QWidget>
+#include <QUuid>
 
 #include <Eigen/Geometry>
 
@@ -33,16 +34,12 @@ class CameraSettingsWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit CameraSettingsWidget(const std::shared_ptr<CameraSettings> camera, QWidget *parent = nullptr);
+    explicit CameraSettingsWidget(QUuid id, QWidget *parent = nullptr);
     virtual ~CameraSettingsWidget();
 
-private slots:
-    void on_pushButton_clicked();
+    Visualization::ExtrinsicWidget *extrinsic();
 
-    void setRotation(const cv::Vec3f &rVec);
-    void setTranslation(const cv::Vec3f &tVec);
 private:
-    std::shared_ptr<CameraSettings> m_camera;
     Ui::CameraSettingsWidget *ui;
 };
 

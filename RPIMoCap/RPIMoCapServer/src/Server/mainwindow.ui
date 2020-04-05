@@ -80,7 +80,7 @@
        </layout>
       </item>
       <item>
-       <widget class="RPIMoCap::Visualization::MocapScene3D" name="widget" native="true">
+       <widget class="RPIMoCap::Visualization::MocapScene3D" name="scene" native="true">
         <property name="minimumSize">
          <size>
           <width>640</width>
