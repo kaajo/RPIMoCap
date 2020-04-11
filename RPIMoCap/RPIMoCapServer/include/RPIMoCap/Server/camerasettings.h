@@ -75,7 +75,7 @@ public:
     Q_PROPERTY(cv::Vec3f rotation MEMBER m_rotation NOTIFY rotationChanged)
 
 signals:
-    void raysReceived(const QUuid cameraID, const std::vector<Line3D> &rays);
+    void raysReceived(const QUuid cameraID, const std::vector<std::pair<cv::Point2f, Line3D>> &rays);
     void translationChanged(const cv::Vec3f &tVec);
     void rotationChanged(const cv::Vec3f &rVec);
 
@@ -100,10 +100,10 @@ private slots:
 
         const std::vector<cv::Point2f> points(result.get().as<std::vector<cv::Point2f>>());
 
-        std::vector<Line3D> rays;
+        std::vector<std::pair<cv::Point2f, Line3D>> rays;
         for (auto &pnt : points)
         {
-            rays.push_back(computePixelRay(pnt));
+            rays.push_back({pnt,computePixelRay(pnt)});
         }
 
         emit raysReceived(m_id, rays);

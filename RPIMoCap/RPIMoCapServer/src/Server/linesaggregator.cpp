@@ -78,7 +78,7 @@ void LinesAggregator::onMoCapStart(bool start)
     }
 }
 
-void LinesAggregator::onRaysReceived(const QUuid clientId, const std::vector<Line3D> &rays)
+void LinesAggregator::onRaysReceived(const QUuid clientId, const std::vector<std::pair<cv::Point2f, Line3D>> &rays)
 {
     if (m_clients.find(clientId) == m_clients.end())
     {
@@ -98,13 +98,25 @@ void LinesAggregator::onRaysReceived(const QUuid clientId, const std::vector<Lin
         }
     }
 
-    qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << rays.size() << "rays received from " << clientId;
+    //qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << rays.size() << "rays received from " << clientId;
 
     if (running && haveAll)
     {
         if (m_wandCalib)
         {
-            //TODO m_wandCalib->addFrame(m_currentPoints);
+            QMap<QUuid, std::vector<cv::Point2f>> pixels;
+
+            for (auto &id : m_currentRays.keys())
+            {
+                std::vector<cv::Point2f> camPixels;
+                for (auto &ray : m_currentRays[id])
+                {
+                    camPixels.push_back(ray.first);
+                }
+                pixels.insert(id,camPixels);
+            }
+
+            m_wandCalib->addFrame(pixels);
         }
 
         for (auto &received : m_framesReceived)
@@ -114,7 +126,7 @@ void LinesAggregator::onRaysReceived(const QUuid clientId, const std::vector<Lin
 
         auto curTime = QTime::currentTime();
 
-        qDebug() << curTime.toString("hh:mm:ss.zzz") << "ms elapsed: " << lastTime.msecsTo(curTime);
+        //qDebug() << curTime.toString("hh:mm:ss.zzz") << "ms elapsed: " << lastTime.msecsTo(curTime);
         lastTime = curTime;
 
         std::vector<RPIMoCap::Frame::LineSegment> frameLines;
@@ -123,7 +135,7 @@ void LinesAggregator::onRaysReceived(const QUuid clientId, const std::vector<Lin
         {
             for (auto &ray : idRays)
             {
-                frameLines.push_back({100, ray});
+                frameLines.push_back({300, ray.second});
             }
         }
 

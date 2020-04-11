@@ -46,14 +46,14 @@ signals:
      * @param frame
      */
     void frameReady(const Frame &frame);
-    void linesReceived(const std::vector<RPIMoCap::Line3D> &lines);
+    //void linesReceived(const std::vector<RPIMoCap::Line3D> &lines);
 
 public slots:
     void addCamera(const std::shared_ptr<CameraSettings> &camera);
     void removeCamera(const QUuid id);
 
     void onMoCapStart(bool start);
-    void onRaysReceived(const QUuid clientId, const std::vector<Line3D> &rays);
+    void onRaysReceived(const QUuid clientId, const std::vector<std::pair<cv::Point2f, Line3D>> &rays);
 
 private:
     QTime lastTime = QTime::currentTime();
@@ -63,7 +63,7 @@ private:
 
     std::unique_ptr<WandCalibration> m_wandCalib;
 
-    QMap<QUuid,std::vector<Line3D>> m_currentRays;
+    QMap<QUuid,std::vector<std::pair<cv::Point2f, Line3D>>> m_currentRays;
     QMap<QUuid,bool> m_framesReceived;
 };
 

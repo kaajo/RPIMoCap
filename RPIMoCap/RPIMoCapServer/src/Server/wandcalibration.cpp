@@ -92,6 +92,9 @@ void WandCalibration::addFrame(const QMap<QUuid, std::vector<cv::Point2f> > &poi
 
     for (auto detIt = m_observedDetections.begin(); detIt != m_observedDetections.end(); ++detIt)
     {
+        cv::Mat cameraMatrix;
+        m_camData.cameraMatrix.convertTo(cameraMatrix, CV_64FC1);
+
         const int detectedFrames = std::min(detIt->firstPixels.size(), detIt->secondPixels.size());
 
         if (detectedFrames < 300 * m_wandPoints.size())
@@ -100,16 +103,16 @@ void WandCalibration::addFrame(const QMap<QUuid, std::vector<cv::Point2f> > &poi
             continue;
         }
 
-        const cv::Mat essential = cv::findEssentialMat(detIt->firstPixels, detIt->secondPixels, m_camData.cameraMatrix, cv::RANSAC, 0.999, 0.1);
+        const cv::Mat essential = cv::findEssentialMat(detIt->firstPixels, detIt->secondPixels, cameraMatrix, cv::RANSAC, 0.999, 0.1);
 
         cv::Mat rotation, translation;
-        cv::recoverPose(essential, detIt->firstPixels, detIt->secondPixels, m_camData.cameraMatrix, rotation, translation);
+        cv::recoverPose(essential, detIt->firstPixels, detIt->secondPixels, cameraMatrix, rotation, translation);
 
         cv::Mat transformMatrixSecond;
         cv::hconcat(rotation, translation, transformMatrixSecond);
 
-        const cv::Mat projectionMatFirst = m_camData.cameraMatrix * cv::Mat::eye(3,4, CV_64FC1);
-        const cv::Mat projectionMatSecond = m_camData.cameraMatrix * transformMatrixSecond;
+        const cv::Mat projectionMatFirst = cameraMatrix * cv::Mat::eye(3,4, CV_64FC1);
+        const cv::Mat projectionMatSecond = cameraMatrix * transformMatrixSecond;
 
         cv::Mat triangulatedPoints;
         cv::triangulatePoints(projectionMatFirst, projectionMatSecond, detIt->firstPixels, detIt->secondPixels, triangulatedPoints);
@@ -134,17 +137,22 @@ void WandCalibration::addFrame(const QMap<QUuid, std::vector<cv::Point2f> > &poi
         translation *= scale;
 
         const Eigen::Affine3f estimatedTransform(cv::Affine3d(rotation, translation).cast<float>());
+        const Eigen::Affine3f estimatedTransformInverse = estimatedTransform.inverse();
 
         //compute error and update transform
         const float errorFirst = computeReprojectionError(detIt->firstPixels, triangulatedPoints3D,
-                                                          Eigen::Affine3f::Identity(), m_camData.cameraMatrix);
+                                                          Eigen::Affine3f::Identity(), cameraMatrix);
         const float errorSecond = computeReprojectionError(detIt->secondPixels, triangulatedPoints3D,
-                                                           estimatedTransform, m_camData.cameraMatrix);
+                                                           estimatedTransform, cameraMatrix);
+
+        const float errorSecondInv = computeReprojectionError(detIt->secondPixels, triangulatedPoints3D,
+                                                              estimatedTransformInverse, cameraMatrix);
 
         const float error = (errorFirst + errorSecond)/2.0f;
 
         qDebug() << "error: " << detIt.key().first << errorFirst;
         qDebug() << "error: " << detIt.key().second << errorSecond;
+        qDebug() << "error second inverse: " << detIt.key().second << errorSecondInv;
 
         if (error < detIt->reprojectionError)
         {
@@ -152,8 +160,18 @@ void WandCalibration::addFrame(const QMap<QUuid, std::vector<cv::Point2f> > &poi
             detIt->transform = estimatedTransform;
             detIt->triangulatedPoints = triangulatedPoints3D;
 
-            m_cameraSettings[detIt.key().second]->setProperty("translation", QVariant::fromValue(cv::Vec3f(translation)));
-            m_cameraSettings[detIt.key().second]->setProperty("rotation", QVariant::fromValue(cv::Vec3f(rotation)));
+            m_cameraSettings[detIt.key().second]->setTranslation(cv::Vec3f(translation.at<double>(0), translation.at<double>(1), translation.at<double>(2)));
+            m_cameraSettings[detIt.key().second]->setRotation(cv::Vec3f(rotation.at<double>(0), rotation.at<double>(1), rotation.at<double>(2)));
+
+            std::cout << "first estimation:" << std::endl;
+            std::cout << "ROTATION: "
+                      << rotation.at<double>(0) * 180.0/M_PI << "° "
+                      << rotation.at<double>(1) * 180.0/M_PI << "° "
+                      << rotation.at<double>(2) * 180.0/M_PI << "°" << std::endl;
+            std::cout << "TRANSLATION: "
+                      << translation.at<double>(0) << " "
+                      << translation.at<double>(1) << " "
+                      << translation.at<double>(2) << std::endl;
         }
     }
 
@@ -215,8 +233,10 @@ void WandCalibration::addFrame(const QMap<QUuid, std::vector<cv::Point2f> > &poi
     //bundle adjustment stage
     //TODO for more than 2 cams;
     auto &data = m_observedDetections.first();
+    cv::Mat cameraMatrix;
+    m_camData.cameraMatrix.convertTo(cameraMatrix, CV_64FC1);
 
-    const cv::Mat projectionMatFirst = m_camData.cameraMatrix * cv::Mat::eye(3,4, CV_64FC1);
+    const cv::Mat projectionMatFirst = cameraMatrix * cv::Mat::eye(3,4, CV_64FC1);
 
     double* dataCamFirst = data.cameraFirstParams(m_camData.cameraMatrix.at<double>(0,0));
     double* dataCamSecond = data.cameraSecondParams(m_camData.cameraMatrix.at<double>(0,0));
@@ -241,13 +261,13 @@ void WandCalibration::addFrame(const QMap<QUuid, std::vector<cv::Point2f> > &poi
 
     for (int i = 0; i < data.firstPixels.size(); ++i) {
         ceres::CostFunction* costFirstFunction =
-            ReprojectionError::Create(data.firstPixels[i], m_camData.cameraMatrix);
+            ReprojectionError::Create(data.firstPixels[i], cameraMatrix);
 
         problem.AddResidualBlock(costFirstFunction, new ceres::CauchyLoss(0.5), dataCamFirst,
                                  &data.triangulatedPoints[i].x);
 
         ceres::CostFunction* costSecondFunction =
-            ReprojectionError::Create(data.secondPixels[i], m_camData.cameraMatrix);
+            ReprojectionError::Create(data.secondPixels[i], cameraMatrix);
 
         problem.AddResidualBlock(costSecondFunction, new ceres::CauchyLoss(0.5), dataCamSecond,
                                  &data.triangulatedPoints[i].x);
@@ -288,17 +308,22 @@ void WandCalibration::addFrame(const QMap<QUuid, std::vector<cv::Point2f> > &poi
     ceres::Solve(options, &problem, &summary);
     std::cout << summary.FullReport() << "\n";
 
-    std::cout << "ROTATION AFTER: " << data.cameraFirstData[0] * 180.0/M_PI << " "
+    std::cout << "ROTATION AFTER: "
+              << data.cameraFirstData[0] * 180.0/M_PI << " "
               << data.cameraFirstData[1] * 180.0/M_PI << " "
               << data.cameraFirstData[2] * 180.0/M_PI << std::endl;
-    std::cout << "TRANSLATION AFTER: " << data.cameraFirstData[3] << " "
+    std::cout << "TRANSLATION AFTER: "
+              << data.cameraFirstData[3] << " "
               << data.cameraFirstData[4] << " " << data.cameraFirstData[5] << std::endl;
 
-    std::cout << "ROTATION AFTER: " << data.cameraSecondData[0] * 180.0/M_PI << " "
+    std::cout << "ROTATION AFTER: "
+              << data.cameraSecondData[0] * 180.0/M_PI << " "
               << data.cameraSecondData[1] * 180.0/M_PI << " "
               << data.cameraSecondData[2] * 180.0/M_PI << std::endl;
-    std::cout << "TRANSLATION AFTER: " << data.cameraSecondData[3] << " "
-              << data.cameraSecondData[4] << " " << data.cameraSecondData[5] << std::endl;
+    std::cout << "TRANSLATION AFTER: "
+              << data.cameraSecondData[3] << " "
+              << data.cameraSecondData[4] << " "
+              << data.cameraSecondData[5] << std::endl;
 
     /*
     for (size_t i = 0; i < data.triangulatedPoints.size(); ++i)
@@ -306,6 +331,26 @@ void WandCalibration::addFrame(const QMap<QUuid, std::vector<cv::Point2f> > &poi
         std::cout << i << " :" << data.triangulatedPoints[i] << std::endl;
     }
     */
+
+    {
+        cv::Affine3f tr(cv::Vec3f(data.cameraFirstData[0], data.cameraFirstData[1], data.cameraFirstData[2]),
+                        cv::Vec3f(data.cameraFirstData[3], data.cameraFirstData[4], data.cameraFirstData[5]));
+
+        cv::Affine3f inv = tr.inv();
+
+        m_cameraSettings[m_observedDetections.firstKey().first]->setTranslation(inv.translation());
+        m_cameraSettings[m_observedDetections.firstKey().first]->setRotation(inv.rvec());
+    }
+
+    {
+        cv::Affine3f tr(cv::Vec3f(data.cameraSecondData[0], data.cameraSecondData[1], data.cameraSecondData[2]),
+                        cv::Vec3f(data.cameraSecondData[3], data.cameraSecondData[4], data.cameraSecondData[5]));
+
+        cv::Affine3f inv = tr.inv();
+
+        m_cameraSettings[m_observedDetections.firstKey().second]->setTranslation(inv.translation());
+        m_cameraSettings[m_observedDetections.firstKey().second]->setRotation(inv.rvec());
+    }
 
     finished = true;
 }
