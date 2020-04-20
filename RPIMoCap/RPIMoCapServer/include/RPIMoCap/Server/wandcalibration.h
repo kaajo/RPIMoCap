@@ -122,6 +122,131 @@ private:
     float m_leftToRightDistSq;
 };
 
+struct ObsDetection {
+    cv::Mat cameraMatrix;
+
+    std::vector<cv::Point2f> firstPixels;
+    std::vector<cv::Point2f> secondPixels;
+    std::vector<cv::Point3d> triangulatedPoints;
+
+    Eigen::Vector3f firstRVec = Eigen::Vector3f::Zero();
+    Eigen::Vector3f secondRVec = Eigen::Vector3f::Zero();
+
+    Eigen::Vector3f firstTVec = Eigen::Vector3f::Zero();
+    Eigen::Vector3f secondTVec = Eigen::Vector3f::Zero();
+
+    float reprojectionError()
+    {
+        return (firstReprojectionError() + secondReprojectionError())/2.0f;
+    }
+
+    float firstReprojectionError()
+    {
+        return reprojectionError(firstPixels, triangulatedPoints,
+                                 cv::Vec3f(firstRVec.x(), firstRVec.y(), firstRVec.z()),
+                                 cv::Vec3f(firstTVec.x(), firstTVec.y(), firstTVec.z()),
+                                 cameraMatrix);
+    }
+
+    float secondReprojectionError()
+    {
+        return reprojectionError(secondPixels, triangulatedPoints,
+                                 cv::Vec3f(secondRVec.x(), secondRVec.y(), secondRVec.z()),
+                                 cv::Vec3f(secondTVec.x(), secondTVec.y(), secondTVec.z()),
+                                 cameraMatrix);
+    }
+
+    cv::Mat firstProjMat() {
+        cv::Vec3d rVec(firstRVec.x(), firstRVec.y(), firstRVec.z());
+        cv::Vec3d tVec(firstTVec.x(), firstTVec.y(), firstTVec.z());
+        auto mat = cv::Mat(cv::Affine3d(rVec, tVec).matrix);
+        return cameraMatrix * mat(cv::Rect(0,0,4,3));
+    }
+
+    cv::Mat secondProjMat() {
+        cv::Vec3d rVec(secondRVec.x(), secondRVec.y(), secondRVec.z());
+        cv::Vec3d tVec(secondTVec.x(), secondTVec.y(), secondTVec.z());
+        auto mat = cv::Mat(cv::Affine3d(rVec, tVec).matrix);
+        return cameraMatrix * mat(cv::Rect(0,0,4,3));
+    }
+
+    Eigen::Affine3f relativeTransform() const
+    {
+        auto rVec = secondRVec - firstRVec;
+        auto tVec = secondTVec - firstTVec;
+
+        Eigen::Matrix3f rot;
+        rot = Eigen::AngleAxisf(rVec[0], Eigen::Vector3f::UnitX())
+              * Eigen::AngleAxisf(rVec[1], Eigen::Vector3f::UnitY())
+              * Eigen::AngleAxisf(rVec[2], Eigen::Vector3f::UnitZ());
+
+        Eigen::Vector3f translation(tVec[0], tVec[1], tVec[2]);
+
+        Eigen::Affine3f t = Eigen::Affine3f::Identity();
+        t.fromPositionOrientationScale(translation, rot, Eigen::Vector3f(1.0, 1.0, 1.0));
+
+        return t;
+    }
+
+    double* cameraFirstParams(double focalLength)
+    {
+        cameraFirstData[0] = firstRVec[0];
+        cameraFirstData[1] = firstRVec[1];
+        cameraFirstData[2] = firstRVec[2];
+        cameraFirstData[3] = firstTVec[0];
+        cameraFirstData[4] = firstTVec[1];
+        cameraFirstData[5] = firstTVec[2];
+        return &cameraFirstData[0];
+    }
+
+    double* cameraSecondParams(double focalLength)
+    {
+        cameraSecondData[0] = secondRVec[0];
+        cameraSecondData[1] = secondRVec[1];
+        cameraSecondData[2] = secondRVec[2];
+        cameraSecondData[3] = secondTVec[0];
+        cameraSecondData[4] = secondTVec[1];
+        cameraSecondData[5] = secondTVec[2];
+        return &cameraSecondData[0];
+    }
+
+private:
+    static float reprojectionError(const std::vector<cv::Point2f> &pixels,
+                            const std::vector<cv::Point3d> &triangulatedPoints,
+                            const cv::Vec3f &rVec, const cv::Vec3f &tVec,
+                            const cv::Mat &cameraMatrix)
+    {
+        std::vector<cv::Point3f> pts;
+        std::transform(triangulatedPoints.begin(), triangulatedPoints.end(), std::back_inserter(pts),
+                       [](auto &pnt){return cv::Point3d(pnt);});
+
+        if (pts.empty())
+        {
+            return std::numeric_limits<float>::infinity();
+        }
+
+        std::vector<cv::Point2f> projPixels;
+        cv::projectPoints(pts, rVec, tVec,
+                          cameraMatrix, cv::noArray(), projPixels);
+        assert(projPixels.size() == pixels.size());
+
+        if (pixels.empty())
+        {
+            return std::numeric_limits<float>::infinity();
+        }
+
+        float sum = 0.0f;
+        for (size_t i = 0; i < pixels.size(); ++i)
+        {
+            sum += cv::norm(projPixels[i] - pixels[i]);
+        }
+
+        return sum/pixels.size();
+    }
+
+    std::array<double,9> cameraFirstData;
+    std::array<double,9> cameraSecondData;
+};
 
 class WandCalibration : public QObject
 {
@@ -130,63 +255,28 @@ public:
     WandCalibration(QMap<QUuid,std::shared_ptr<CameraSettings>> &cameraSettings,
                     RPIMoCap::Camera::Intrinsics camData, QObject *parent = nullptr);
 
-    void addFrame(const QMap<QUuid, std::vector<cv::Point2f> > &points);
+    void addFrame(const std::vector<std::pair<QUuid, std::vector<cv::Point2f> > > &points);
 
-    static float computeReprojectionError(const std::vector<cv::Point2f> &pixels, const std::vector<cv::Point3d> &triangulatedPoints,
-                                   const Eigen::Affine3f &estTransform, cv::Mat cameraMatrix);
+    static QMap<QUuid, Eigen::Affine3f> relativeToGlobalTransforms(const QMap<std::pair<QUuid, QUuid>, ObsDetection> &detections);
+
 private:
-    float computeScale(const cv::Mat &transformEstimation, std::vector<cv::Point3d> &triangulatedPoints);
+    float computeScale(std::vector<cv::Point3d> &triangulatedPoints);
+    void triangulatePoints();
 
     std::vector<cv::Point3f> m_wandPoints;
 
     QMap<QUuid,std::shared_ptr<CameraSettings>> m_cameraSettings;
-    //QMap<int, CameraCalibState> m_extrinsicGuess;
 
     bool finished = false;
 
-    float m_errorTreshold = 3.0f;
+    float m_errorTreshold = 3.0f; //reprojection error threshold for second stage
 
-    struct ObsDetection {
-        std::vector<cv::Point2f> firstPixels;
-        std::vector<cv::Point2f> secondPixels;
-        std::vector<cv::Point3d> triangulatedPoints;
-        float reprojectionError = std::numeric_limits<float>::max();
-        Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+    bool isCameraPairReady(const ObsDetection &detections);
+    bool isReadyForPreciseStage();
+    size_t m_minCalibObservations = 300; //minimum number of observed frames for a pair of cameras
 
-        std::array<double,9> cameraFirstData;
-        double* cameraFirstParams(double focalLength)
-        {
-            cameraFirstData[0] = 0.0;
-            cameraFirstData[1] = 0.0;
-            cameraFirstData[2] = 0.0;
-            cameraFirstData[3] = 0.0;
-            cameraFirstData[4] = 0.0;
-            cameraFirstData[5] = 0.0;
-
-            return &cameraFirstData[0];
-        }
-
-        std::array<double,9> cameraSecondData;
-        double* cameraSecondParams(double focalLength)
-        {
-            cv::Mat secondTransform;
-            cv::eigen2cv(transform.matrix(), secondTransform);
-            secondTransform.convertTo(secondTransform, CV_64FC1);
-
-            cv::Mat rotVec;
-            cv::Rodrigues(secondTransform.rowRange(0,3).colRange(0,3), rotVec);
-
-            cameraSecondData[0] = rotVec.at<double>(0);
-            cameraSecondData[1] = rotVec.at<double>(1);
-            cameraSecondData[2] = rotVec.at<double>(2);
-            cameraSecondData[3] = transform.translation().x();
-            cameraSecondData[4] = transform.translation().y();
-            cameraSecondData[5] = transform.translation().z();
-
-            return &cameraSecondData[0];
-        }
-
-    };
+    void addObservations(const std::vector<std::pair<QUuid, std::vector<cv::Point2f>>> &wandPoints);
+    cv::Mat computeBasicRelativeTransform(std::vector<cv::Point2f> firstPixels, std::vector<cv::Point2f> secondPixels, cv::Mat &cameraMatrix);
 
     QMap<std::pair<QUuid,QUuid>,ObsDetection> m_observedDetections;
 

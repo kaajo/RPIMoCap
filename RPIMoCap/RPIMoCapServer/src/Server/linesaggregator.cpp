@@ -104,7 +104,8 @@ void LinesAggregator::onRaysReceived(const QUuid clientId, const std::vector<std
     {
         if (m_wandCalib)
         {
-            QMap<QUuid, std::vector<cv::Point2f>> pixels;
+            std::vector<std::pair<QUuid, std::vector<cv::Point2f>>> pixels;
+            pixels.reserve(m_currentRays.size());
 
             for (auto &id : m_currentRays.keys())
             {
@@ -113,7 +114,7 @@ void LinesAggregator::onRaysReceived(const QUuid clientId, const std::vector<std
                 {
                     camPixels.push_back(ray.first);
                 }
-                pixels.insert(id,camPixels);
+                pixels.push_back({id,camPixels});
             }
 
             m_wandCalib->addFrame(pixels);
