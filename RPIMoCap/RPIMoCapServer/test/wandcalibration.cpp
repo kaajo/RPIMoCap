@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-using RPIMoCap::ObsDetection;
+using RPIMoCap::ObservationPair;
 using RPIMoCap::WandCalibration;
 
 QVector<QUuid> generateUuids(size_t count)
@@ -21,11 +21,11 @@ QVector<QUuid> generateUuids(size_t count)
 
 TEST(wandcalibration, identity)
 {
-    QMap<std::pair<QUuid, QUuid>, ObsDetection> detections;
+    QMap<std::pair<QUuid, QUuid>, ObservationPair> detections;
 
     auto ids = generateUuids(2);
 
-    ObsDetection d;
+    ObservationPair d;
     detections.insert({ids[0], ids[1]}, d);
 
     auto transforms = WandCalibration::relativeToGlobalTransforms(detections);
@@ -37,12 +37,12 @@ TEST(wandcalibration, identity)
 
 TEST(wandcalibration, simple)
 {
-    QMap<std::pair<QUuid, QUuid>, ObsDetection> detections;
+    QMap<std::pair<QUuid, QUuid>, ObservationPair> detections;
 
     auto ids = generateUuids(2);
 
-    ObsDetection d;
-    d.secondTVec = Eigen::Vector3f(1.0, 2.0, 3.0);
+    ObservationPair d;
+    d.second.tVec = Eigen::Vector3f(1.0, 2.0, 3.0);
 
     detections.insert({ids[0], ids[1]}, d);
 
@@ -55,19 +55,19 @@ TEST(wandcalibration, simple)
 
 TEST(wandcalibration, threeCamerasTranslation)
 {
-    QMap<std::pair<QUuid, QUuid>, ObsDetection> detections;
+    QMap<std::pair<QUuid, QUuid>, ObservationPair> detections;
 
     auto ids = generateUuids(3);
 
     {
-        ObsDetection d;
-        d.secondTVec = Eigen::Vector3f(1.0, 0.0, 0.0);
+        ObservationPair d;
+        d.second.tVec = Eigen::Vector3f(1.0, 0.0, 0.0);
         detections.insert({ids[0], ids[1]}, d);
     }
 
     {
-        ObsDetection d;
-        d.secondTVec = Eigen::Vector3f(1.0, 0.0, 0.0);
+        ObservationPair d;
+        d.second.tVec = Eigen::Vector3f(1.0, 0.0, 0.0);
         detections.insert({ids[1], ids[2]}, d);
     }
 
@@ -85,15 +85,15 @@ TEST(wandcalibration, threeCamerasTranslation)
 
 TEST(wandcalibration, threeCamerasRotation)
 {
-    QMap<std::pair<QUuid, QUuid>, ObsDetection> detections;
+    QMap<std::pair<QUuid, QUuid>, ObservationPair> detections;
 
     auto ids = generateUuids(3);
 
     for (size_t i = 0; i < 2; ++i)
     {
-        ObsDetection d;
-        d.secondRVec = Eigen::Vector3f(0.0, M_PI_2, 0.0);
-        d.secondTVec = Eigen::Vector3f(1.0, 0.0, 0.0);
+        ObservationPair d;
+        d.second.rVec = Eigen::Vector3f(0.0, M_PI_2, 0.0);
+        d.second.tVec = Eigen::Vector3f(1.0, 0.0, 0.0);
         detections.insert({ids[i], ids[i+1]}, d);
     }
 
@@ -113,15 +113,15 @@ TEST(wandcalibration, threeCamerasRotation)
 
 TEST(wandcalibration, square)
 {
-    QMap<std::pair<QUuid, QUuid>, ObsDetection> detections;
+    QMap<std::pair<QUuid, QUuid>, ObservationPair> detections;
 
     auto ids = generateUuids(5);
 
     for (size_t i = 0; i < 4; ++i)
     {
-        ObsDetection d;
-        d.secondRVec = Eigen::Vector3f(0.0, M_PI_2, 0.0);
-        d.secondTVec = Eigen::Vector3f(1.0, 0.0, 0.0);
+        ObservationPair d;
+        d.second.rVec = Eigen::Vector3f(0.0, M_PI_2, 0.0);
+        d.second.tVec = Eigen::Vector3f(1.0, 0.0, 0.0);
         detections.insert({ids[i], ids[i+1]}, d);
     }
 

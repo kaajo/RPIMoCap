@@ -71,13 +71,13 @@ void WandCalibration::addFrame(const std::vector<std::pair<QUuid, std::vector<cv
         m_camData.cameraMatrix.convertTo(cameraMatrix, CV_64FC1);
         detIt->cameraMatrix = cameraMatrix;
 
-        cv::Mat relativeTransform = computeBasicRelativeTransform(detIt->firstPixels, detIt->secondPixels, cameraMatrix);
+        cv::Mat relativeTransform = computeBasicRelativeTransform(detIt->first.pixels, detIt->second.pixels, cameraMatrix);
 
         const cv::Mat projectionMatFirst = cameraMatrix * cv::Mat::eye(3,4, CV_64FC1);
         const cv::Mat projectionMatSecond = cameraMatrix * relativeTransform;
 
         cv::Mat triangulatedPoints;
-        cv::triangulatePoints(projectionMatFirst, projectionMatSecond, detIt->firstPixels, detIt->secondPixels, triangulatedPoints);
+        cv::triangulatePoints(projectionMatFirst, projectionMatSecond, detIt->first.pixels, detIt->second.pixels, triangulatedPoints);
 
         std::vector<cv::Point3d> triangulatedPoints3D;
 
@@ -103,21 +103,21 @@ void WandCalibration::addFrame(const std::vector<std::pair<QUuid, std::vector<cv
         cv::Affine3f transformScaled(transform.rotation(),
                                      transform.translation() * scale);
 
-        detIt->firstRVec = Eigen::Vector3f::Zero();
-        detIt->firstTVec = Eigen::Vector3f::Zero();
-        detIt->secondRVec = Eigen::Vector3f(transformScaled.rvec()[0],
+        detIt->first.rVec = Eigen::Vector3f::Zero();
+        detIt->first.tVec = Eigen::Vector3f::Zero();
+        detIt->second.rVec = Eigen::Vector3f(transformScaled.rvec()[0],
                                             transformScaled.rvec()[1],
                                             transformScaled.rvec()[2]);
-        detIt->secondTVec = Eigen::Vector3f(transformScaled.translation()[0],
+        detIt->second.tVec = Eigen::Vector3f(transformScaled.translation()[0],
                                             transformScaled.translation()[1],
                                             transformScaled.translation()[2]);
 
-        qDebug() << "error: " << detIt.key().first << detIt->firstReprojectionError();
-        std::cout << "rvec: " << detIt->firstRVec * 180.0/M_PI << std::endl;
-        std::cout << "tvec: " << detIt->firstTVec << std::endl;
-        qDebug() << "error: " << detIt.key().second << detIt->secondReprojectionError();
-        std::cout << "rvec: " << detIt->secondRVec * 180.0/M_PI << std::endl;
-        std::cout << "tvec: " << detIt->secondTVec << std::endl;
+        qDebug() << "error: " << detIt.key().first << detIt->first.reprojectionError(detIt->triangulatedPoints, detIt->cameraMatrix);
+        std::cout << "rvec: " << detIt->first.rVec * 180.0/M_PI << std::endl;
+        std::cout << "tvec: " << detIt->first.tVec << std::endl;
+        qDebug() << "error: " << detIt.key().second << detIt->second.reprojectionError(detIt->triangulatedPoints, detIt->cameraMatrix);
+        std::cout << "rvec: " << detIt->second.rVec * 180.0/M_PI << std::endl;
+        std::cout << "tvec: " << detIt->second.tVec << std::endl;
     }
 
 
@@ -167,19 +167,19 @@ void WandCalibration::addFrame(const std::vector<std::pair<QUuid, std::vector<cv
         auto fRVec = cv::Affine3f(fTransform).rvec();
         auto sRVec = cv::Affine3f(sTransform).rvec();
 
-        detIt->firstRVec = {fRVec[0], fRVec[1], fRVec[2]};
-        detIt->secondRVec = {sRVec[0], sRVec[1], sRVec[2]};
+        detIt->first.rVec = {fRVec[0], fRVec[1], fRVec[2]};
+        detIt->second.rVec = {sRVec[0], sRVec[1], sRVec[2]};
 
-        detIt->firstTVec = fTransform.translation();
-        detIt->secondTVec = sTransform.translation();
+        detIt->first.tVec = fTransform.translation();
+        detIt->second.tVec = sTransform.translation();
 
         // Triangulate points
         cv::Mat triangulatedPoints;
 
-        auto fp = detIt->firstProjMat();
-        auto sp = detIt->secondProjMat();
+        auto fp = detIt->first.projectionMatrix(detIt->cameraMatrix);
+        auto sp = detIt->second.projectionMatrix(detIt->cameraMatrix);
 
-        cv::triangulatePoints(fp, sp, detIt->firstPixels, detIt->secondPixels, triangulatedPoints);
+        cv::triangulatePoints(fp, sp, detIt->first.pixels, detIt->second.pixels, triangulatedPoints);
 
         std::vector<cv::Point3d> triangulatedPoints3D;
 
@@ -193,12 +193,12 @@ void WandCalibration::addFrame(const std::vector<std::pair<QUuid, std::vector<cv
 
         detIt->triangulatedPoints = triangulatedPoints3D;
 
-        qDebug() << "error: " << detIt.key().first << detIt->firstReprojectionError();
-        std::cout << "rvec: " << detIt->firstRVec * 180.0/M_PI << std::endl;
-        std::cout << "tvec: " << detIt->firstTVec << std::endl;
-        qDebug() << "error: " << detIt.key().second << detIt->secondReprojectionError();
-        std::cout << "rvec: " << detIt->secondRVec * 180.0/M_PI << std::endl;
-        std::cout << "tvec: " << detIt->secondTVec << std::endl;
+        qDebug() << "error: " << detIt.key().first << detIt->first.reprojectionError(detIt->triangulatedPoints, detIt->cameraMatrix);
+        std::cout << "rvec: " << detIt->first.rVec * 180.0/M_PI << std::endl;
+        std::cout << "tvec: " << detIt->first.tVec << std::endl;
+        qDebug() << "error: " << detIt.key().second << detIt->second.reprojectionError(detIt->triangulatedPoints, detIt->cameraMatrix);
+        std::cout << "rvec: " << detIt->second.rVec * 180.0/M_PI << std::endl;
+        std::cout << "tvec: " << detIt->second.tVec << std::endl;
     }
 
     //init distances between wand points
@@ -208,28 +208,28 @@ void WandCalibration::addFrame(const std::vector<std::pair<QUuid, std::vector<cv
 
     //get data from every camera
 
-    QMap<QUuid, double*> cameraData;
+    QMap<QUuid, std::array<double, 6>> cameraData;
 
     for (auto detIt = m_observedDetections.begin(); detIt != m_observedDetections.end(); ++detIt)
     {
         if (!cameraData.contains(detIt.key().first))
         {
-            cameraData.insert(detIt.key().first, detIt->cameraFirstParams(m_camData.cameraMatrix.at<double>(0,0)));
+            cameraData.insert(detIt.key().first, detIt->first.ceresParams());
         }
 
         if (!cameraData.contains(detIt.key().second))
         {
-            cameraData.insert(detIt.key().second, detIt->cameraSecondParams(m_camData.cameraMatrix.at<double>(0,0)));
+            cameraData.insert(detIt.key().second, detIt->second.ceresParams());
         }
     }
 
     //add observations
     for (auto detIt = m_observedDetections.begin(); detIt != m_observedDetections.end(); ++detIt)
     {
-        double* dataCamFirst = cameraData[detIt.key().first];
-        double* dataCamSecond = cameraData[detIt.key().second];
+        double* dataCamFirst = &cameraData[detIt.key().first][0];
+        double* dataCamSecond = &cameraData[detIt.key().second][0];
 
-        for (int i = 0; i < detIt->firstPixels.size(); i = i + m_wandPoints.size()) {
+        for (int i = 0; i < detIt->first.pixels.size(); i = i + m_wandPoints.size()) {
             ceres::CostFunction* costLeftFirstFunction =
                 PointDistanceError::Create(leftToMiddleDist, middleToRightDist, leftToRightDist);
 
@@ -239,15 +239,15 @@ void WandCalibration::addFrame(const std::vector<std::pair<QUuid, std::vector<cv
                                      &detIt->triangulatedPoints[i+2].x);
         }
 
-        for (int i = 0; i < detIt->firstPixels.size(); ++i) {
+        for (int i = 0; i < detIt->first.pixels.size(); ++i) {
             ceres::CostFunction* costFirstFunction =
-                ReprojectionError::Create(detIt->firstPixels[i], detIt->cameraMatrix);
+                ReprojectionError::Create(detIt->first.pixels[i], detIt->cameraMatrix);
 
             problem.AddResidualBlock(costFirstFunction, new ceres::CauchyLoss(0.5), dataCamFirst,
                                      &detIt->triangulatedPoints[i].x);
 
             ceres::CostFunction* costSecondFunction =
-                ReprojectionError::Create(detIt->secondPixels[i], detIt->cameraMatrix);
+                ReprojectionError::Create(detIt->second.pixels[i], detIt->cameraMatrix);
 
             problem.AddResidualBlock(costSecondFunction, new ceres::CauchyLoss(0.5), dataCamSecond,
                                      &detIt->triangulatedPoints[i].x);
@@ -285,44 +285,44 @@ void WandCalibration::addFrame(const std::vector<std::pair<QUuid, std::vector<cv
     for (auto detIt = m_observedDetections.begin(); detIt != m_observedDetections.end(); ++detIt)
     {
         {
-            double* dataCamFirst = cameraData[detIt.key().first];
+            double* dataCamFirst = &cameraData[detIt.key().first][0];
             cv::Affine3f tr(cv::Vec3f(dataCamFirst[0], dataCamFirst[1], dataCamFirst[2]),
                             cv::Vec3f(dataCamFirst[3], dataCamFirst[4], dataCamFirst[5]));
             cv::Affine3f inv = tr.inv();
 
-            detIt->firstRVec = Eigen::Vector3f(inv.rvec()[0], inv.rvec()[1], inv.rvec()[2]);
-            detIt->firstTVec = Eigen::Vector3f(inv.translation()[0], inv.translation()[1], inv.translation()[2]);
+            detIt->first.rVec = Eigen::Vector3f(inv.rvec()[0], inv.rvec()[1], inv.rvec()[2]);
+            detIt->first.tVec = Eigen::Vector3f(inv.translation()[0], inv.translation()[1], inv.translation()[2]);
 
             m_cameraSettings[detIt.key().first]->setRotation(inv.rvec());
             m_cameraSettings[detIt.key().first]->setTranslation(inv.translation());
         }
 
         {
-            double* dataCamSecond = cameraData[detIt.key().second];
+            double* dataCamSecond = &cameraData[detIt.key().second][0];
             cv::Affine3f tr(cv::Vec3f(dataCamSecond[0], dataCamSecond[1], dataCamSecond[2]),
                             cv::Vec3f(dataCamSecond[3], dataCamSecond[4], dataCamSecond[5]));
             cv::Affine3f inv = tr.inv();
 
-            detIt->secondRVec = Eigen::Vector3f(inv.rvec()[0], inv.rvec()[1], inv.rvec()[2]);
-            detIt->secondTVec = Eigen::Vector3f(inv.translation()[0], inv.translation()[1], inv.translation()[2]);
+            detIt->second.rVec = Eigen::Vector3f(inv.rvec()[0], inv.rvec()[1], inv.rvec()[2]);
+            detIt->second.tVec = Eigen::Vector3f(inv.translation()[0], inv.translation()[1], inv.translation()[2]);
 
             m_cameraSettings[detIt.key().second]->setRotation(inv.rvec());
             m_cameraSettings[detIt.key().second]->setTranslation(inv.translation());
         }
 
         qDebug() << "reprojection error after second stage";
-        qDebug() << "error: " << detIt.key().first << detIt->firstReprojectionError();
-        std::cout << "rvec: " << detIt->firstRVec * 180.0/M_PI << std::endl;
-        std::cout << "tvec: " << detIt->firstTVec << std::endl;
-        qDebug() << "error: " << detIt.key().second << detIt->secondReprojectionError();
-        std::cout << "rvec: " << detIt->secondRVec * 180.0/M_PI << std::endl;
-        std::cout << "tvec: " << detIt->secondTVec << std::endl;
+        qDebug() << "error: " << detIt.key().first << detIt->first.reprojectionError(detIt->triangulatedPoints, detIt->cameraMatrix);
+        std::cout << "rvec: " << detIt->first.rVec * 180.0/M_PI << std::endl;
+        std::cout << "tvec: " << detIt->first.tVec << std::endl;
+        qDebug() << "error: " << detIt.key().second << detIt->second.reprojectionError(detIt->triangulatedPoints, detIt->cameraMatrix);
+        std::cout << "rvec: " << detIt->second.rVec * 180.0/M_PI << std::endl;
+        std::cout << "tvec: " << detIt->second.tVec << std::endl;
     }
 
     finished = true;
 }
 
-QMap<QUuid, Eigen::Affine3f> WandCalibration::relativeToGlobalTransforms(const QMap<std::pair<QUuid, QUuid>, ObsDetection> &detections)
+QMap<QUuid, Eigen::Affine3f> WandCalibration::relativeToGlobalTransforms(const QMap<std::pair<QUuid, QUuid>, ObservationPair> &detections)
 {
     QVector<QUuid> discovered;
     std::queue<QUuid> pointQueue;
@@ -385,10 +385,10 @@ float WandCalibration::computeScale(std::vector<cv::Point3d> &triangulatedPoints
     return scale/static_cast<float>(m_wandPoints.size() - 1);
 }
 
-bool WandCalibration::isCameraPairReady(const ObsDetection &detections)
+bool WandCalibration::isCameraPairReady(const ObservationPair &detections)
 {
-    const int detectedFrames = std::min(detections.firstPixels.size(),
-                                        detections.secondPixels.size());
+    const int detectedFrames = std::min(detections.first.pixels.size(),
+                                        detections.second.pixels.size());
 
     return detectedFrames > m_minCalibObservations * m_wandPoints.size();
 }
@@ -454,7 +454,7 @@ void WandCalibration::addObservations(const std::vector<std::pair<QUuid, std::ve
     {
         for (size_t j = i + 1; j < wandPoints.size(); ++j)
         {
-            ObsDetection &obsDet = m_observedDetections[{wandPoints[i].first,wandPoints[j].first}];
+            auto &obsDet = m_observedDetections[{wandPoints[i].first,wandPoints[j].first}];
 
             if (isCameraPairReady(obsDet))
             {
@@ -463,12 +463,12 @@ void WandCalibration::addObservations(const std::vector<std::pair<QUuid, std::ve
 
             float maxDiff = 0.0;
 
-            if (!obsDet.firstPixels.empty())
+            if (!obsDet.first.pixels.empty())
             {
                 for (int wandIndex = 0; wandIndex < m_wandPoints.size(); ++wandIndex)
                 {
-                    const float diff = cv::norm(wandPoints[i].second[wandIndex] - obsDet.firstPixels[obsDet.firstPixels.size() - m_wandPoints.size() + wandIndex]);
-                    const float diff2 = cv::norm(wandPoints[j].second[wandIndex] - obsDet.secondPixels[obsDet.secondPixels.size() - m_wandPoints.size() + wandIndex]);
+                    const float diff = cv::norm(wandPoints[i].second[wandIndex] - obsDet.first.pixels[obsDet.first.pixels.size() - m_wandPoints.size() + wandIndex]);
+                    const float diff2 = cv::norm(wandPoints[j].second[wandIndex] - obsDet.second.pixels[obsDet.second.pixels.size() - m_wandPoints.size() + wandIndex]);
                     if (std::max(diff, diff2) > maxDiff)
                     {
                         maxDiff = std::max(diff, diff2);
@@ -476,23 +476,23 @@ void WandCalibration::addObservations(const std::vector<std::pair<QUuid, std::ve
                 }
             }
 
-            if (maxDiff > 5.0 || obsDet.firstPixels.empty() || obsDet.secondPixels.empty())
+            if (maxDiff > 5.0 || obsDet.first.pixels.empty() || obsDet.second.pixels.empty())
             {
-                obsDet.firstPixels.insert(obsDet.firstPixels.end(), wandPoints[i].second.begin(), wandPoints[i].second.end());
-                obsDet.secondPixels.insert(obsDet.secondPixels.end(), wandPoints[j].second.begin(), wandPoints[j].second.end());
+                obsDet.first.pixels.insert(obsDet.first.pixels.end(), wandPoints[i].second.begin(), wandPoints[i].second.end());
+                obsDet.second.pixels.insert(obsDet.second.pixels.end(), wandPoints[j].second.begin(), wandPoints[j].second.end());
 
-                qDebug() << "add observation:" << obsDet.firstPixels.size()/m_wandPoints.size() << "/" << m_minCalibObservations;
+                qDebug() << "add observation:" << obsDet.first.pixels.size()/m_wandPoints.size() << "/" << m_minCalibObservations;
             }
         }
     }
 }
 
-cv::Mat WandCalibration::computeBasicRelativeTransform(std::vector<cv::Point2f> firstPixels, std::vector<cv::Point2f> secondPixels, cv::Mat &cameraMatrix)
+cv::Mat WandCalibration::computeBasicRelativeTransform(std::vector<cv::Point2f> firstpixels, std::vector<cv::Point2f> secondpixels, cv::Mat &cameraMatrix)
 {
-    const cv::Mat essential = cv::findEssentialMat(firstPixels, secondPixels, cameraMatrix, cv::RANSAC, 0.999, 0.1);
+    const cv::Mat essential = cv::findEssentialMat(firstpixels, secondpixels, cameraMatrix, cv::RANSAC, 0.999, 0.1);
 
     cv::Mat rotMat, tVec;
-    cv::recoverPose(essential, firstPixels, secondPixels, cameraMatrix, rotMat, tVec);
+    cv::recoverPose(essential, firstpixels, secondpixels, cameraMatrix, rotMat, tVec);
 
     cv::Mat relativeTransform;
     cv::hconcat(rotMat, tVec, relativeTransform);
