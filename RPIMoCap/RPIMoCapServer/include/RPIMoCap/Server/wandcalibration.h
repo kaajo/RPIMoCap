@@ -147,7 +147,8 @@ public:
         }
 
         std::vector<cv::Point2f> projPixels;
-        cv::projectPoints(pts, cv::Vec3f::zeros(), cv::Vec3f::zeros(),
+        cv::projectPoints(pts, cv::Vec3f(rVec.x(), rVec.y(), rVec.z()),
+                          cv::Vec3f(tVec.x(), tVec.y(), tVec.z()),
                           cameraMatrix, cv::noArray(), projPixels);
         assert(projPixels.size() == pixels.size());
 
