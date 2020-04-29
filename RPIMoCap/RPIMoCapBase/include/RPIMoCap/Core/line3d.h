@@ -24,62 +24,29 @@
 namespace RPIMoCap {
 
 /**
- * @author Miroslav Krajicek
  * @brief The Line class represents parametric line/ray in 3D space.
  */
 using Line3D = Eigen::ParametrizedLine<float,3>;
 
-///**
-//     * @brief Number of intersections detected. If line has more intersections,
-//     * we can inspect, which intersection is real.
-//     */
-//    size_t m_numberOfIntersections = 0;
-
 /**
-* @brief Finds closest points on two lines.
+* @brief Finds closest points on two rays.
 * @param[in] line1 First line
 * @param[in] line2 Second line
 * @param[out] closestPointLine1 Point on line1
 * @param[out] closestPointLine2 Point on line2
-* @return If lines are parallel returns false, otherwise true.
+* @return If closest point lies on ray returns false, otherwise true.
 */
-bool closestPointsTwoLines(const Line3D &line1,const Line3D &line2, Eigen::Vector3f &closestPointLine1, Eigen::Vector3f &closestPointLine2);
-
-/**
-* @brief averagePoint
-* @param[in] point1 first point
-* @param[in] point2 second point
-* @return Midpoint of line segment.
-*/
-Eigen::Vector3f averagePoint(const Eigen::Vector3f &point1, const Eigen::Vector3f &point2);
+bool closestPoints(const Line3D &line1,const Line3D &line2, Eigen::Vector3f &pointLine1, Eigen::Vector3f &pointLine2);
 
 /**
 * @brief Angle between two 3D vectors.
 * @param v1 First vector
 * @param v2 Second vector
-* @return
+* @return Angle in radians
 */
 float lineAngle(const Eigen::Vector3f &v1, const Eigen::Vector3f &v2);
 
-/**
-* @brief Angle between two 2D vectors.
-* @param v1 First vector
-* @param v2 Second vector
-* @return
-*/
-float lineAngle(const Eigen::Vector2f &v1, const Eigen::Vector2f &v2);
-
-/**
-* @brief Function using triangulation to find intersection. Ideally, lines have zero distance from each other.
-* @param[inout] l1 first line
-* @param[inout] l2 second line
-* @param[in] maxError maximum distance between two #Line for detecting intersection.
-* @param[out] point 3D intersection point
-* @return If lines are closer than \a maxError returns true, otherwise false.
-*/
-bool isIntersection(const Line3D &l1, const Line3D &l2,const float maxError, Eigen::Vector3f &point);
-
-}
+} //namespace RPIMoCap
 
 namespace msgpack {
 MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {

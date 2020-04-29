@@ -17,63 +17,46 @@
 
 #include "RPIMoCap/Core/line3d.h"
 
-bool RPIMoCap::closestPointsTwoLines(const RPIMoCap::Line3D &line1, const RPIMoCap::Line3D &line2, Eigen::Vector3f &closestPointLine1, Eigen::Vector3f &closestPointLine2)
-{
-    double a = line1.direction().dot(line1.direction());
-    double b = line1.direction().dot(line2.direction());
-    double e = line2.direction().dot(line2.direction());
+namespace RPIMoCap {
 
-    double d = a*e - b*b;
+bool closestPoints(const Line3D &line1, const Line3D &line2, Eigen::Vector3f &pointLine1, Eigen::Vector3f &pointLine2)
+{
+    const float a = line1.direction().dot(line1.direction());
+    const float b = line1.direction().dot(line2.direction());
+    const float e = line2.direction().dot(line2.direction());
+
+    const float d = a*e - b*b;
 
     // if lines are not parallel
-    if(d != 0)
+    if(std::abs(d) > 0.0000001f)
     {
         const Eigen::Vector3f r = line1.origin() - line2.origin();
-        double c = line1.direction().dot(r);
-        double f = line2.direction().dot(r);
+        const float c = line1.direction().dot(r);
+        const float f = line2.direction().dot(r);
 
-        closestPointLine1 = line1.origin() + line1.direction() * (b*f - c*e) / d;
-        closestPointLine2 = line2.origin() + line2.direction() * (a*f - c*b) / d;
+        const float coeff1 = (b*f - c*e) / d;
+        const float coeff2 = (a*f - c*b) / d;
+
+        // if some of the point lies "behind" origin
+        if (coeff1 < 0.0f || coeff2 < 0.0f)
+        {
+            return false;
+        }
+
+        pointLine1 = line1.origin() + line1.direction() * coeff1;
+        pointLine2 = line2.origin() + line2.direction() * coeff2;
 
         return true;
     }
-
-    return false;
+    else
+    {
+        return false;
+    }
 }
 
-Eigen::Vector3f RPIMoCap::averagePoint(const Eigen::Vector3f &point1, const Eigen::Vector3f &point2)
-{
-    return Eigen::Vector3f((point1.x() + point2.x())/2,(point1.y() + point2.y())/2,(point1.z() + point2.z())/2);
-}
-
-float RPIMoCap::lineAngle(const Eigen::Vector3f &v1, const Eigen::Vector3f &v2)
+float lineAngle(const Eigen::Vector3f &v1, const Eigen::Vector3f &v2)
 {
     return std::atan2( v1.cross(v2).norm(), v1.dot(v2));
 }
 
-float RPIMoCap::lineAngle(const Eigen::Vector2f &v1, const Eigen::Vector2f &v2)
-{
-    return atan2(v2.y(), v2.x()) - atan2(v1.y(), v1.x());
-}
-
-bool RPIMoCap::isIntersection(const RPIMoCap::Line3D &l1, const RPIMoCap::Line3D &l2, const float maxError, Eigen::Vector3f &point)
-{
-    Eigen::Vector3f point1, point2;
-
-    if(! closestPointsTwoLines(l1, l2, point1, point2))
-    {
-        return false;
-    }
-
-    if(maxError > (point1 - point2).norm())
-    {
-        //l1.m_numberOfIntersections += 1;
-        //l2.m_numberOfIntersections += 1;
-
-        point = averagePoint(point1, point2);
-
-        return true;
-    }
-
-    return false;
 }

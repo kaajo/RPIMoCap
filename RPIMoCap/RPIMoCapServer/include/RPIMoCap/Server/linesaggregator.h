@@ -65,6 +65,16 @@ private:
 
     QMap<QUuid,std::vector<std::pair<cv::Point2f, Line3D>>> m_currentRays;
     QMap<QUuid,bool> m_framesReceived;
+
+    struct TriangulationResult {
+        // idea - uncertainty in case points are on epipolar line
+        // TODO cameras and rays id
+        // TODo number of intersections
+        float edgeDistance;
+        Eigen::Vector3f estimatedPoint;
+    };
+
+    std::vector<TriangulationResult> stereoIntersections(const std::vector<Line3D> &lines1, const std::vector<Line3D> &lines2);
 };
 
 }

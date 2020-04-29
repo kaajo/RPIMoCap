@@ -130,6 +130,42 @@ void LinesAggregator::onRaysReceived(const QUuid clientId, const std::vector<std
         //qDebug() << curTime.toString("hh:mm:ss.zzz") << "ms elapsed: " << lastTime.msecsTo(curTime);
         lastTime = curTime;
 
+        //transform lines as needed TODO worth refactoring?
+        std::vector<std::pair<QUuid, std::vector<Line3D>>> linesTransformed;
+        for (auto it = m_currentRays.begin(); it != m_currentRays.end(); ++it)
+        {
+            std::vector<Line3D> rayVec;
+
+            std::transform(it.value().begin(), it.value().end(),
+                           std::back_inserter(rayVec), [](auto &pair){return pair.second;});
+
+            linesTransformed.push_back({it.key(), rayVec});
+        }
+
+        //all intersections
+        double maxDistancecm = 2.0;
+        std::vector<Frame::Marker> results;
+        for (size_t i = 0; i < linesTransformed.size(); ++i)
+        {
+            for (size_t j = 0; j < linesTransformed.size(); ++j)
+            {
+                if (i == j)
+                {
+                    continue;
+                }
+
+                auto res = stereoIntersections(linesTransformed[i].second, linesTransformed[j].second);
+
+                for (const auto &intersection : res)
+                {
+                    if (intersection.edgeDistance < maxDistancecm)
+                    {
+                        results.push_back(Frame::Marker{0, intersection.estimatedPoint});
+                    }
+                }
+            }
+        }
+
         std::vector<RPIMoCap::Frame::LineSegment> frameLines;
 
         for (auto &idRays : m_currentRays)
@@ -140,10 +176,33 @@ void LinesAggregator::onRaysReceived(const QUuid clientId, const std::vector<std
             }
         }
 
+        //TODO time of trigger
         RPIMoCap::Frame frame(std::chrono::high_resolution_clock::now(), frameLines);
+        frame.setMarkers(results);
         emit frameReady(frame);
         emit trigger();
     }
+}
+
+std::vector<LinesAggregator::TriangulationResult> LinesAggregator::stereoIntersections(const std::vector<Line3D> &lines1, const std::vector<Line3D> &lines2)
+{
+    std::vector<LinesAggregator::TriangulationResult> retVal;
+
+    for (size_t i = 0; i < lines1.size(); ++i)
+    {
+        for (size_t j = 0; j < lines2.size(); ++j)
+        {
+            Eigen::Vector3f iPoint = Eigen::Vector3f::Zero();
+            Eigen::Vector3f jPoint = Eigen::Vector3f::Zero();
+
+            if (closestPoints(lines1[i], lines2[j], iPoint, jPoint))
+            {
+                retVal.push_back({(jPoint - iPoint).norm(), (jPoint + iPoint)/2});
+            }
+        }
+    }
+
+    return retVal;
 }
 
 }
