@@ -19,11 +19,10 @@
 #include <RPIMoCap/ClientLib/rpicamera.h>
 
 #include <QCoreApplication>
+#include <QSettings>
 
 #include <csignal>
 #include <iostream>
-
-constexpr float degToRad = M_PI/180.0f;
 
 std::unique_ptr<RPIMoCap::Client> client;
 
@@ -50,7 +49,10 @@ int main(int argc, char *argv[])
                                                 "videoconvert ! video/x-raw,format=GRAY8 ! "
                                                 "appsink max-buffers=1 name=appsink");
 
-    QUuid id = QUuid::createUuid();
+    //Generate QUuid so that it stays same after restart
+    QSettings settings;
+    const QUuid id = QUuid::fromString(settings.value("ID", QUuid::createUuid().toString()).toString());
+    settings.setValue("ID", id.toString());
 
     client.reset(new RPIMoCap::Client(camera, params, id));
     return a.exec();
