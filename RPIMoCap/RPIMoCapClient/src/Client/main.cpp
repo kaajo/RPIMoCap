@@ -50,6 +50,8 @@ int main(int argc, char *argv[])
                                                 "videoconvert ! video/x-raw,format=GRAY8 ! "
                                                 "appsink max-buffers=1 name=appsink");
 
-    client.reset(new RPIMoCap::Client(camera, params));
+    QUuid id = QUuid::createUuid();
+
+    client.reset(new RPIMoCap::Client(camera, params, id));
     return a.exec();
 }

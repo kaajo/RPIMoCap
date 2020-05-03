@@ -44,7 +44,7 @@ class Client : public QObject
     Q_OBJECT
 public:
     explicit Client(std::shared_ptr<ICamera> camera, Camera::Intrinsics camParams,
-                    QObject *parent = nullptr);
+                    const QUuid &id, QObject *parent = nullptr);
 
     ~Client() override;
 
@@ -63,14 +63,14 @@ private:
     void findMQTTService();
 
     bool isMQTTInitialized();
-    void initMQTT(const QString &idString);
+    void initMQTT();
     MQTTSettings m_MQTTsettings;
     std::shared_ptr<MQTTSubscriber> m_cameraTriggerSub;
     std::shared_ptr<MQTTPublisher<std::vector<cv::Point2f>>> m_pointPub;
 
-    QUuid m_clientID = QUuid::createUuid();
+    QUuid m_clientID;
 
-    void publishClientService(const QString &idString, const Camera::Intrinsics &params);
+    void publishClientService(const Camera::Intrinsics &params);
     QProcess m_avahiPublish;
 };
 

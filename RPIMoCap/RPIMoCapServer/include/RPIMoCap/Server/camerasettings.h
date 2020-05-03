@@ -21,6 +21,7 @@
 #include <RPIMoCap/Core/line3d.h>
 #include <RPIMoCap/Core/msgpack_defs.h>
 #include <RPIMoCap/Core/cameraparams.h>
+#include <RPIMoCap/Core/topics.h>
 
 #include <QObject>
 #include <QUuid>
@@ -43,8 +44,8 @@ struct CameraSettings : public QObject
 public:
     CameraSettings(QUuid id, const RPIMoCap::MQTTSettings &settings, Camera::Intrinsics camParams)
         : m_id(id)
-        , m_pointSub("serverPointsSub-" + id.toString(QUuid::StringFormat::WithoutBraces),
-                     "/client-" + id.toString(QUuid::StringFormat::WithoutBraces) + "/points",settings)
+        , m_pointSub("serverPointsSub-" + RPIMoCap::MQTTTopics::uuidString(id),
+                     RPIMoCap::MQTTTopics::pixels(id),settings)
         , m_params(std::move(camParams))
     {
         connect(&m_pointSub,&RPIMoCap::MQTTSubscriber::messageReceived, this, &CameraSettings::onPointsDataReceived);

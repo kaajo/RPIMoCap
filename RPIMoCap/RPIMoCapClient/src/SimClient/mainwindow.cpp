@@ -21,8 +21,12 @@
 #include "RPIMoCap/SimClient/virtualwand.h"
 #include "RPIMoCap/SimClient/simcamerawidget.h"
 
+#include <RPIMoCap/Core/topics.h>
+
 #include <QThread>
 #include <QCloseEvent>
+#include <QFileDialog>
+#include <QJsonDocument>
 
 namespace RPIMoCap::SimClient {
 
@@ -36,6 +40,11 @@ MainWindow::MainWindow(SimScene &scene, QWidget *parent) :
     connect(m_ui->wandExtrinsic, &Visualization::ExtrinsicWidget::transformChanged, this, &MainWindow::updateWandTransform);
 
     m_ui->scrollAreaWidgetContents->setLayout(new QVBoxLayout);
+
+    connect(m_ui->actionOpen, &QAction::triggered, this, &MainWindow::openProject);
+    connect(m_ui->actionSave, &QAction::triggered, this, &MainWindow::saveProject);
+    connect(m_ui->addClientButton, &QPushButton::clicked, this, &MainWindow::createClient);
+    connect(m_ui->removeClientButton, &QPushButton::clicked, this, &MainWindow::removeClient);
 }
 
 MainWindow::~MainWindow()
@@ -108,30 +117,94 @@ void MainWindow::onfpsChanged(QUuid clientId, int64_t fps)
     }
 }
 
-void MainWindow::on_addClientButton_clicked()
+void MainWindow::openProject()
 {
-    RPIMoCap::Camera::Intrinsics params = RPIMoCap::Camera::Intrinsics::computeRPICameraV1Params();
+    QSettings settings;
+    settings.beginGroup("simulation");
+    const QString lastDir = settings.value("lastProject", QStandardPaths::DocumentsLocation).toString();
+    const QString path = QFileDialog::getOpenFileName(this, "Save project", lastDir);
 
-    auto camera = std::make_shared<SimCamera>(params, m_scene);
-    auto client = QSharedPointer<Client>(new Client(camera,params), &QObject::deleteLater);
-    auto widget = new SimCameraWidget(camera->getParams().maxFPS, client->id());
+    if (path.isNull() || path.isEmpty())
+    {
+        return;
+    }
 
-    connect(widget, &SimCameraWidget::fpsChanged, this, &MainWindow::onfpsChanged);
-    connect(widget, &SimCameraWidget::transformChanged, m_ui->scene, &Visualization::MocapScene3D::updateCamera);
-    connect(widget, &SimCameraWidget::rotationChanged, this, &MainWindow::onRotationChanged);
-    connect(widget, &SimCameraWidget::translationChanged, this, &MainWindow::onTranslationChanged);
+    clearClients();
 
-    m_ui->scene->addCamera(client->id(), Eigen::Affine3f::Identity());
+    QFile loadFile(path);
+    loadFile.open(QIODevice::ReadOnly);
 
-    auto thread = new QThread;
-    m_ui->scrollAreaWidgetContents->layout()->addWidget(widget);
-    client->moveToThread(thread);
-    thread->start();
+    const QVariantMap data = QJsonDocument::fromJson(loadFile.readAll()).toVariant().toMap();
+    QVariantList clients = data["clients"].toList();
 
-    m_clients.push_back({client->id(), camera, client, widget, thread});
+    for (auto &var : clients)
+    {
+        auto map = var.toMap();
+
+        QUuid id = QUuid::fromString(map["id"].toString());
+        auto params = Camera::Intrinsics::fromVariantMap(map);
+
+        cv::Vec3f rVec(map["rx"].toFloat(), map["ry"].toFloat(), map["rz"].toFloat());
+        cv::Vec3f tVec(map["tx"].toFloat(), map["ty"].toFloat(), map["tz"].toFloat());
+        addClient(id, params, rVec, tVec);
+    }
+
+    settings.setValue("lastProject", QFileInfo(path).dir().path());
 }
 
-void MainWindow::on_removeClientButton_clicked()
+void MainWindow::saveProject()
+{
+    QSettings settings;
+    settings.beginGroup("simulation");
+    const QString lastDir = settings.value("lastProject", QStandardPaths::DocumentsLocation).toString();
+    const QString path = QFileDialog::getSaveFileName(this, "Save project", lastDir);
+
+    if (path.isNull() || path.isEmpty())
+    {
+        return;
+    }
+
+    QVariantMap saveMap;
+    QVariantList clientList;
+    for (auto data : m_clients)
+    {
+        QVariantMap clientMap = data.camera->getParams().toVariantMap();
+        clientMap["id"] = data.id.toString();
+
+        {
+            auto rVec = data.camera->getRotation();
+            clientMap["rx"] = rVec[0];
+            clientMap["ry"] = rVec[1];
+            clientMap["rz"] = rVec[2];
+        }
+        {
+            auto tVec = data.camera->getTranslation();
+            clientMap["tx"] = tVec[0];
+            clientMap["ty"] = tVec[1];
+            clientMap["tz"] = tVec[2];
+        }
+
+        clientList.push_back(clientMap);
+    }
+    saveMap["clients"] = clientList;
+
+    auto data = QJsonDocument::fromVariant(saveMap).toJson(QJsonDocument::JsonFormat::Indented);
+    QFile saveFile(path);
+    saveFile.open(QIODevice::WriteOnly);
+    saveFile.write(data);
+    saveFile.close();
+
+    settings.setValue("lastProject", QFileInfo(path).dir().path());
+}
+
+void MainWindow::createClient()
+{
+    RPIMoCap::Camera::Intrinsics params = RPIMoCap::Camera::Intrinsics::computeRPICameraV1Params();
+    QUuid id = QUuid::createUuid();
+    addClient(id, params, cv::Vec3f(0.0f, 0.0f, 0.0f), cv::Vec3f(0.0f, 0.0f, 0.0f));
+}
+
+void MainWindow::removeClient()
 {
     if (m_clients.empty())
     {
@@ -150,13 +223,43 @@ void MainWindow::on_removeClientButton_clicked()
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     event->accept();
+    clearClients();
+}
 
-    for (auto &client : m_clients)
+void MainWindow::addClient(const QUuid &id, const Camera::Intrinsics &params,
+                           const cv::Vec3f &rVec, const cv::Vec3f &tVec)
+{
+    auto camera = std::make_shared<SimCamera>(params, m_scene);
+
+    auto client = QSharedPointer<Client>(new Client(camera,params, id), &QObject::deleteLater);
+    auto widget = new SimCameraWidget(camera->getParams().maxFPS, client->id());
+
+    connect(widget, &SimCameraWidget::fpsChanged, this, &MainWindow::onfpsChanged);
+    connect(widget, &SimCameraWidget::transformChanged, m_ui->scene, &Visualization::MocapScene3D::updateCamera);
+    connect(widget, &SimCameraWidget::rotationChanged, this, &MainWindow::onRotationChanged);
+    connect(widget, &SimCameraWidget::translationChanged, this, &MainWindow::onTranslationChanged);
+
+    m_ui->scene->addCamera(client->id(), Eigen::Affine3f::Identity());
+
+    auto thread = new QThread;
+    m_ui->scrollAreaWidgetContents->layout()->addWidget(widget);
+    client->moveToThread(thread);
+    thread->start();
+
+    m_clients.push_back({client->id(), camera, client, widget, thread});
+
+    camera->setRotation(rVec);
+    camera->setTranslation(tVec);
+    widget->extrinsic()->setRotation(rVec);
+    widget->extrinsic()->setTranslation(tVec);
+}
+
+void MainWindow::clearClients()
+{
+    while (!m_clients.empty())
     {
-        client.clear(); //TODO oh my
+        removeClient();
     }
-
-    m_clients.clear();
 }
 
 }

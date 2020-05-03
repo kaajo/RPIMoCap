@@ -23,7 +23,6 @@ target_sources(RPIMoCapServerLib
     src/Server/linesaggregator.cpp
     src/Server/mainwindow.cpp
     src/Server/mainwindow.ui
-    src/Server/munkres.cpp
     src/Server/pointchecker.cpp
     src/Server/rpimocapserver.cpp
     src/Server/wanddetector.cpp
@@ -33,9 +32,6 @@ target_sources(RPIMoCapServerLib
     include/RPIMoCap/Server/camerasettingswidget.h
     include/RPIMoCap/Server/linesaggregator.h
     include/RPIMoCap/Server/mainwindow.h
-    include/RPIMoCap/Server/matrix.h
-    include/RPIMoCap/Server/matrix.tpp
-    include/RPIMoCap/Server/munkres.h
     include/RPIMoCap/Server/pointchecker.h
     include/RPIMoCap/Server/rpimocapserver.h
     include/RPIMoCap/Server/wanddetector.h

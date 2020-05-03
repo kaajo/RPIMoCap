@@ -18,6 +18,7 @@
 #include "RPIMoCap/Server/rpimocapserver.h"
 
 #include <RPIMoCap/Core/avahibrowser.h>
+#include <RPIMoCap/Core/topics.h>
 
 #include <QJsonDocument>
 
@@ -106,7 +107,7 @@ void Server::trigger()
 void Server::setupMQTT(const MQTTSettings &settings)
 {
     const QString uuid = QUuid::createUuid().toString(QUuid::StringFormat::WithoutBraces);
-    m_triggerPub = std::make_unique<RPIMoCap::MQTTPublisher<std::string>>("serverTriggerPub-" + uuid, "/trigger", settings);
+    m_triggerPub = std::make_unique<RPIMoCap::MQTTPublisher<std::string>>("serverTriggerPub-" + uuid, RPIMoCap::MQTTTopics::trigger, settings);
 }
 
 }

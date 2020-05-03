@@ -23,7 +23,7 @@
 #include <RPIMoCap/Core/line3d.h>
 #include <RPIMoCap/Core/msgpack_defs.h>
 
-#include "munkres.h"
+//#include "munkres.h"
 
 #include <QVector>
 #include <QQueue>
@@ -81,10 +81,10 @@ private:
 
     void my_solve(std::vector <std::vector <double> > &m)
     {
-      Matrix<double> matrix = convert_std_2d_vector_to_munkres_matrix<double>(m);
-      Munkres munkres;
-      munkres.solve (matrix);
-      fill_std_2d_vector_from_munkres_matrix<double>(m, matrix);
+      // Matrix<double> matrix = convert_std_2d_vector_to_munkres_matrix<double>(m);
+      // Munkres munkres;
+      // munkres.solve (matrix);
+      // fill_std_2d_vector_from_munkres_matrix<double>(m, matrix);
     }
 };
 

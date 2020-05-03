@@ -26,6 +26,7 @@ target_sources(RPIMoCapBase
     src/Core/line3d.cpp
     src/Core/mqttsettings.cpp
     src/Core/mqttsubscriber.cpp
+    src/Core/topics.cpp
     PUBLIC
     include/RPIMoCap/Core/avahibrowser.h
     include/RPIMoCap/Core/cameraparams.h
@@ -34,7 +35,8 @@ target_sources(RPIMoCapBase
     include/RPIMoCap/Core/mqttpublisher.h
     include/RPIMoCap/Core/mqttsettings.h
     include/RPIMoCap/Core/mqttsubscriber.h
-    include/RPIMoCap/Core/msgpack_defs.h)
+    include/RPIMoCap/Core/msgpack_defs.h
+    include/RPIMoCap/Core/topics.h)
 
 target_include_directories(RPIMoCapBase PUBLIC
     ${PROJECT_SOURCE_DIR}/include

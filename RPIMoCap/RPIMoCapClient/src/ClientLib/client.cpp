@@ -18,6 +18,8 @@
 #include "RPIMoCap/ClientLib/client.h"
 #include "RPIMoCap/Core/avahibrowser.h"
 
+#include <RPIMoCap/Core/topics.h>
+
 #include <QTimerEvent>
 #include <QJsonDocument>
 
@@ -25,18 +27,17 @@
 
 namespace RPIMoCap {
 
-Client::Client(std::shared_ptr<ICamera> camera,
-               Camera::Intrinsics camParams, QObject *parent)
+Client::Client(std::shared_ptr<ICamera> camera, Camera::Intrinsics camParams,
+               const QUuid &id, QObject *parent)
     : QObject(parent)
     , m_camera(camera)
     , m_markerDetector({})
+    , m_clientID(id)
     , m_avahiPublish(this)
 {
-    const QString idString = m_clientID.toString(QUuid::StringFormat::WithoutBraces);
-
-    publishClientService(idString, camParams);
+    publishClientService(camParams);
     findMQTTService();
-    initMQTT(idString);
+    initMQTT();
 }
 
 Client::~Client()
@@ -118,20 +119,24 @@ bool Client::isMQTTInitialized()
     return m_cameraTriggerSub != nullptr;
 }
 
-void Client::initMQTT(const QString &idString)
+void Client::initMQTT()
 {
     if (isMQTTInitialized())
     {
         return;
     }
 
-    m_cameraTriggerSub = std::make_shared<MQTTSubscriber>("triggersub-" + idString, "/trigger", m_MQTTsettings); //TODO create topics.h file with all topics an generator functions
-    m_pointPub = std::make_shared<MQTTPublisher<std::vector<cv::Point2f>>>("pointspub-" + idString,"/client-" + idString + "/points", m_MQTTsettings);
+    m_cameraTriggerSub = std::make_shared<MQTTSubscriber>("triggersub-" + RPIMoCap::MQTTTopics::uuidString(m_clientID),
+                                                          RPIMoCap::MQTTTopics::trigger, m_MQTTsettings);
+    m_pointPub = std::make_shared<MQTTPublisher<std::vector<cv::Point2f>>>("pointspub-" + RPIMoCap::MQTTTopics::uuidString(m_clientID),
+                                                                           RPIMoCap::MQTTTopics::pixels(m_clientID), m_MQTTsettings);
     connect(m_cameraTriggerSub.get(), &MQTTSubscriber::messageReceived,this, &Client::cameraTrigger);
 }
 
-void Client::publishClientService(const QString &idString, const Camera::Intrinsics &params)
+void Client::publishClientService(const Camera::Intrinsics &params)
 {
+    QString idString = RPIMoCap::MQTTTopics::uuidString(m_clientID);
+
     QString type = "_rpimocap._tcp";
     QString port = QString::number(5000);
 

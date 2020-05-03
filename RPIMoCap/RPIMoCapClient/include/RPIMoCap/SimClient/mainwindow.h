@@ -45,13 +45,17 @@ private slots:
     void onRotationChanged(QUuid clientId, cv::Vec3f rVec);
     void onTranslationChanged(QUuid clientId, cv::Vec3f tVec);
     void onfpsChanged(QUuid clientId, int64_t fps);
-
-    void on_addClientButton_clicked();
-
-    void on_removeClientButton_clicked();
+    void openProject();
+    void saveProject();
+    void createClient();
+    void removeClient();
 
 private:
     void closeEvent(QCloseEvent *event) override;
+
+    void addClient(const QUuid &id, const RPIMoCap::Camera::Intrinsics &params,
+                   const cv::Vec3f& rVec, const cv::Vec3f& tVec);
+    void clearClients();
 
     Ui::MainWindow *m_ui = nullptr;
 
