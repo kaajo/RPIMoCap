@@ -4,15 +4,16 @@ project(RPIMoCapBase CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native -mtune=native -O3")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
 find_package(Qt5 COMPONENTS Core Network REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_library(mosquitto REQUIRED)
 find_library(mosquittopp REQUIRED)
 
-pkg_check_modules(MSGPACK REQUIRED msgpack)
-pkg_check_modules(EIGEN3 REQUIRED eigen3)
+pkg_check_modules(OPENCV REQUIRED opencv4)
+pkg_check_modules(MSGPACK REQUIRED IMPORTED_TARGET GLOBAL msgpack)
+pkg_check_modules(EIGEN3 REQUIRED IMPORTED_TARGET GLOBAL eigen3)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -40,13 +41,12 @@ target_sources(RPIMoCapBase
 
 target_include_directories(RPIMoCapBase PUBLIC
     ${PROJECT_SOURCE_DIR}/include
-    ${EIGEN_INCLUDE_DIR})
-
-message(WARNING ${EIGEN3_INCLUDE_DIR})
+    ${OPENCV_INCLUDE_DIRS})
 
 target_link_libraries(RPIMoCapBase PUBLIC
     mosquitto
     mosquittopp
     Qt5::Core
     Qt5::Network
-    ${MSGPACK_LIBRARIES})
+    PkgConfig::EIGEN3
+    PkgConfig::MSGPACK)

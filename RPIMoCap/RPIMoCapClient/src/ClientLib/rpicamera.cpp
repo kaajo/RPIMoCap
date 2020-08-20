@@ -23,7 +23,7 @@
 
 namespace RPIMoCap {
 
-GstCVCamera::GstCVCamera(std::__cxx11::string pipelineDescription)
+GstCVCamera::GstCVCamera(std::string pipelineDescription)
     : pipelineDescription_(pipelineDescription)
 {
 

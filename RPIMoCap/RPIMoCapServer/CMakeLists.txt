@@ -9,7 +9,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native -mtune=nat
 find_package(Ceres REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(Qt5 COMPONENTS Gui Widgets 3DCore 3DRender 3DInput 3DLogic 3DExtras REQUIRED)
-pkg_check_modules(OPENCV REQUIRED opencv)
+pkg_check_modules(OPENCV REQUIRED opencv4)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -20,6 +20,8 @@ target_sources(RPIMoCapServerLib
     PRIVATE
     src/Server/camerasettingswidget.cpp
     src/Server/camerasettingswidget.ui
+    src/Server/calibrationwidget.cpp
+    src/Server/calibrationwidget.ui
     src/Server/linesaggregator.cpp
     src/Server/mainwindow.cpp
     src/Server/mainwindow.ui
@@ -30,6 +32,7 @@ target_sources(RPIMoCapServerLib
     PUBLIC
     include/RPIMoCap/Server/camerasettings.h
     include/RPIMoCap/Server/camerasettingswidget.h
+    include/RPIMoCap/Server/calibrationwidget.h
     include/RPIMoCap/Server/linesaggregator.h
     include/RPIMoCap/Server/mainwindow.h
     include/RPIMoCap/Server/pointchecker.h

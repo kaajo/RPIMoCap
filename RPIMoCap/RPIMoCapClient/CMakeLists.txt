@@ -2,13 +2,16 @@ cmake_minimum_required(VERSION 3.13)
 
 project(RPIMoCapClient CXX)
 
+OPTION(ENABLE_SIM "enables simulation" ON)
+OPTION(ENABLE_TESTS "enables tests" ON)
+
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native -mtune=native -O3")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
 find_package(PkgConfig REQUIRED)
 find_package(Qt5 COMPONENTS Gui Widgets Concurrent REQUIRED)
-pkg_check_modules(OPENCV REQUIRED opencv)
+pkg_check_modules(OPENCV REQUIRED opencv4)
 pkg_check_modules(GSTREAMER_BASE REQUIRED gstreamer-base-1.0)
 pkg_check_modules(GSTREAMER_APP REQUIRED gstreamer-app-1.0)
 
@@ -45,28 +48,35 @@ add_executable(RPIMoCapClient)
 target_sources(RPIMoCapClient PRIVATE src/Client/main.cpp)
 target_link_libraries(RPIMoCapClient RPIMoCapClientLib)
 
-add_executable(RPIMoCapSimClient)
-target_sources(RPIMoCapSimClient
-    PRIVATE
-    src/SimClient/main.cpp
-    src/SimClient/simcamera.cpp
-    src/SimClient/simcamerawidget.cpp
-    src/SimClient/simscene.cpp
-    src/SimClient/virtualwand.cpp
-    src/SimClient/mainwindow.cpp
-    src/SimClient/mainwindow.ui
-    src/SimClient/simcamerawidget.ui
-    PUBLIC
-    include/RPIMoCap/SimClient/simmarker.h
-    include/RPIMoCap/SimClient/simcamera.h
-    include/RPIMoCap/SimClient/simscene.h
-    include/RPIMoCap/SimClient/simcamerawidget.h
-    include/RPIMoCap/SimClient/mainwindow.h
-    include/RPIMoCap/SimClient/virtualwand.h)
+if (ENABLE_SIM)
+    add_executable(RPIMoCapSimClient)
+    target_sources(RPIMoCapSimClient
+        PRIVATE
+        src/SimClient/main.cpp
+        src/SimClient/simcamera.cpp
+        src/SimClient/simcamerawidget.cpp
+        src/SimClient/simscene.cpp
+        src/SimClient/virtualwand.cpp
+        src/SimClient/mainwindow.cpp
+        src/SimClient/mainwindow.ui
+        src/SimClient/simcamerawidget.ui
+        PUBLIC
+        include/RPIMoCap/SimClient/simmarker.h
+        include/RPIMoCap/SimClient/simcamera.h
+        include/RPIMoCap/SimClient/simscene.h
+        include/RPIMoCap/SimClient/simcamerawidget.h
+        include/RPIMoCap/SimClient/mainwindow.h
+        include/RPIMoCap/SimClient/virtualwand.h)
 
-target_link_libraries(RPIMoCapSimClient PRIVATE
-    RPIMoCapClientLib
-    RPIMoCapVisualizations
-    Qt5::Widgets)
+    target_link_libraries(RPIMoCapSimClient PRIVATE
+        RPIMoCapClientLib
+        RPIMoCapVisualizations
+        Qt5::Widgets)
+endif()
 
-add_subdirectory(test)
+if (ENABLE_TESTS)
+    add_subdirectory(test)
+endif()
+
+install(TARGETS RPIMoCapClient
+    RUNTIME DESTINATION bin)
