@@ -213,14 +213,36 @@ class WandCalibration : public QObject
 {
     Q_OBJECT
 public:
-    WandCalibration(QMap<QUuid,std::shared_ptr<CameraSettings>> &cameraSettings,
-                    RPIMoCap::Camera::Intrinsics camData, QObject *parent = nullptr);
+    enum class Type {
+        Full,
+        Refine
+    };
+
+    struct Settings {
+        int framesPerCamera = -1;
+        Type calibType = Type::Full;
+    };
+
+    struct InputData {
+        std::vector<cv::Point3f> wandPoints;
+        RPIMoCap::Camera::Intrinsics camParams;
+        QMap<QUuid,std::shared_ptr<CameraSettings>> cameraSettings;
+    };
+
+    WandCalibration(QObject *parent = nullptr);
+
+    bool running() const {return started;}
 
     void addFrame(const std::vector<std::pair<QUuid, std::vector<cv::Point2f> > > &points);
 
     static QMap<QUuid, Eigen::Affine3f> relativeToGlobalTransforms(const QMap<std::pair<QUuid, QUuid>, ObservationPair> &detections);
 
+public slots:
+    void startCalib(bool start, Settings settings, InputData data);
+
 private:
+    bool started = false;
+
     float computeScale(std::vector<cv::Point3d> &triangulatedPoints);
     void triangulatePoints();
 

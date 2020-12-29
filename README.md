@@ -4,7 +4,7 @@ This project attempts to build an optical motion capture system with passive mar
 #### Dependencies
 * CMake
 * Qt 5.14
-* OpenCV 3.2
+* OpenCV 4
 * Eigen
 * Ceres Solver
 * Avahi

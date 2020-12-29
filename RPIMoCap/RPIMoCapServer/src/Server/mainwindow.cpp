@@ -18,11 +18,16 @@
 #include "RPIMoCap/Server/mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include "RPIMoCap/Server/calibrationwidget.h"
+
+#include <QTreeWidgetItem>
+
 namespace RPIMoCap {
 
 MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    QMainWindow(parent)
+    , ui(new Ui::MainWindow)
+    , m_calibWidget(new CalibrationWidget())
 {
     ui->setupUi(this);
 
@@ -32,6 +37,19 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->searchCameras, &QPushButton::clicked,
             this, &MainWindow::searchForCameras);
+
+    { // Add calibration section
+        QTreeWidgetItem* pCategory = new QTreeWidgetItem();
+        pCategory->setText(0, "Calibration");
+        pCategory->setTextAlignment(0, Qt::AlignCenter);
+        ui->treeWidget->addTopLevelItem(pCategory);
+
+        QTreeWidgetItem* pContainer = new QTreeWidgetItem();
+        pCategory->addChild(pContainer);
+        ui->treeWidget->setItemWidget(pContainer, 0, m_calibWidget);
+
+        pCategory->setExpanded(true);
+    }
 }
 
 MainWindow::~MainWindow()
@@ -86,12 +104,6 @@ void MainWindow::on_MoCapButton_clicked(bool checked)
 {
     ui->MoCapButton->setText(checked ? "STOP" : "START");
     emit startMoCap(checked);
-}
-
-void MainWindow::on_calibButton_clicked(bool checked)
-{
-    ui->calibButton->setText(checked ? "STOP calib" : "START calib");
-    emit startCalib(checked);
 }
 
 }

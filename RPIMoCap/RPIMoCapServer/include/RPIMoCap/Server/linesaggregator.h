@@ -35,8 +35,7 @@ class LinesAggregator : public QObject
 public:
     explicit LinesAggregator(QObject *parent = nullptr);
 
-    void startCalib();
-    void stopCalib();
+    void startCalib(bool start, WandCalibration::Settings settings);
 
 signals:
     void trigger();
@@ -61,7 +60,7 @@ private:
 
     QMap<QUuid,std::shared_ptr<CameraSettings>> m_clients;
 
-    std::unique_ptr<WandCalibration> m_wandCalib;
+    WandCalibration m_wandCalib;
 
     QMap<QUuid,std::vector<std::pair<cv::Point2f, Line3D>>> m_currentRays;
     QMap<QUuid,bool> m_framesReceived;

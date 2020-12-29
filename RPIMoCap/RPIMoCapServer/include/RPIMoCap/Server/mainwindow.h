@@ -31,6 +31,8 @@ class MainWindow;
 
 namespace RPIMoCap {
 
+class CalibrationWidget;
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -39,9 +41,10 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    CalibrationWidget* calibrationWidget() {return m_calibWidget;};
+
 signals:
     void startMoCap(bool start);
-    void startCalib(bool start);
     void searchForCameras();
 
 public slots:
@@ -52,10 +55,11 @@ public slots:
 
 private slots:
     void on_MoCapButton_clicked(bool checked);
-    void on_calibButton_clicked(bool checked);
 
 private:
     Ui::MainWindow *ui;
+
+    CalibrationWidget *m_calibWidget = nullptr;
 
     QMap<QUuid, CameraSettingsWidget*> m_cameraWidgets;
 };

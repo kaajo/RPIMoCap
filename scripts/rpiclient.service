@@ -1,0 +1,22 @@
+[Unit]
+Description=RPIMoCap client service
+After=network.target
+StartLimitBurst=5
+StartLimitIntervalSec=60
+#StartLimitAction=reboot
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=root
+Environment="DISPLAY=:0"
+#Environment="LD_LIBRARY_PATH=/home/pi/rpimocap-service"
+Environment="QT_LOGGING_RULES=*.debug=false"
+#WorkingDirectory=/home/pi/rpimocap-service
+ExecStart=/opt/rpimocap/bin/RPIMoCapClient
+PIDFile=/opt/rpimocap/bin/RPIMoCap.pid
+
+[Install]
+WantedBy=multi-user.target
+

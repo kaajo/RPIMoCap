@@ -56,8 +56,9 @@ MocapScene3D::MocapScene3D(QWidget *parent) :
     Qt3DCore::QTransform *lightTransform = new Qt3DCore::QTransform(lightEntity);
     lightTransform->setTranslation(cameraEntity->position());
     lightEntity->addComponent(lightTransform);
-    Qt3DExtras::QOrbitCameraController *camController = new Qt3DExtras::QOrbitCameraController(m_rootEntity);
+    Qt3DExtras::QAbstractCameraController *camController = new Qt3DExtras::QOrbitCameraController(m_rootEntity);
     camController->setCamera(cameraEntity);
+    camController->setLinearSpeed(50);
 
     for (size_t i = 0; i < 200; ++i)
     {

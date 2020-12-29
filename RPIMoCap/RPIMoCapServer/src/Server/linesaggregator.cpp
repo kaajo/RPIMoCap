@@ -31,16 +31,19 @@ LinesAggregator::LinesAggregator(QObject *parent) : QObject(parent)
 
 }
 
-void LinesAggregator::startCalib()
+void LinesAggregator::startCalib(bool start, WandCalibration::Settings settings)
 {
-    auto params = Camera::Intrinsics::computeRPICameraV1Params();
-    m_wandCalib = std::make_unique<WandCalibration>(m_clients,params);
+    //TODO get data from settings
+    WandCalibration::InputData inputdata;
+    inputdata.wandPoints.push_back({-25.0,0.0,0.0});
+    inputdata.wandPoints.push_back({10.0,0.0,0.0});
+    inputdata.wandPoints.push_back({25.0,0.0,0.0});
+    inputdata.camParams = Camera::Intrinsics::computeRPICameraV1Params();
+    inputdata.cameraSettings = m_clients;
+
+    m_wandCalib.startCalib(start, settings, inputdata);
 }
 
-void LinesAggregator::stopCalib()
-{
-    m_wandCalib.reset();
-}
 
 void LinesAggregator::addCamera(const std::shared_ptr<CameraSettings> &camera)
 {
@@ -102,7 +105,7 @@ void LinesAggregator::onRaysReceived(const QUuid clientId, const std::vector<std
 
     if (running && haveAll)
     {
-        if (m_wandCalib)
+        if (m_wandCalib.running())
         {
             std::vector<std::pair<QUuid, std::vector<cv::Point2f>>> pixels;
             pixels.reserve(m_currentRays.size());
@@ -117,7 +120,7 @@ void LinesAggregator::onRaysReceived(const QUuid clientId, const std::vector<std
                 pixels.push_back({id,camPixels});
             }
 
-            m_wandCalib->addFrame(pixels);
+            m_wandCalib.addFrame(pixels);
         }
 
         for (auto &received : m_framesReceived)

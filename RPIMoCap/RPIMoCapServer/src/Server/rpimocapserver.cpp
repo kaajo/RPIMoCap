@@ -82,9 +82,9 @@ void Server::init()
     }
 }
 
-void Server::onCalibStart(bool start)
+void Server::onCalibStart(bool start, WandCalibration::Settings settings)
 {
-    start ? m_aggregator.startCalib() : m_aggregator.stopCalib();
+    m_aggregator.startCalib(start, settings);
 }
 
 void Server::onMoCapStart(bool start)

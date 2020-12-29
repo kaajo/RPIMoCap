@@ -42,7 +42,7 @@ signals:
 
 public slots:
     void init();
-    void onCalibStart(bool start);
+    void onCalibStart(bool start, WandCalibration::Settings settings);
     void onMoCapStart(bool start);
     void trigger();
 

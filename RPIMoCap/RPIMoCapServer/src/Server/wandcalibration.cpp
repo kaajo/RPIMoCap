@@ -32,15 +32,10 @@
 
 namespace RPIMoCap {
 
-WandCalibration::WandCalibration(QMap<QUuid, std::shared_ptr<CameraSettings> > &cameraSettings,
-                                 Camera::Intrinsics camData, QObject *parent)
+WandCalibration::WandCalibration(QObject *parent)
     : QObject(parent)
-    , m_cameraSettings(cameraSettings)
-    , m_camData(camData)
 {
-    m_wandPoints.push_back({-25.0,0.0,0.0});
-    m_wandPoints.push_back({10.0,0.0,0.0});
-    m_wandPoints.push_back({25.0,0.0,0.0});
+
 }
 
 void WandCalibration::addFrame(const std::vector<std::pair<QUuid, std::vector<cv::Point2f>>> &points)
@@ -81,7 +76,7 @@ void WandCalibration::addFrame(const std::vector<std::pair<QUuid, std::vector<cv
 
         std::vector<cv::Point3d> triangulatedPoints3D;
 
-        for (size_t i = 0; i < triangulatedPoints.cols; ++i)
+        for (int i = 0; i < triangulatedPoints.cols; ++i)
         {
             const float w = triangulatedPoints.at<float>(3,i);
             triangulatedPoints3D.push_back({triangulatedPoints.at<float>(0,i)/w,
@@ -183,7 +178,7 @@ void WandCalibration::addFrame(const std::vector<std::pair<QUuid, std::vector<cv
 
         std::vector<cv::Point3d> triangulatedPoints3D;
 
-        for (size_t i = 0; i < triangulatedPoints.cols; ++i)
+        for (int i = 0; i < triangulatedPoints.cols; ++i)
         {
             const float w = triangulatedPoints.at<float>(3,i);
             triangulatedPoints3D.push_back({triangulatedPoints.at<float>(0,i)/w,
@@ -229,7 +224,7 @@ void WandCalibration::addFrame(const std::vector<std::pair<QUuid, std::vector<cv
         double* dataCamFirst = &cameraData[detIt.key().first][0];
         double* dataCamSecond = &cameraData[detIt.key().second][0];
 
-        for (int i = 0; i < detIt->first.pixels.size(); i = i + m_wandPoints.size()) {
+        for (size_t i = 0; i < detIt->first.pixels.size(); i = i + m_wandPoints.size()) {
             ceres::CostFunction* costLeftFirstFunction =
                 PointDistanceError::Create(leftToMiddleDist, middleToRightDist, leftToRightDist);
 
@@ -239,7 +234,7 @@ void WandCalibration::addFrame(const std::vector<std::pair<QUuid, std::vector<cv
                                      &detIt->triangulatedPoints[i+2].x);
         }
 
-        for (int i = 0; i < detIt->first.pixels.size(); ++i) {
+        for (size_t i = 0; i < detIt->first.pixels.size(); ++i) {
             ceres::CostFunction* costFirstFunction =
                 ReprojectionError::Create(detIt->first.pixels[i], detIt->cameraMatrix);
 
@@ -363,6 +358,30 @@ QMap<QUuid, Eigen::Affine3f> WandCalibration::relativeToGlobalTransforms(const Q
     return transforms;
 }
 
+void WandCalibration::startCalib(bool start, WandCalibration::Settings settings, InputData data)
+{
+    started = start;
+    finished = !start;
+
+    if (!start) {
+        qDebug() << "end calibration";
+        return;
+    }
+
+    switch (settings.calibType) {
+    case WandCalibration::Type::Full:
+        m_camData = data.camParams;
+        m_cameraSettings = data.cameraSettings;
+        m_wandPoints = data.wandPoints;
+        m_observedDetections.clear();
+        m_minCalibObservations = settings.framesPerCamera;
+        break;
+    case WandCalibration::Type::Refine:
+        m_minCalibObservations += settings.framesPerCamera;
+        break;
+    }
+}
+
 float WandCalibration::computeScale(std::vector<cv::Point3d> &triangulatedPoints)
 {
     assert(triangulatedPoints.size() % m_wandPoints.size() == 0);
@@ -465,7 +484,7 @@ void WandCalibration::addObservations(const std::vector<std::pair<QUuid, std::ve
 
             if (!obsDet.first.pixels.empty())
             {
-                for (int wandIndex = 0; wandIndex < m_wandPoints.size(); ++wandIndex)
+                for (size_t wandIndex = 0; wandIndex < m_wandPoints.size(); ++wandIndex)
                 {
                     const float diff = cv::norm(wandPoints[i].second[wandIndex] - obsDet.first.pixels[obsDet.first.pixels.size() - m_wandPoints.size() + wandIndex]);
                     const float diff2 = cv::norm(wandPoints[j].second[wandIndex] - obsDet.second.pixels[obsDet.second.pixels.size() - m_wandPoints.size() + wandIndex]);
