@@ -2,7 +2,7 @@
 set -e
 set -o xtrace
 
-ROOTFS=/media/kaajo/rootfs/
+ROOTFS=/media/$USER/rootfs/
 INSTALL_PATH=${ROOTFS}/opt/rpimocap/
 PROJECT_DIR=$(dirname "$(readlink -f "$0")")/../
 
