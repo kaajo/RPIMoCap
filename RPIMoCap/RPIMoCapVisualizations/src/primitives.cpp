@@ -115,4 +115,26 @@ void Line::setLine3D(const Frame::LineSegment &line)
     buf->setData(bufferBytes);
 }
 
+FloorPlane::FloorPlane(Qt3DCore::QEntity *rootEntity) {
+    entity->addComponent(transform);
+    entity->addComponent(mesh);
+    entity->addComponent(material);
+    entity->setParent(rootEntity);
+
+    material->setDiffuse(QColor(QRgb(0xe3e3e3)));
+    material->setShininess(0.0f);
+
+    setSize(500.0f);
+    setFloorPosition(-10.0f);
+}
+
+void FloorPlane::setSize(const float sizeCM) {
+    mesh->setHeight(sizeCM);
+    mesh->setWidth(sizeCM);
+}
+
+void FloorPlane::setFloorPosition(const float posY) {
+    transform->setTranslation({0.0, 0.0, posY});
+}
+
 }

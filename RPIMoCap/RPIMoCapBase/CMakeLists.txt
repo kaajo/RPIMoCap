@@ -8,12 +8,12 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
 find_package(Qt5 COMPONENTS Core Network REQUIRED)
 find_package(PkgConfig REQUIRED)
-find_library(mosquitto REQUIRED)
-find_library(mosquittopp REQUIRED)
 
 pkg_check_modules(OPENCV REQUIRED opencv4)
 pkg_check_modules(MSGPACK REQUIRED IMPORTED_TARGET GLOBAL msgpack)
 pkg_check_modules(EIGEN3 REQUIRED IMPORTED_TARGET GLOBAL eigen3)
+pkg_check_modules(libmosquitto REQUIRED IMPORTED_TARGET GLOBAL libmosquitto)
+pkg_check_modules(libmosquittopp REQUIRED IMPORTED_TARGET GLOBAL libmosquittopp)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)

@@ -69,4 +69,20 @@ struct Line
     QByteArray bufferBytes;
 };
 
+class FloorPlane
+{
+public:
+    FloorPlane(Qt3DCore::QEntity *rootEntity);
+
+    void setSize(const float sizeCM);
+
+    void setFloorPosition(const float posY);
+
+private:
+    SharedEntity entity = SharedEntity(new Qt3DCore::QEntity(), &QObject::deleteLater);
+    Qt3DCore::QTransform *transform = new Qt3DCore::QTransform();
+    Qt3DExtras::QPlaneMesh *mesh = new Qt3DExtras::QPlaneMesh();
+    Qt3DExtras::QPhongMaterial *material = new Qt3DExtras::QPhongMaterial();
+};
+
 }

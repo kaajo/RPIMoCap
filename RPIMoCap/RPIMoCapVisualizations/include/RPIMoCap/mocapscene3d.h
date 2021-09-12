@@ -54,6 +54,8 @@ private:
     std::vector<Line*> m_allLines;
 
     QHash<QUuid,std::shared_ptr<Camera>> m_currentCameras;
+
+    FloorPlane* m_floor = nullptr;
 };
 
 }
