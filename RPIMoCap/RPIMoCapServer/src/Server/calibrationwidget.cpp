@@ -1,4 +1,4 @@
-#include "RPIMoCap/Server/calibrationwidget.h"
+#include "Server/calibrationwidget.h"
 #include "ui_calibrationwidget.h"
 
 namespace RPIMoCap {

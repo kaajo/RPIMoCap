@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <RPIMoCap/Server/wanddetector.h>
+#include "Server/wanddetector.h"
 #include <RPIMoCap/Core/cameraparams.h>
 
 #include <opencv2/core/affine.hpp>

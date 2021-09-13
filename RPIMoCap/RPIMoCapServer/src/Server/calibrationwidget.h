@@ -1,6 +1,6 @@
 #pragma once
 
-#include "RPIMoCap/Server/wandcalibration.h"
+#include "Server/wandcalibration.h"
 
 #include <QWidget>
 

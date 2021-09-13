@@ -1,4 +1,4 @@
-#include "RPIMoCap/Server/wanddetector.h"
+#include "Server/wanddetector.h"
 
 #include <opencv2/core.hpp>
 #include <QSet>

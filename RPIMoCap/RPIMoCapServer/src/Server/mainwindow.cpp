@@ -15,10 +15,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "RPIMoCap/Server/mainwindow.h"
+#include "Server/mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include "RPIMoCap/Server/calibrationwidget.h"
+#include "Server/calibrationwidget.h"
+#include "Server/floorcalibrationwidget.h"
 
 #include <QTreeWidgetItem>
 
@@ -28,6 +29,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , m_calibWidget(new CalibrationWidget())
+    , m_floorCalibWidget(new FloorCalibrationWidget())
 {
     ui->setupUi(this);
 
@@ -38,15 +40,28 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->searchCameras, &QPushButton::clicked,
             this, &MainWindow::searchForCameras);
 
-    { // Add calibration section
+    { // Add extrinsic calibration section
         QTreeWidgetItem* pCategory = new QTreeWidgetItem();
-        pCategory->setText(0, "Calibration");
+        pCategory->setText(0, "Extrinsic Calibration");
         pCategory->setTextAlignment(0, Qt::AlignCenter);
         ui->treeWidget->addTopLevelItem(pCategory);
 
         QTreeWidgetItem* pContainer = new QTreeWidgetItem();
         pCategory->addChild(pContainer);
         ui->treeWidget->setItemWidget(pContainer, 0, m_calibWidget);
+
+        pCategory->setExpanded(true);
+    }
+
+    { // Add floor calibration
+        QTreeWidgetItem* pCategory = new QTreeWidgetItem();
+        pCategory->setText(0, "Floor Calibration");
+        pCategory->setTextAlignment(0, Qt::AlignCenter);
+        ui->treeWidget->addTopLevelItem(pCategory);
+
+        QTreeWidgetItem* pContainer = new QTreeWidgetItem();
+        pCategory->addChild(pContainer);
+        ui->treeWidget->setItemWidget(pContainer, 0, m_floorCalibWidget);
 
         pCategory->setExpanded(true);
     }

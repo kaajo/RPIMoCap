@@ -15,7 +15,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "RPIMoCap/Server/rpimocapserver.h"
+#include "Server/rpimocapserver.h"
 
 #include <RPIMoCap/Core/avahibrowser.h>
 #include <RPIMoCap/Core/topics.h>

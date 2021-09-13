@@ -15,9 +15,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "RPIMoCap/Server/mainwindow.h"
-#include "RPIMoCap/Server/rpimocapserver.h"
-#include "RPIMoCap/Server/calibrationwidget.h"
+#include "Server/mainwindow.h"
+#include "Server/rpimocapserver.h"
+#include "Server/calibrationwidget.h"
 
 #include <QApplication>
 #include <QtWidgets/QApplication>

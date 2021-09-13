@@ -15,7 +15,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "RPIMoCap/Server/wandcalibration.h"
+#include "Server/wandcalibration.h"
 
 #include <QThread>
 #include <Eigen/Geometry>

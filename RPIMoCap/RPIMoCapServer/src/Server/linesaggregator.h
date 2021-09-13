@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <RPIMoCap/Server/wandcalibration.h>
-#include <RPIMoCap/Server/camerasettings.h>
+#include <Server/wandcalibration.h>
+#include <Server/camerasettings.h>
 
 #include <RPIMoCap/Core/line3d.h>
 #include <RPIMoCap/Core/frame.h>

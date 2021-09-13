@@ -15,7 +15,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "RPIMoCap/Server/pointchecker.h"
+#include "Server/pointchecker.h"
 
 #include <QVector>
 #include <QVector2D>

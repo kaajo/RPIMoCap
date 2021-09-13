@@ -15,7 +15,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "RPIMoCap/Server/camerasettingswidget.h"
+#include "Server/camerasettingswidget.h"
 #include "ui_camerasettingswidget.h"
 
 #include <QMetaProperty>

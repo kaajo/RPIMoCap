@@ -29,19 +29,22 @@ target_sources(RPIMoCapServerLib
     src/Server/rpimocapserver.cpp
     src/Server/wanddetector.cpp
     src/Server/wandcalibration.cpp
+    src/Server/floorcalibrationwidget.cpp
+    src/Server/floorcalibrationwidget.ui
     PUBLIC
-    include/RPIMoCap/Server/camerasettings.h
-    include/RPIMoCap/Server/camerasettingswidget.h
-    include/RPIMoCap/Server/calibrationwidget.h
-    include/RPIMoCap/Server/linesaggregator.h
-    include/RPIMoCap/Server/mainwindow.h
-    include/RPIMoCap/Server/pointchecker.h
-    include/RPIMoCap/Server/rpimocapserver.h
-    include/RPIMoCap/Server/wanddetector.h
-    include/RPIMoCap/Server/wandcalibration.h)
+    src/Server/camerasettings.h
+    src/Server/camerasettingswidget.h
+    src/Server/calibrationwidget.h
+    src/Server/linesaggregator.h
+    src/Server/mainwindow.h
+    src/Server/pointchecker.h
+    src/Server/rpimocapserver.h
+    src/Server/wanddetector.h
+    src/Server/wandcalibration.h
+    src/Server/floorcalibrationwidget.h)
 
 target_include_directories(RPIMoCapServerLib PUBLIC
-    ${PROJECT_SOURCE_DIR}/include)
+    ${PROJECT_SOURCE_DIR}/src)
 
 target_link_libraries(RPIMoCapServerLib PUBLIC
     RPIMoCapBase

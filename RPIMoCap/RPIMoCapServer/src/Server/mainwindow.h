@@ -32,6 +32,7 @@ class MainWindow;
 namespace RPIMoCap {
 
 class CalibrationWidget;
+class FloorCalibrationWidget;
 
 class MainWindow : public QMainWindow
 {
@@ -60,6 +61,7 @@ private:
     Ui::MainWindow *ui;
 
     CalibrationWidget *m_calibWidget = nullptr;
+    FloorCalibrationWidget *m_floorCalibWidget = nullptr;
 
     QMap<QUuid, CameraSettingsWidget*> m_cameraWidgets;
 };

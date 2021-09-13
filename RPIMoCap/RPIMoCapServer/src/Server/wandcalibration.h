@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <RPIMoCap/Server/camerasettings.h>
-#include <RPIMoCap/Server/wanddetector.h>
+#include <Server/camerasettings.h>
+#include <Server/wanddetector.h>
 #include <RPIMoCap/Core/cameraparams.h>
 #include <RPIMoCap/Core/msgpack_defs.h>
 

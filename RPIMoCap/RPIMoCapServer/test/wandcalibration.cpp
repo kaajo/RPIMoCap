@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <RPIMoCap/Server/wandcalibration.h>
+#include <Server/wandcalibration.h>
 
 #include <iostream>
 
