@@ -27,4 +27,13 @@ class WandDetector
 public:
     static std::optional<std::vector<cv::Point2f>> detect4pWand(const std::vector<cv::Point2f> &pts);
     static std::optional<std::vector<cv::Point2f>> detect3pWand(const std::vector<cv::Point2f> &pts);
+
+
+    struct CrossDetection {
+        cv::Point3f centerPoint;
+        std::vector<cv::Point3f> edgePoints;
+        cv::Point3f normalVector;
+    };
+
+    static std::optional<CrossDetection> detectCross(const std::vector<cv::Point3f> &pts, const float size);
 };

@@ -3,6 +3,9 @@
 #include <opencv2/core.hpp>
 #include <QSet>
 
+#include <Eigen/Geometry>
+#include <Eigen/Eigenvalues>
+
 std::optional<std::vector<cv::Point2f> > WandDetector::detect4pWand(const std::vector<cv::Point2f> &pts)
 {
     if (pts.size() != 4)
@@ -68,4 +71,54 @@ std::optional<std::vector<cv::Point2f> > WandDetector::detect3pWand(const std::v
     const size_t rightID = indexes.values().first();
 
     return std::vector<cv::Point2f>{pts[leftID], pts[middleID], pts[rightID]};
+}
+
+std::optional<WandDetector::CrossDetection> WandDetector::detectCross(const std::vector<cv::Point3f> &pts, const float size)
+{
+    if (pts.size() != 5)
+    {
+        return std::nullopt;
+    }
+
+    std::vector<float> RMSE;
+
+    for (size_t i = 0; i < 5; ++i) {
+
+        float RMSEI = 0.0f;
+
+        for (size_t j = 0; j < 5; ++j) {
+            RMSEI += std::pow(cv::norm(pts[i] - pts[j]) - size, 2);
+        }
+
+        RMSE.push_back(sqrtf(1.0f/5.0f * RMSEI));
+    }
+
+    auto centerIndex = std::min_element(RMSE.begin(), RMSE.end()) - RMSE.begin();
+
+    WandDetector::CrossDetection detection;
+    detection.centerPoint = pts[centerIndex];
+
+    for (long i = 0; i < 5; ++i) {
+        if (i != centerIndex) {
+            detection.edgePoints.push_back(pts[i]);
+        }
+    }
+
+    // Compute normals
+    Eigen::Map<const Eigen::Matrix3Xf> P(&pts[0].x, 3, pts.size());
+
+    Eigen::Vector3f centroid = P.rowwise().mean();
+    Eigen::MatrixXf centered = P.colwise() - centroid;
+    Eigen::Matrix3f cov = centered * centered.transpose();
+
+    //eigvecs sorted in increasing order of eigvals
+    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3f> eig;
+    //eig.compute(cov);
+    eig.computeDirect(cov);
+    Eigen::Vector3f normal = eig.eigenvectors().col(0); //is already normalized
+    if (normal(2) < 0.0f) normal = -normal; //flip towards camera
+
+    detection.normalVector = {normal.x(), normal.y(), normal.z()};
+
+    return detection;
 }

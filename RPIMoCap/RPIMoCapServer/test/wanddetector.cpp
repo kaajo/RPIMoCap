@@ -50,3 +50,48 @@ TEST(wanddetector, 3Psimple)
         EXPECT_EQ(detectedPixels[i], pixels[i]);
     }
 }
+
+TEST(wanddetector, CrossSimple)
+{
+    std::vector<cv::Point3f> points;
+    points.push_back({0.0f,0.0f,0.0f}); // Center
+    points.push_back({1.0f,0.0f,0.0f});
+    points.push_back({0.0f,1.0f,0.0f});
+    points.push_back({-1.0f,0.0f,0.0f});
+    points.push_back({0.0f,-1.0f,0.0f});
+
+    auto detection = WandDetector::detectCross(points, 1.0f);
+
+    EXPECT_EQ(detection->centerPoint, points[0]);
+    EXPECT_EQ(detection->normalVector, cv::Point3f(0.0f, 0.0f, 1.0f));
+}
+
+TEST(wanddetector, CrossNoise)
+{
+    std::vector<cv::Point3f> points;
+    points.push_back({0.0f,0.0f,0.0f}); // Center
+    points.push_back({1.0f,-0.1f,0.0f});
+    points.push_back({0.0f,0.9f,0.0f});
+    points.push_back({-1.1f,0.0f,0.0f});
+    points.push_back({0.0f,-1.2f,0.0f});
+
+    auto detection = WandDetector::detectCross(points, 1.0f);
+
+    EXPECT_EQ(detection->centerPoint, points[0]);
+    EXPECT_EQ(detection->normalVector, cv::Point3f(0.0f, 0.0f, 1.0f));
+}
+
+TEST(wanddetector, CrossNoiseShift)
+{
+    std::vector<cv::Point3f> points;
+    points.push_back({0.0f,0.0f,-10.0f}); // Center
+    points.push_back({1.0f,-0.1f,-10.0f});
+    points.push_back({0.0f,0.9f,-10.0f});
+    points.push_back({-1.1f,0.0f,-10.0f});
+    points.push_back({0.0f,-1.2f,-10.0f});
+
+    auto detection = WandDetector::detectCross(points, 1.0f);
+
+    EXPECT_EQ(detection->centerPoint, points[0]);
+    EXPECT_EQ(detection->normalVector, cv::Point3f(0.0f, 0.0f, 1.0f));
+}
