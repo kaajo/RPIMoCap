@@ -37,7 +37,10 @@ MainWindow::MainWindow(SimScene &scene, QWidget *parent) :
 {
     m_ui->setupUi(this);
 
-    connect(m_ui->wandExtrinsic, &Visualization::ExtrinsicWidget::transformChanged, this, &MainWindow::updateWandTransform);
+    connect(m_ui->wandExtrinsic, &Visualization::ExtrinsicWidget::transformChanged, this, &MainWindow::drawFrame);
+    connect(m_ui->floorCross, &Visualization::ExtrinsicWidget::transformChanged, this, &MainWindow::drawFrame);
+    connect(m_ui->showWandExtrinsic, &QCheckBox::stateChanged, this, &MainWindow::drawFrame);
+    connect(m_ui->showFloorCross, &QCheckBox::stateChanged, this, &MainWindow::drawFrame);
 
     m_ui->scrollAreaWidgetContents->setLayout(new QVBoxLayout);
 
@@ -50,26 +53,6 @@ MainWindow::MainWindow(SimScene &scene, QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete m_ui;
-}
-
-void MainWindow::updateWandTransform(Eigen::Affine3f transform)
-{
-    const VirtualWand wand(50.0, 10.0);
-
-    auto markers = wand.markers(transform);
-    m_scene.setMarkers(markers);
-
-    std::vector<Frame::Marker> frameMarkers;
-
-    for (auto &marker : markers)
-    {
-        frameMarkers.push_back({0,{marker.translation.x, marker.translation.y, marker.translation.z}});
-    }
-
-    Frame frame(std::chrono::high_resolution_clock::now(), {});
-    frame.setMarkers(frameMarkers);
-
-    m_ui->scene->drawFrame(frame);
 }
 
 void MainWindow::onRotationChanged(QUuid clientId, cv::Vec3f rVec)
@@ -166,7 +149,7 @@ void MainWindow::saveProject()
 
     QVariantMap saveMap;
     QVariantList clientList;
-    for (auto data : m_clients)
+    for (const auto& data : m_clients)
     {
         QVariantMap clientMap = data.camera->getParams().toVariantMap();
         clientMap["id"] = data.id.toString();
@@ -260,6 +243,36 @@ void MainWindow::clearClients()
     {
         removeClient();
     }
+}
+
+void MainWindow::drawFrame()
+{
+    std::vector<SimMarker> markers;
+
+    if (m_ui->showWandExtrinsic->isChecked()) {
+        const VirtualWand wand(50.0, 10.0);
+        auto wandMarkers = wand.markers(m_ui->wandExtrinsic->getTransform());
+        markers.insert(markers.end(), wandMarkers.begin(), wandMarkers.end());
+    }
+
+    if (m_ui->showFloorCross->isChecked()) {
+        const VirtualFloorWand wand(30.0);
+        auto wandMarkers = wand.markers(m_ui->floorCross->getTransform());
+        markers.insert(markers.end(), wandMarkers.begin(), wandMarkers.end());
+    }
+
+    m_scene.setMarkers(markers);
+
+    std::vector<Frame::Marker> frameMarkers;
+    for (auto &marker : markers)
+    {
+        frameMarkers.push_back({0,{marker.translation.x, marker.translation.y, marker.translation.z}});
+    }
+
+    Frame frame(std::chrono::high_resolution_clock::now(), {});
+    frame.setMarkers(frameMarkers);
+
+    m_ui->scene->drawFrame(frame);
 }
 
 }

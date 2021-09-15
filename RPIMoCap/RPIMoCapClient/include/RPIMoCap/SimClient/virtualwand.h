@@ -40,4 +40,19 @@ private:
     Eigen::Vector3f m_rightPoint;
 };
 
+class VirtualFloorWand
+{
+public:
+    VirtualFloorWand(float sizecm);
+
+    std::vector<SimMarker> markers(const Eigen::Affine3f &transform) const;
+
+private:
+    Eigen::Vector3f m_centerPoint;
+    Eigen::Vector3f m_leftPoint;
+    Eigen::Vector3f m_rightPoint;
+    Eigen::Vector3f m_nearPoint;
+    Eigen::Vector3f m_farPoint;
+};
+
 }

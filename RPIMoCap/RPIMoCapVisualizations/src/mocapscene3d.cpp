@@ -64,12 +64,16 @@ MocapScene3D::MocapScene3D(QWidget *parent) :
 
     for (size_t i = 0; i < 200; ++i)
     {
-        m_allLines.push_back(new Line(Frame::LineSegment(), m_rootEntity));
+        auto line = new Line(Frame::LineSegment(), m_rootEntity);
+        m_allLines.push_back(line);
+        line->entity->setEnabled(false);
     }
 
     for (size_t i = 0; i < 200; ++i)
     {
-        m_currentMarkers.push_back(new Marker({0, Eigen::Vector3f()}, m_rootEntity));
+        auto marker = new Marker({0, Eigen::Vector3f()}, m_rootEntity);
+        m_currentMarkers.push_back(marker);
+        marker->entity->setEnabled(false);
     }
 
     m_floor = new FloorPlane(m_rootEntity);

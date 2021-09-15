@@ -41,4 +41,35 @@ std::vector<SimMarker> VirtualWand::markers(const Eigen::Affine3f &transform) co
     return {left, middle, right};
 }
 
+VirtualFloorWand::VirtualFloorWand(float sizecm)
+    : m_centerPoint(0.0f, 0.0f, 0.0f)
+    , m_leftPoint(sizecm, 0.0f, 0.0f)
+    , m_rightPoint(-sizecm, 0.0f, 0.0f)
+    , m_nearPoint(0.0f, 0.0f, -sizecm)
+    , m_farPoint(0.0f, 0.0f, sizecm)
+{
+
+}
+
+std::vector<SimMarker> VirtualFloorWand::markers(const Eigen::Affine3f &transform) const
+{
+    SimMarker center;
+    const auto centerTr = transform * m_centerPoint;
+    center.translation = cv::Point3f(centerTr.x(), centerTr.y(), centerTr.z());
+    SimMarker left;
+    const auto leftTr = transform * m_leftPoint;
+    left.translation = cv::Point3f(leftTr.x(), leftTr.y(), leftTr.z());
+    SimMarker right;
+    const auto rightTr = transform * m_rightPoint;
+    right.translation = cv::Point3f(rightTr.x(), rightTr.y(), rightTr.z());
+    SimMarker near;
+    const auto nearTr = transform * m_nearPoint;
+    near.translation = cv::Point3f(nearTr.x(), nearTr.y(), nearTr.z());
+    SimMarker far;
+    const auto farTr = transform * m_farPoint;
+    far.translation = cv::Point3f(farTr.x(), farTr.y(), farTr.z());
+
+    return {center, left, right, near, far};
+}
+
 }

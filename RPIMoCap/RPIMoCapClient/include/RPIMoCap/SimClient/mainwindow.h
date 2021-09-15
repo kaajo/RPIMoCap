@@ -40,8 +40,6 @@ public:
     ~MainWindow();
 
 private slots:
-    void updateWandTransform(Eigen::Affine3f transform);
-
     void onRotationChanged(QUuid clientId, cv::Vec3f rVec);
     void onTranslationChanged(QUuid clientId, cv::Vec3f tVec);
     void onfpsChanged(QUuid clientId, int64_t fps);
@@ -80,6 +78,8 @@ private:
     };
 
     QVector<ClientData> m_clients;
+
+    void drawFrame();
 };
 
 }
