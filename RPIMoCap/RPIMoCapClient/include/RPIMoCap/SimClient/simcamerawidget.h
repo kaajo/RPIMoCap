@@ -45,14 +45,14 @@ public:
 
 signals:
     void fpsChanged(QUuid clientid, uint16_t fps);
-    void rotationChanged(QUuid clientId, cv::Vec3f rVec);
-    void translationChanged(QUuid clientId, cv::Vec3f tVec);
+    void rotationChanged(QUuid clientId, Eigen::Vector3d rVec);
+    void translationChanged(QUuid clientId, Eigen::Vector3d tVec);
     void transformChanged(QUuid clientId, Eigen::Affine3f transform);
 
 private slots:
     void onfpsChanged(int fps);
-    void onRotationChanged(cv::Vec3f rVec);
-    void onTranslationChanged(cv::Vec3f tVec);
+    void onRotationChanged(Eigen::Vector3d rVec);
+    void onTranslationChanged(Eigen::Vector3d tVec);
     void onTransformChanged(Eigen::Affine3f transform);
 
 private:

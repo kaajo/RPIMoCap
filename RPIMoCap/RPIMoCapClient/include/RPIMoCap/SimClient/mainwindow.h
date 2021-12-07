@@ -40,8 +40,8 @@ public:
     ~MainWindow();
 
 private slots:
-    void onRotationChanged(QUuid clientId, cv::Vec3f rVec);
-    void onTranslationChanged(QUuid clientId, cv::Vec3f tVec);
+    void onRotationChanged(QUuid clientId, Eigen::Vector3d rVec);
+    void onTranslationChanged(QUuid clientId, Eigen::Vector3d tVec);
     void onfpsChanged(QUuid clientId, int64_t fps);
     void openProject();
     void saveProject();
@@ -52,7 +52,7 @@ private:
     void closeEvent(QCloseEvent *event) override;
 
     void addClient(const QUuid &id, const RPIMoCap::Camera::Intrinsics &params,
-                   const cv::Vec3f& rVec, const cv::Vec3f& tVec);
+                   const Eigen::Vector3d &rVec, const Eigen::Vector3d& tVec);
     void clearClients();
 
     Ui::MainWindow *m_ui = nullptr;

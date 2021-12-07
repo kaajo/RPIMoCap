@@ -18,6 +18,7 @@ set(CMAKE_AUTOUIC ON)
 add_library(RPIMoCapServerLib STATIC)
 target_sources(RPIMoCapServerLib
     PRIVATE
+    src/Server/camerasettings.cpp
     src/Server/camerasettingswidget.cpp
     src/Server/camerasettingswidget.ui
     src/Server/calibrationwidget.cpp

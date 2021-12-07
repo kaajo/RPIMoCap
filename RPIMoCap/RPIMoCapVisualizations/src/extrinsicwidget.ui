@@ -181,6 +181,14 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>tx</tabstop>
+  <tabstop>ty</tabstop>
+  <tabstop>tz</tabstop>
+  <tabstop>rx</tabstop>
+  <tabstop>ry</tabstop>
+  <tabstop>rz</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

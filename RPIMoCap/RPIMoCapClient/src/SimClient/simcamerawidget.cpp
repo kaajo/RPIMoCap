@@ -54,12 +54,12 @@ void SimCameraWidget::onfpsChanged(int fps)
     emit fpsChanged(m_clientId, fps);
 }
 
-void SimCameraWidget::onRotationChanged(cv::Vec3f rVec)
+void SimCameraWidget::onRotationChanged(Eigen::Vector3d rVec)
 {
     emit rotationChanged(m_clientId, rVec);
 }
 
-void SimCameraWidget::onTranslationChanged(cv::Vec3f tVec)
+void SimCameraWidget::onTranslationChanged(Eigen::Vector3d tVec)
 {
     emit translationChanged(m_clientId, tVec);
 }

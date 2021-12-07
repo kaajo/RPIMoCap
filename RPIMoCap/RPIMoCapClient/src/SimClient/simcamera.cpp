@@ -50,7 +50,8 @@ cv::Mat SimCamera::pullData()
         m_timer.restart();
     }
 
-    return m_scene.projectScene(m_params, m_rotation, m_translation);
+    return m_scene.projectScene(m_params, cv::Vec3f(m_rotation.x(), m_rotation.y(), m_rotation.z()),
+                                cv::Vec3f(m_translation.x(), m_translation.y(), m_translation.z()));
 }
 
 Camera::Intrinsics &SimCamera::getParams()
@@ -58,22 +59,22 @@ Camera::Intrinsics &SimCamera::getParams()
     return m_params;
 }
 
-cv::Vec3f SimCamera::getTranslation() const
+Eigen::Vector3d SimCamera::getTranslation() const
 {
     return m_translation;
 }
 
-void SimCamera::setTranslation(const cv::Vec3f &translation)
+void SimCamera::setTranslation(const Eigen::Vector3d &translation)
 {
     m_translation = translation;
 }
 
-cv::Vec3f SimCamera::getRotation() const
+Eigen::Vector3d SimCamera::getRotation() const
 {
     return m_rotation;
 }
 
-void SimCamera::setRotation(const cv::Vec3f &rotation)
+void SimCamera::setRotation(const Eigen::Vector3d &rotation)
 {
     m_rotation = rotation;
 }

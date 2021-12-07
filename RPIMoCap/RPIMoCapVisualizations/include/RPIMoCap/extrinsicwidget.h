@@ -38,18 +38,18 @@ public:
     explicit ExtrinsicWidget(QWidget *parent = nullptr);
     ~ExtrinsicWidget() override;
 
-    cv::Vec3f getRotation();
-    cv::Vec3f getTranslation();
+    Eigen::Vector3d getRotation();
+    Eigen::Vector3d getTranslation();
     Eigen::Affine3f getTransform();
 
 signals:
-    void rotationChanged(cv::Vec3f rVec);
-    void translationChanged(cv::Vec3f tVec);
+    void rotationChanged(Eigen::Vector3d rVec);
+    void translationChanged(Eigen::Vector3d tVec);
     void transformChanged(Eigen::Affine3f transform);
 
 public slots:
-    void setRotation(cv::Vec3f rVec);
-    void setTranslation(cv::Vec3f tVec);
+    void setRotation(Eigen::Vector3d rVec);
+    void setTranslation(Eigen::Vector3d tVec);
 
 private slots:
     void onRotationChange();

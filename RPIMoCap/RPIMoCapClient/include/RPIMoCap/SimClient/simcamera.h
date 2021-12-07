@@ -22,6 +22,7 @@
 #include <RPIMoCap/ClientLib/icamera.h>
 
 #include <QElapsedTimer>
+#include <Eigen/Geometry>
 
 namespace RPIMoCap::SimClient {
 
@@ -42,11 +43,11 @@ public:
 
     Camera::Intrinsics& getParams();
 
-    cv::Vec3f getTranslation() const;
-    void setTranslation(const cv::Vec3f &translation);
+    Eigen::Vector3d getTranslation() const;
+    void setTranslation(const Eigen::Vector3d &translation);
 
-    cv::Vec3f getRotation() const;
-    void setRotation(const cv::Vec3f &rotation);
+    Eigen::Vector3d getRotation() const;
+    void setRotation(const Eigen::Vector3d &rotation);
 
 private:
     bool m_opened = false;
@@ -56,8 +57,8 @@ private:
 
     QElapsedTimer m_timer;
 
-    cv::Vec3f m_translation = cv::Vec3f(0.0, 0.0, 0.0);
-    cv::Vec3f m_rotation = cv::Vec3f(0.0, 0.0, 0.0);
+    Eigen::Vector3d m_translation = Eigen::Vector3d::Zero();
+    Eigen::Vector3d m_rotation = Eigen::Vector3d::Zero();
 };
 
 }

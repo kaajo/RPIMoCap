@@ -288,8 +288,8 @@ void WandCalibration::addFrame(const std::vector<std::pair<QUuid, std::vector<cv
             detIt->first.rVec = Eigen::Vector3f(inv.rvec()[0], inv.rvec()[1], inv.rvec()[2]);
             detIt->first.tVec = Eigen::Vector3f(inv.translation()[0], inv.translation()[1], inv.translation()[2]);
 
-            m_cameraSettings[detIt.key().first]->setRotation(inv.rvec());
-            m_cameraSettings[detIt.key().first]->setTranslation(inv.translation());
+            m_cameraSettings[detIt.key().first]->setRotation(Eigen::Vector3d(inv.rvec()[0], inv.rvec()[1], inv.rvec()[2]));
+            m_cameraSettings[detIt.key().first]->setTranslation(Eigen::Vector3d(inv.translation()[0], inv.translation()[1], inv.translation()[2]));
         }
 
         {
@@ -301,8 +301,8 @@ void WandCalibration::addFrame(const std::vector<std::pair<QUuid, std::vector<cv
             detIt->second.rVec = Eigen::Vector3f(inv.rvec()[0], inv.rvec()[1], inv.rvec()[2]);
             detIt->second.tVec = Eigen::Vector3f(inv.translation()[0], inv.translation()[1], inv.translation()[2]);
 
-            m_cameraSettings[detIt.key().second]->setRotation(inv.rvec());
-            m_cameraSettings[detIt.key().second]->setTranslation(inv.translation());
+            m_cameraSettings[detIt.key().second]->setRotation(Eigen::Vector3d(inv.rvec()[0], inv.rvec()[1], inv.rvec()[2]));
+            m_cameraSettings[detIt.key().second]->setTranslation(Eigen::Vector3d(inv.translation()[0], inv.translation()[1], inv.translation()[2]));
         }
 
         qDebug() << "reprojection error after second stage";

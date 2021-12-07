@@ -34,99 +34,56 @@
 #include <memory>
 #include <mutex>
 
-Q_DECLARE_METATYPE(cv::Vec3f)
+Q_DECLARE_METATYPE(Eigen::Vector3d)
 
 namespace RPIMoCap {
 
 struct CameraSettings : public QObject
 {
     Q_OBJECT
+
 public:
-    CameraSettings(QUuid id, const RPIMoCap::MQTTSettings &settings, Camera::Intrinsics camParams)
-        : m_id(id)
-        , m_pointSub("serverPointsSub-" + RPIMoCap::MQTTTopics::uuidString(id),
-                     RPIMoCap::MQTTTopics::pixels(id),settings)
-        , m_params(std::move(camParams))
-    {
-        connect(&m_pointSub,&RPIMoCap::MQTTSubscriber::messageReceived, this, &CameraSettings::onPointsDataReceived);
-    }
+    Q_PROPERTY(Eigen::Vector3d translation MEMBER m_translation NOTIFY translationChanged)
+    Q_PROPERTY(Eigen::Vector3d rotation MEMBER m_rotation NOTIFY rotationChanged)
+
+    CameraSettings(QUuid id, const RPIMoCap::MQTTSettings &settings, Camera::Intrinsics camParams);
 
     virtual ~CameraSettings() = default;
 
     QUuid id() const {return m_id;}
 
-    Eigen::Affine3f transform() const
-    {
-        Eigen::Affine3f t = Eigen::Affine3f::Identity();
+    Eigen::Affine3f transform() const;
 
-        Eigen::Matrix3f rot;
-        rot = Eigen::AngleAxisf(m_rotation[0], Eigen::Vector3f::UnitX())
-              * Eigen::AngleAxisf(m_rotation[1], Eigen::Vector3f::UnitY())
-              * Eigen::AngleAxisf(m_rotation[2], Eigen::Vector3f::UnitZ());
-        t.rotate(rot);
+    Line3D computePixelRay(cv::Point2f pixel);
 
-        t.translation().x() = m_translation[0];
-        t.translation().y() = m_translation[1];
-        t.translation().z() = m_translation[2];
+    Eigen::Matrix<double, 3, 3> essentialMatrix(const CameraSettings& targetCamera);
 
-        return t;
-    }
+    cv::Point2f normalizeCoords(cv::Point2f pixel);
 
-    Q_PROPERTY(cv::Vec3f translation MEMBER m_translation NOTIFY translationChanged)
-    Q_PROPERTY(cv::Vec3f rotation MEMBER m_rotation NOTIFY rotationChanged)
+    Eigen::ParametrizedLine<double, 2> epipolarLine(cv::Point2f pixelNormalized, const Eigen::Matrix<double, 3, 3>& essentialMatrix);
 
 signals:
     void raysReceived(const QUuid cameraID, const std::vector<std::pair<cv::Point2f, Line3D>> &rays);
-    void translationChanged(const cv::Vec3f &tVec);
-    void rotationChanged(const cv::Vec3f &rVec);
+    void translationChanged(const Eigen::Vector3d &tVec);
+    void rotationChanged(const Eigen::Vector3d &rVec);
 
 public slots:
-    void setTranslation(cv::Vec3f tVec)
-    {
-        m_translation = tVec;
-        emit translationChanged(tVec);
-    }
+    void setTranslation(Eigen::Vector3d tVec);
 
-    void setRotation(cv::Vec3f rVec)
-    {
-        m_rotation = rVec;
-        emit rotationChanged(rVec);
-    }
+    void setRotation(Eigen::Vector3d rVec);
 
 private slots:
-    void onPointsDataReceived(const QByteArray &data)
-    {
-        msgpack::object_handle result;
-        msgpack::unpack(result, data.data(), data.length());
-
-        const std::vector<cv::Point2f> points(result.get().as<std::vector<cv::Point2f>>());
-
-        std::vector<std::pair<cv::Point2f, Line3D>> rays;
-        for (auto &pnt : points)
-        {
-            rays.push_back({pnt,computePixelRay(pnt)});
-        }
-
-        emit raysReceived(m_id, rays);
-    }
+    void onPointsDataReceived(const QByteArray &data);
 
 private:
-    Line3D computePixelRay(cv::Point2f pixel)
-    {
-        cv::Mat normalized = m_params.cameraMatrixInv * cv::Mat(cv::Vec3f(pixel.x, pixel.y, 1));
-
-        Eigen::Vector3f origin(m_translation[0], m_translation[1], m_translation[2]);
-        auto dir = cv::Affine3f(m_rotation) * cv::Vec3f(normalized.at<float>(0), normalized.at<float>(1), normalized.at<float>(2));
-
-        return Line3D(origin, Eigen::Vector3f(dir[0], dir[1], dir[2]).normalized()); //TODO more effective!!!
-    }
+    Eigen::Matrix<double, 3, 3> cameraMatFromCV(const cv::Mat camMatrix);
 
     QUuid m_id;
     MQTTSubscriber m_pointSub;
     Camera::Intrinsics m_params;
 
-    cv::Vec3f m_translation = cv::Vec3f(0.0, 0.0, 0.0);
-    cv::Vec3f m_rotation = cv::Vec3f(0.0, 0.0, 0.0);
+    Eigen::Vector3d m_translation = Eigen::Vector3d::Zero();
+    Eigen::Vector3d m_rotation = Eigen::Vector3d::Zero();
 };
 
 }

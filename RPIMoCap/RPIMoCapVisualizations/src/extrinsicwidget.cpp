@@ -41,15 +41,15 @@ ExtrinsicWidget::~ExtrinsicWidget()
     delete m_ui;
 }
 
-cv::Vec3f ExtrinsicWidget::getRotation()
+Eigen::Vector3d ExtrinsicWidget::getRotation()
 {
-    float x = m_ui->rx->value() * degToRad;
-    float y = m_ui->ry->value() * degToRad;
-    float z = m_ui->rz->value() * degToRad;
+    double x = m_ui->rx->value() * degToRad;
+    double y = m_ui->ry->value() * degToRad;
+    double z = m_ui->rz->value() * degToRad;
     return {x, y, z};
 }
 
-cv::Vec3f ExtrinsicWidget::getTranslation()
+Eigen::Vector3d ExtrinsicWidget::getTranslation()
 {
     float x = m_ui->tx->value();
     float y = m_ui->ty->value();
@@ -74,18 +74,18 @@ Eigen::Affine3f ExtrinsicWidget::getTransform()
     return t;
 }
 
-void ExtrinsicWidget::setRotation(cv::Vec3f rVec)
+void ExtrinsicWidget::setRotation(Eigen::Vector3d rVec)
 {
-    m_ui->rx->setValue(rVec[0] * radToDeg);
-    m_ui->ry->setValue(rVec[1] * radToDeg);
-    m_ui->rz->setValue(rVec[2] * radToDeg);
+    m_ui->rx->setValue(rVec.x() * radToDeg);
+    m_ui->ry->setValue(rVec.y() * radToDeg);
+    m_ui->rz->setValue(rVec.z() * radToDeg);
 }
 
-void ExtrinsicWidget::setTranslation(cv::Vec3f tVec)
+void ExtrinsicWidget::setTranslation(Eigen::Vector3d tVec)
 {
-    m_ui->tx->setValue(tVec[0]);
-    m_ui->ty->setValue(tVec[1]);
-    m_ui->tz->setValue(tVec[2]);
+    m_ui->tx->setValue(tVec.x());
+    m_ui->ty->setValue(tVec.y());
+    m_ui->tz->setValue(tVec.z());
 }
 
 void ExtrinsicWidget::onRotationChange()
