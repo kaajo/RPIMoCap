@@ -52,7 +52,7 @@ void LinesAggregator::addCamera(const std::shared_ptr<CameraSettings> &camera)
     if (!m_clients.contains(camera->id()))
     {
         m_clients.insert(camera->id(), camera);
-        m_framesReceived.insert(camera->id(), false);
+        m_framesReceived.insert({camera->id(), false});
     }
 }
 
@@ -63,7 +63,7 @@ void LinesAggregator::removeCamera(const QUuid id)
         disconnect(m_clients[id].get(),&CameraSettings::raysReceived, this, &LinesAggregator::onRaysReceived);
 
         m_clients.remove(id);
-        m_framesReceived.remove(id);
+        m_framesReceived.erase(id);
     }
 }
 
@@ -71,7 +71,7 @@ void LinesAggregator::onMoCapStart(bool start)
 {
     for (auto &received : m_framesReceived)
     {
-        received = false;
+        received.second = false;
     }
 
     running = start;
@@ -85,39 +85,30 @@ void LinesAggregator::onRaysReceived(const QUuid clientId, const std::vector<std
 {
     if (m_clients.find(clientId) == m_clients.end())
     {
+        qWarning() << "Received data from unexpected client: " << clientId;
         return;
     }
 
     m_currentRays[clientId] = rays;
     m_framesReceived[clientId] = true;
 
-    bool haveAll = true;
-
-    for (auto &received : m_framesReceived)
-    {
-        if (!received)
-        {
-            haveAll = false;
-        }
-    }
-
     //qDebug() << QTime::currentTime().toString("hh:mm:ss.zzz") << rays.size() << "rays received from " << clientId;
 
-    if (running && haveAll)
+    if (running && haveAllDataForFrame())
     {
         if (m_wandCalib.running())
         {
             std::vector<std::pair<QUuid, std::vector<cv::Point2f>>> pixels;
             pixels.reserve(m_currentRays.size());
 
-            for (auto &id : m_currentRays.keys())
+            for (auto &id : m_currentRays)
             {
                 std::vector<cv::Point2f> camPixels;
-                for (auto &ray : m_currentRays[id])
+                for (auto &ray : m_currentRays[id.first])
                 {
                     camPixels.push_back(ray.first);
                 }
-                pixels.push_back({id,camPixels});
+                pixels.push_back({id.first,camPixels});
             }
 
             m_wandCalib.addFrame(pixels);
@@ -125,7 +116,7 @@ void LinesAggregator::onRaysReceived(const QUuid clientId, const std::vector<std
 
         for (auto &received : m_framesReceived)
         {
-            received = false;
+            received.second = false;
         }
 
         auto curTime = QTime::currentTime();
@@ -133,16 +124,42 @@ void LinesAggregator::onRaysReceived(const QUuid clientId, const std::vector<std
         //qDebug() << curTime.toString("hh:mm:ss.zzz") << "ms elapsed: " << lastTime.msecsTo(curTime);
         lastTime = curTime;
 
+
+//        ////////////// TEST
+//        auto idFirst = m_clients.first()->id();
+//        auto idLast = m_clients.last()->id();
+//        auto pxNorm = m_clients[idFirst]->normalizeCoords(m_currentRays[idFirst][0].first);
+
+//        auto essentialMatrix = m_clients[idFirst]->essentialMatrix(*m_clients[idLast]);
+//        auto epipolarLine = m_clients[idFirst]->epipolarLine(pxNorm, essentialMatrix);
+
+//        // Find closest point to epipolar line
+//        double minDist = std::numeric_limits<double>::max();
+//        cv::Point2f minDistPixel;
+//        for (auto& pixelLine : m_currentRays[idLast]) {
+//            auto norm = m_clients[idLast]->normalizeCoords(pixelLine.first);
+//            auto dist = epipolarLine.distance(Eigen::Vector2d((double)norm.x,(double) norm.y));
+
+//            if (dist < minDist)
+//            {
+//                minDist = dist;
+//                minDistPixel = pixelLine.first;
+//            }
+//        }
+
+//        std::cout << minDist << std::endl;
+//        std::cout << minDistPixel << std::endl;
+
         //transform lines as needed TODO worth refactoring?
         std::vector<std::pair<QUuid, std::vector<Line3D>>> linesTransformed;
         for (auto it = m_currentRays.begin(); it != m_currentRays.end(); ++it)
         {
             std::vector<Line3D> rayVec;
 
-            std::transform(it.value().begin(), it.value().end(),
+            std::transform(it->second.begin(), it->second.end(),
                            std::back_inserter(rayVec), [](auto &pair){return pair.second;});
 
-            linesTransformed.push_back({it.key(), rayVec});
+            linesTransformed.push_back({it->first, rayVec});
         }
 
         //all intersections
@@ -163,28 +180,44 @@ void LinesAggregator::onRaysReceived(const QUuid clientId, const std::vector<std
                 {
                     if (intersection.edgeDistance < maxDistancecm)
                     {
-                        results.push_back(Frame::Marker{0, intersection.estimatedPoint});
+                        results.push_back(Frame::Marker{0, {}, intersection.estimatedPoint}); // TODO construct properly
                     }
                 }
             }
         }
 
-        std::vector<RPIMoCap::Frame::LineSegment> frameLines;
+        std::unordered_map<QUuid, Frame::CamObservations> observations;
 
         for (auto &idRays : m_currentRays)
         {
-            for (auto &ray : idRays)
+            for (auto &ray : idRays.second)
             {
-                frameLines.push_back({300, ray.second});
+                observations[idRays.first].push_back(Frame::CamObservation{std::numeric_limits<size_t>::quiet_NaN(), ray.first, ray.second});
             }
         }
 
         //TODO time of trigger
-        RPIMoCap::Frame frame(std::chrono::high_resolution_clock::now(), frameLines);
+        RPIMoCap::Frame frame(std::chrono::high_resolution_clock::now(), observations);
         frame.setMarkers(results);
+
+        m_lastFrame = frame;
+
         emit frameReady(frame);
         emit trigger();
     }
+}
+
+bool LinesAggregator::haveAllDataForFrame()
+{
+    for (auto &received : m_framesReceived)
+    {
+        if (!received.second)
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 std::vector<LinesAggregator::TriangulationResult> LinesAggregator::stereoIntersections(const std::vector<Line3D> &lines1, const std::vector<Line3D> &lines2)

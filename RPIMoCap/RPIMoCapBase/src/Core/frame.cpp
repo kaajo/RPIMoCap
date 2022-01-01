@@ -17,16 +17,11 @@
 
 #include "RPIMoCap/Core/frame.h"
 
-RPIMoCap::Frame::Frame(const std::chrono::high_resolution_clock::time_point time,
-                       const std::vector<RPIMoCap::Frame::LineSegment> &lines)
+RPIMoCap::Frame::Frame(const Time time, const std::unordered_map<QUuid, CamObservations>& obs)
     : m_time(time)
-    , m_lines(lines)
+    , m_observations(obs)
 {
-}
 
-std::vector<RPIMoCap::Frame::LineSegment> RPIMoCap::Frame::lines() const
-{
-    return m_lines;
 }
 
 std::vector<RPIMoCap::Frame::Marker>  RPIMoCap::Frame::markers() const

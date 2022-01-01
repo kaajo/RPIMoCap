@@ -64,14 +64,14 @@ MocapScene3D::MocapScene3D(QWidget *parent) :
 
     for (size_t i = 0; i < 200; ++i)
     {
-        auto line = new Line(Frame::LineSegment(), m_rootEntity);
+        auto line = new Line(Line3D(), 100, m_rootEntity);
         m_allLines.push_back(line);
         line->entity->setEnabled(false);
     }
 
     for (size_t i = 0; i < 200; ++i)
     {
-        auto marker = new Marker({0, Eigen::Vector3f()}, m_rootEntity);
+        auto marker = new Marker({0, {}, Eigen::Vector3f()}, m_rootEntity);
         m_currentMarkers.push_back(marker);
         marker->entity->setEnabled(false);
     }
@@ -105,13 +105,18 @@ void MocapScene3D::drawFrame(const RPIMoCap::Frame &frame)
 {
     //TODO resize m_allLines and m_currentMarkers if needed
 
-    for (size_t i = 0; i < frame.lines().size(); ++i)
-    {
-        m_allLines[i]->setLine3D(frame.lines()[i]);
-        m_allLines[i]->entity->setEnabled(true);
+    size_t lineCounter = 0;
+
+    for (const auto&obs : frame.observations()) {
+        for (size_t i = 0; i < obs.second.size(); ++i)
+        {
+            m_allLines[lineCounter]->setLine3D(obs.second[i].ray, 300); // TODO get length from marker
+            m_allLines[lineCounter]->entity->setEnabled(true);
+            ++lineCounter;
+        }
     }
 
-    for (size_t i = frame.lines().size(); i < m_allLines.size(); ++i)
+    for (size_t i = lineCounter + 1; i < m_allLines.size(); ++i)
     {
         m_allLines[i]->entity->setEnabled(false);
     }

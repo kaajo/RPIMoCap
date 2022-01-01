@@ -52,6 +52,8 @@ public:
 
     QUuid id() const {return m_id;}
 
+    auto intrinsics() const {return m_params;}
+
     Eigen::Affine3f transform() const;
 
     Line3D computePixelRay(cv::Point2f pixel);

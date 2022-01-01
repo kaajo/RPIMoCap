@@ -20,13 +20,28 @@
 #include "msgpack_defs.h"
 #include "line3d.h"
 
+#include <QUuid>
+
 #include <Eigen/Geometry>
 #include <msgpack/type.hpp>
 #include <msgpack.hpp>
 
 #include <chrono>
 
+// needed because https://bugreports.qt.io/browse/QTBUG-69701
+namespace std
+{
+template<> struct hash<QUuid>
+{
+    std::size_t operator()(const QUuid& s) const noexcept
+    {
+        return qHash(s);
+    }
+};
+}
+
 namespace RPIMoCap {
+
 
 /**
  * @brief Frame contains all information captured in set of images from synchronized cameras.
@@ -34,36 +49,43 @@ namespace RPIMoCap {
 class Frame
 {
 public:
+    using Time = std::chrono::high_resolution_clock::time_point;
+
+    struct CamObservation {
+        size_t targetId = std::numeric_limits<size_t>::quiet_NaN();
+        cv::Point2f px;
+        Line3D ray;
+
+        MSGPACK_DEFINE_MAP(targetId,px,ray);
+    };
+    using CamObservations = std::vector<CamObservation>;
+
     struct Marker
     {
-        size_t id = 0;
+        size_t id = std::numeric_limits<size_t>::quiet_NaN();
+        std::unordered_map<QUuid, CamObservations> observations;
         Eigen::Vector3f position;
 
         MSGPACK_DEFINE_MAP(id,position);
     };
 
-    struct LineSegment
-    {
-        float lengthcm = 100.0f;
-        Line3D line;
+    Frame(const Time time = Time::min(), const std::unordered_map<QUuid, CamObservations> &obs = {});
 
-        MSGPACK_DEFINE_MAP(lengthcm, line);
-    };
-
-    Frame(const std::chrono::high_resolution_clock::time_point time,
-          const std::vector<LineSegment> &lines);
-
-    std::vector<LineSegment> lines() const;
+    auto observations() const {
+        return m_observations;
+    }
 
     std::vector<Marker> markers() const;
     void setMarkers(const std::vector<Marker> &markers);
 
 private:
-    std::chrono::high_resolution_clock::time_point m_time;
-    std::vector<Marker> m_markers;
-    std::vector<LineSegment> m_lines;
+    Time m_time;
 
-    MSGPACK_DEFINE_MAP(m_time,m_markers,m_lines);
+    std::unordered_map<QUuid, CamObservations> m_observations;
+
+    std::vector<Marker> m_markers;
+
+    MSGPACK_DEFINE_MAP(m_time,m_observations, m_markers);
 };
 
 }

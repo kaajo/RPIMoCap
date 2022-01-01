@@ -20,6 +20,7 @@
 #include <Eigen/Geometry>
 #include <opencv2/core/types.hpp>
 #include <msgpack.hpp>
+#include <QUuid>
 
 #include <math.h>
 #include <chrono>
@@ -84,6 +85,28 @@ struct pack<cv::Point2f> {
         o.pack_array(2);
         o.pack(t.x);
         o.pack(t.y);
+        return o;
+    }
+};
+
+template <>
+struct convert<QUuid> {
+    msgpack::object const& operator()(msgpack::object const &o, QUuid &t) const {
+        if (o.type != msgpack::type::ARRAY) throw msgpack::type_error();
+        if (o.via.array.size != 1) throw msgpack::type_error();
+        std::string str;
+        o.via.array.ptr[0] >> str;
+        t = QUuid::fromString(QString::fromStdString(str));
+        return o;
+    }
+};
+
+template <>
+struct pack<QUuid> {
+    template <typename Stream>
+    msgpack::packer<Stream>& operator()(msgpack::packer<Stream> &o, QUuid const &t) const {
+        o.pack_array(1);
+        o.pack(t.toString().toStdString());
         return o;
     }
 };

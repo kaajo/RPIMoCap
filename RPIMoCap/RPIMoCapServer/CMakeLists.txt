@@ -29,9 +29,10 @@ target_sources(RPIMoCapServerLib
     src/Server/pointchecker.cpp
     src/Server/rpimocapserver.cpp
     src/Server/wanddetector.cpp
-    src/Server/wandcalibration.cpp
+    src/Server/Calibration/wandcalibration.cpp
     src/Server/floorcalibrationwidget.cpp
     src/Server/floorcalibrationwidget.ui
+    src/Server/Calibration/floorcalibration.cpp
     PUBLIC
     src/Server/camerasettings.h
     src/Server/camerasettingswidget.h
@@ -41,8 +42,9 @@ target_sources(RPIMoCapServerLib
     src/Server/pointchecker.h
     src/Server/rpimocapserver.h
     src/Server/wanddetector.h
-    src/Server/wandcalibration.h
-    src/Server/floorcalibrationwidget.h)
+    src/Server/Calibration/wandcalibration.h
+    src/Server/floorcalibrationwidget.h
+    src/Server/Calibration/floorcalibration.h)
 
 target_include_directories(RPIMoCapServerLib PUBLIC
     ${PROJECT_SOURCE_DIR}/src)

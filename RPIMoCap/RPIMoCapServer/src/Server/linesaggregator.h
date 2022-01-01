@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <Server/wandcalibration.h>
+#include <Server/Calibration/wandcalibration.h>
 #include <Server/camerasettings.h>
 
 #include <RPIMoCap/Core/line3d.h>
@@ -37,6 +37,8 @@ public:
 
     void startCalib(bool start, WandCalibration::Settings settings);
 
+    Frame lastFrame() const {return m_lastFrame;}
+
 signals:
     void trigger();
 
@@ -44,7 +46,7 @@ signals:
      * @brief When lines are received from all cameras, new RPIMoCap::Frame with proper time and lines is emitted
      * @param frame
      */
-    void frameReady(const Frame &frame);
+    void frameReady(const RPIMoCap::Frame &frame);
     //void linesReceived(const std::vector<RPIMoCap::Line3D> &lines);
 
 public slots:
@@ -54,16 +56,21 @@ public slots:
     void onMoCapStart(bool start);
     void onRaysReceived(const QUuid clientId, const std::vector<std::pair<cv::Point2f, Line3D>> &rays);
 
+    bool haveAllDataForFrame();
+
 private:
     QTime lastTime = QTime::currentTime();
     bool running = false;
+
+    Frame m_lastFrame;
 
     QMap<QUuid,std::shared_ptr<CameraSettings>> m_clients;
 
     WandCalibration m_wandCalib;
 
-    QMap<QUuid,std::vector<std::pair<cv::Point2f, Line3D>>> m_currentRays;
-    QMap<QUuid,bool> m_framesReceived;
+    std::unordered_map<QUuid,std::vector<std::pair<cv::Point2f, Line3D>>> m_currentRays;
+    std::unordered_map<QUuid,bool> m_framesReceived;
+
 
     struct TriangulationResult {
         // idea - uncertainty in case points are on epipolar line

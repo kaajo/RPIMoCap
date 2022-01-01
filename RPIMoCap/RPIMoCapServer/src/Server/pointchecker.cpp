@@ -116,7 +116,7 @@ QVector<RPIMoCap::Frame::Marker> PointChecker::handleNo(QVector<Eigen::Vector3f>
 
         for(int i = 0; i < points.size(); i++)
         {
-            pts.push_back({nextUniqueIndex(i), points[i]});
+            pts.push_back({nextUniqueIndex(i), {}, points[i]}); // TODO observations
         }
     }
 
@@ -275,7 +275,7 @@ void PointChecker::addUncoveredPoints(QVector<Eigen::Vector3f> points, std::vect
         }
         if(!ok)
         {
-            pts.push_back({nextUniqueIndex(pts.size()), points[i]});
+            pts.push_back({nextUniqueIndex(pts.size()), {}, points[i]}); //TODO observations
         }
     }
 }
@@ -292,7 +292,7 @@ QVector<RPIMoCap::Frame::Marker> PointChecker::addCoveredPoints(QVector<Eigen::V
             {
                 if(i < lastPoints.size() && j < points.size())
                 {
-                    pts.push_back({lastPoints[i].id, points[j]});
+                    pts.push_back({lastPoints[i].id, {}, points[j]}); //TODO observations
                 }
             }
         }

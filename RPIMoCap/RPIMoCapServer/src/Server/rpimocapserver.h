@@ -46,6 +46,8 @@ public slots:
     void onMoCapStart(bool start);
     void trigger();
 
+    void calibrateFloor(const float offset);
+
 private:
     LinesAggregator m_aggregator;
 

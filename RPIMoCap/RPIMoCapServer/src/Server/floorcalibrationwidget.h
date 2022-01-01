@@ -19,7 +19,7 @@ public:
 
 
 Q_SIGNALS:
-    void snapshotRequest(const double offsetCM);
+    void snapshotRequest(const float offsetCM);
 
 private Q_SLOTS:
     void onSnapshotButton();

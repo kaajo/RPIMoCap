@@ -19,14 +19,14 @@
 
 namespace RPIMoCap::SimClient {
 
-VirtualWand::VirtualWand(float sizecm, float middlePointOffsetcm)
+VirtualExtrinsicWand::VirtualExtrinsicWand(float sizecm, float middlePointOffsetcm)
     : m_leftPoint(-sizecm/2.0f, 0.0f, 0.0f)
     , m_middlePoint(middlePointOffsetcm, 0.0f, 0.0f)
     , m_rightPoint(sizecm/2.0f, 0.0f, 0.0f)
 {
 }
 
-std::vector<SimMarker> VirtualWand::markers(const Eigen::Affine3f &transform) const
+std::vector<SimMarker> VirtualExtrinsicWand::markers(const Eigen::Affine3f &transform) const
 {
     SimMarker left;
     const auto leftTr = transform * m_leftPoint;

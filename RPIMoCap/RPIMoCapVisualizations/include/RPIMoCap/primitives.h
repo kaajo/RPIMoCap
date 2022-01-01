@@ -57,9 +57,9 @@ public:
 
 struct Line
 {
-    Line(const RPIMoCap::Frame::LineSegment &line, Qt3DCore::QEntity *rootEntity);
+    Line(const RPIMoCap::Line3D &line, float lengthcm, Qt3DCore::QEntity *rootEntity);
 
-    void setLine3D(const RPIMoCap::Frame::LineSegment &line);
+    void setLine3D(const RPIMoCap::Line3D &line, const float lengthcm);
 
     SharedEntity entity = SharedEntity(new Qt3DCore::QEntity(), &QObject::deleteLater);
     Qt3DRender::QGeometry *geometry = new Qt3DRender::QGeometry();

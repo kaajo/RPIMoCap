@@ -16,6 +16,7 @@
  */
 
 #include "Server/rpimocapserver.h"
+#include "Server/Calibration/floorcalibration.h"
 
 #include <RPIMoCap/Core/avahibrowser.h>
 #include <RPIMoCap/Core/topics.h>
@@ -54,7 +55,7 @@ void Server::init()
         setupMQTT(MQTTsettings);
     }
 
-    for (const auto& cam : m_clients)
+    for (const auto& cam : qAsConst(m_clients))
     {
         m_aggregator.removeCamera(cam->id());
         emit cameraRemoved(cam->id());
@@ -102,6 +103,78 @@ void Server::trigger()
     {
         qWarning() << "Cannot trigger remote cameras - no connection to MQTT";
     }
+}
+
+/**
+     * @brief converts between quaternion representation to euler angels.
+     *
+     * @param q Quaternion
+     * @return Vector3[roll, pitch, yaw] in rad
+     *
+     * @note Pitch is only limited to +/-90° of freedom.
+     *
+     * source: https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles#Quaternion_to_Euler_Angles_Conversion
+     */
+static Eigen::Vector3f toEulerAngles(const Eigen::Quaternionf& q) {
+    // pitch (X-axis rotation)
+    double sinr_cosp = 2 * (q.w() * q.x() + q.y() * q.z());
+    double cosr_cosp = 1 - 2 * (q.x() * q.x() + q.y() * q.y());
+    double pitch = std::atan2(sinr_cosp, cosr_cosp);
+
+    // yaw (Y-axis rotation)
+    double sinp = 2 * (q.w() * q.y() - q.z() * q.x());
+    double yaw = std::abs(sinp) >= 1 ? std::copysign(M_PI / 2, sinp) : std::asin(sinp); // use 90 degrees if out of range
+
+    // roll (Z-axis rotation)
+    double siny_cosp = 2 * (q.w() * q.z() + q.x() * q.y());
+    double cosy_cosp = 1 - 2 * (q.y() * q.y() + q.z() * q.z());
+    double roll = std::atan2(siny_cosp, cosy_cosp);
+
+    return {pitch, yaw, roll};
+}
+
+
+void Server::calibrateFloor(const float offset)
+{
+    std::vector<FloorCalibration::CameraData> inputData;
+
+    // convert data from last frame
+    const Frame lastFrame = m_aggregator.lastFrame();
+
+    for (const auto& observation : lastFrame.observations()) {
+
+        std::vector<cv::Point2f> detectedPixels;
+        std::vector<Line3D> rays;
+
+        for (const auto &data : observation.second) { // TODO vector of structures vs structure of vectors in whole system
+            detectedPixels.push_back(data.px);
+            rays.push_back(data.ray);
+        }
+
+        FloorCalibration::CameraData camData{observation.first, m_clients[observation.first]->intrinsics(),
+                                             detectedPixels, rays};
+        inputData.push_back(camData);
+    }
+
+    // get result of calibration
+    auto transform = FloorCalibration::computeOrigin(inputData, 30.0f); //TODO size from settings
+
+    // apply result to all cameras
+    if (!transform.has_value()) {
+        qWarning() << "Floor calibration failed";
+        return;
+    }
+
+    for (auto& client : m_clients) {
+        const Eigen::Affine3f newTransform = transform.value().inverse() * client->transform();
+
+        auto trans = newTransform.translation().cast<double>();
+        auto rot = toEulerAngles(Eigen::Quaternionf(newTransform.rotation())).cast<double>();
+
+        client->setTranslation(trans);
+        client->setRotation(rot);
+    }
+
 }
 
 void Server::setupMQTT(const MQTTSettings &settings)

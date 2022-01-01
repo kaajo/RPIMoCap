@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Server/wandcalibration.h"
+#include "Server/Calibration/wandcalibration.h"
 
 #include <QWidget>
 

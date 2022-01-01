@@ -25,10 +25,10 @@
 
 namespace RPIMoCap::SimClient {
 
-class VirtualWand
+class VirtualExtrinsicWand
 {
 public:
-    VirtualWand(float sizecm, float middlePointOffsetcm);
+    VirtualExtrinsicWand(float sizecm, float middlePointOffsetcm);
 
     std::vector<SimMarker> markers(const Eigen::Affine3f &transform) const;
 

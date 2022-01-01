@@ -43,6 +43,7 @@ public:
     ~MainWindow();
 
     CalibrationWidget* calibrationWidget() {return m_calibWidget;};
+    FloorCalibrationWidget* floorCalibration() {return m_floorCalibWidget;};
 
 signals:
     void startMoCap(bool start);

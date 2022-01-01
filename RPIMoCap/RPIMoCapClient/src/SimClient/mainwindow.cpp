@@ -250,7 +250,7 @@ void MainWindow::drawFrame()
     std::vector<SimMarker> markers;
 
     if (m_ui->showWandExtrinsic->isChecked()) {
-        const VirtualWand wand(50.0, 10.0);
+        const VirtualExtrinsicWand wand(50.0, 10.0);
         auto wandMarkers = wand.markers(m_ui->wandExtrinsic->getTransform());
         markers.insert(markers.end(), wandMarkers.begin(), wandMarkers.end());
     }
@@ -266,7 +266,7 @@ void MainWindow::drawFrame()
     std::vector<Frame::Marker> frameMarkers;
     for (auto &marker : markers)
     {
-        frameMarkers.push_back({0,{marker.translation.x, marker.translation.y, marker.translation.z}});
+        frameMarkers.push_back({0, {}, {marker.translation.x, marker.translation.y, marker.translation.z}});
     }
 
     Frame frame(std::chrono::high_resolution_clock::now(), {});
